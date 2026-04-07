@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bid-postgres
+    environment:
+      POSTGRES_DB: bid_analysis
+      POSTGRES_USER: biduser
+      POSTGRES_PASSWORD: bidpass123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biduser -d bid_analysis"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bid-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://biduser:bidpass123@postgres:5432/bid_analysis
+      DATA_GO_KR_API_KEY: ${DATA_GO_KR_API_KEY:-}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bid-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    command: npm run dev
+
+volumes:
+  pgdata:

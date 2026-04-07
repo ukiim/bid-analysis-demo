@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조달 입찰 사정률 예측 플랫폼</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/prop-types@15/prop-types.min.js"></script>
+<script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F0F4F8; color: #0F172A; }
+  :root {
+    --primary: #0066CC;
+    --primary-dark: #0052A3;
+    --secondary: #1E3A5F;
+    --accent: #00A3FF;
+    --bg: #F0F4F8;
+    --surface: #FFFFFF;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --border: #E2E8F0;
+    --sidebar-w: 260px;
+  }
+  .layout { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar {
+    width: var(--sidebar-w); background: var(--secondary);
+    display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+  }
+  .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .logo-mark { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: #fff; }
+  .logo-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+  .sidebar-section { padding: 16px 12px 8px; }
+  .sidebar-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.8px; padding: 0 8px; margin-bottom: 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px; color: rgba(255,255,255,0.65);
+    cursor: pointer; font-size: 13.5px; font-weight: 500;
+    transition: all 0.15s; margin-bottom: 2px;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: var(--primary); color: #fff; }
+  .nav-item .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  .sidebar-bottom { margin-top: auto; padding: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .user-badge { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.06); }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .user-info .name { font-size: 13px; font-weight: 600; color: #fff; }
+  .user-info .plan { font-size: 11px; color: rgba(255,255,255,0.45); }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar {
+    height: 56px; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px; justify-content: space-between; flex-shrink: 0;
+  }
+  .topbar-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+  .badge-blue { background: #EFF6FF; color: var(--primary); }
+  .badge-green { background: #F0FDF4; color: #059669; }
+  .badge-amber { background: #FFFBEB; color: #D97706; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-outline { background: transparent; color: var(--text-primary); border: 1.5px solid var(--border); }
+  .btn-outline:hover { background: var(--bg); }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+  .card { background: var(--surface); border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); padding: 20px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .card-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-20 { margin-bottom: 20px; }
+  .kpi-card { background: var(--surface); border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); }
+  .kpi-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; margin-bottom: 6px; }
+  .kpi-value { font-size: 24px; font-weight: 800; color: var(--text-primary); }
+  .kpi-change { font-size: 12px; margin-top: 4px; }
+  .kpi-change.up { color: #059669; }
+  .kpi-change.down { color: #DC2626; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
+  th { text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); border-bottom: 1.5px solid var(--border); background: #F8FAFC; white-space: nowrap; }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--border); color: var(--text-primary); vertical-align: middle; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #F8FAFC; }
+  .filter-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; background: var(--surface); border-radius: 10px; margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); flex-wrap: wrap;
+  }
+  .filter-select {
+    padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 7px;
+    font-size: 13px; color: var(--text-primary); background: var(--bg);
+    font-family: 'Pretendard', sans-serif; cursor: pointer;
+  }
+  .search-input {
+    flex: 1; min-width: 200px; padding: 7px 12px;
+    border: 1.5px solid var(--border); border-radius: 7px;
+    font-size: 13px; font-family: 'Pretendard', sans-serif; outline: none;
+  }
+  .search-input:focus { border-color: var(--primary); }
+  .tag { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .tag-construction { background: #EFF6FF; color: #0066CC; }
+  .tag-service { background: #F5F3FF; color: #7C3AED; }
+  .tag-defense { background: #FFF7ED; color: #C2410C; }
+  .confidence-bar { height: 6px; border-radius: 3px; background: #E2E8F0; margin-top: 10px; overflow: hidden; }
+  .confidence-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--primary), var(--accent)); }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+  .dot-green { background: #10B981; }
+  .dot-amber { background: #F59E0B; }
+  .dot-red { background: #EF4444; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 2px; }
+  .page-header { margin-bottom: 20px; }
+  .page-title { font-size: 20px; font-weight: 800; color: var(--text-primary); }
+  .page-desc { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .pipeline-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .pipeline-row:last-child { border-bottom: none; }
+  .pipeline-name { font-size: 13px; font-weight: 600; flex: 1; }
+  .pipeline-time { font-size: 11.5px; color: var(--text-secondary); }
+  .metric-box { padding: 14px; background: #F8FAFC; border-radius: 8px; text-align: center; }
+  .metric-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+  .metric-val { font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 4px 0; }
+  .metric-sub { font-size: 11px; color: var(--text-secondary); }
+  .prog-bar { height: 8px; border-radius: 4px; background: #E2E8F0; overflow: hidden; margin-top: 6px; }
+  .prog-fill { height: 100%; border-radius: 4px; background: var(--primary); }
+  .alert { padding: 12px 14px; border-radius: 8px; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
+  .alert-info { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+  .loading { text-align: center; padding: 40px; color: var(--text-secondary); font-size: 14px; }
+  .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; }
+  .pagination button { padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 6px; background: var(--surface); cursor: pointer; font-size: 12px; font-family: 'Pretendard', sans-serif; }
+  .pagination button:hover { background: var(--bg); }
+  .pagination button:disabled { opacity: 0.4; cursor: default; }
+  .pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .pagination span { font-size: 12px; color: var(--text-secondary); }
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
+  }
+  .modal-content {
+    background: var(--surface); border-radius: 12px; padding: 24px;
+    max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); padding: 4px 8px; border-radius: 4px; }
+  .modal-close:hover { background: var(--bg); }
+  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { color: var(--text-secondary); }
+  .detail-val { font-weight: 600; }
+  /* Toast */
+  .toast-container { position: fixed; top: 16px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 260px;
+    animation: toastIn 0.3s ease;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+  .toast-success { background: #059669; color: #fff; }
+  .toast-error { background: #DC2626; color: #fff; }
+  .toast-info { background: var(--primary); color: #fff; }
+  /* Tabs */
+  .tab-nav {
+    display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px;
+  }
+  .tab-btn {
+    padding: 10px 20px; font-size: 13.5px; font-weight: 600; color: var(--text-secondary);
+    background: none; border: none; cursor: pointer; position: relative;
+    transition: color 0.15s; font-family: 'Pretendard', sans-serif;
+  }
+  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn.active {
+    color: var(--primary);
+  }
+  .tab-btn.active::after {
+    content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
+    height: 2px; background: var(--primary); border-radius: 1px;
+  }
+  .tab-content { min-height: 200px; }
+  /* Summary card */
+  .summary-card {
+    background: linear-gradient(135deg, #1E3A5F 0%, #0066CC 100%);
+    border-radius: 10px; padding: 20px 24px; color: #fff; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+  .summary-card .summary-title { font-size: 16px; font-weight: 700; flex: 1; min-width: 200px; }
+  .summary-card .summary-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+  .summary-card .summary-item { text-align: center; }
+  .summary-card .summary-item-label { font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
+  .summary-card .summary-item-value { font-size: 14px; font-weight: 700; margin-top: 2px; }
+  /* Period buttons */
+  .period-btn-group { display: flex; gap: 4px; }
+  .period-btn {
+    padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 6px;
+    border: 1.5px solid var(--border); background: transparent; color: var(--text-secondary);
+    cursor: pointer; font-family: 'Pretendard', sans-serif; transition: all 0.15s;
+  }
+  .period-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .period-btn:hover:not(.active) { background: var(--bg); }
+  /* Scope toggle */
+  .scope-toggle { display: flex; border: 1.5px solid var(--border); border-radius: 7px; overflow: hidden; }
+  .scope-btn {
+    padding: 6px 14px; font-size: 12px; font-weight: 600; border: none;
+    background: transparent; color: var(--text-secondary); cursor: pointer;
+    font-family: 'Pretendard', sans-serif; transition: all 0.15s;
+  }
+  .scope-btn.active { background: var(--primary); color: #fff; }
+  /* Highlighted rate */
+  .rate-highlight {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px; background: #EFF6FF; border: 2px solid var(--primary);
+    border-radius: 10px; font-size: 20px; font-weight: 800; color: var(--primary);
+  }
+  .rate-input {
+    width: 100px; padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 7px;
+    font-size: 14px; font-weight: 700; text-align: center; font-family: 'Pretendard', sans-serif;
+    outline: none;
+  }
+  .rate-input:focus { border-color: var(--primary); }
+  /* Gap visualization */
+  .gap-bar {
+    position: relative; height: 28px; background: #E2E8F0; border-radius: 6px;
+    overflow: hidden; margin: 4px 0;
+  }
+  .gap-fill {
+    height: 100%; border-radius: 6px; display: flex; align-items: center;
+    padding: 0 8px; font-size: 11px; font-weight: 700; color: #fff;
+    min-width: 30px; transition: width 0.3s;
+  }
+  .gap-marker {
+    position: absolute; top: -4px; bottom: -4px; width: 3px;
+    background: #DC2626; border-radius: 2px;
+  }
+  /* Prediction card */
+  .prediction-card {
+    background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+    border-radius: 12px; padding: 28px; color: #fff; text-align: center;
+  }
+  .prediction-card .pred-label { font-size: 13px; opacity: 0.85; margin-bottom: 8px; }
+  .prediction-card .pred-value { font-size: 36px; font-weight: 900; letter-spacing: -1px; }
+  .prediction-card .pred-sub { font-size: 14px; opacity: 0.85; margin-top: 6px; }
+  /* Match badge */
+  .match-yes { background: #F0FDF4; color: #059669; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .match-no { background: #FEF2F2; color: #DC2626; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  /* NAS status */
+  .nas-status { display: flex; align-items: center; gap: 8px; }
+  .nas-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .nas-dot.online { background: #10B981; }
+  .nas-dot.offline { background: #EF4444; }
+  /* Step Guide */
+  .step-guide { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 20px; padding: 16px 20px; background: var(--surface); border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); }
+  .step-item { display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; flex: 1; }
+  .step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; transition: all 0.2s; }
+  .step-circle.completed { background: #059669; color: #fff; }
+  .step-circle.active { background: var(--primary); color: #fff; box-shadow: 0 0 0 4px rgba(0,102,204,0.2); }
+  .step-circle.pending { background: #E2E8F0; color: #94A3B8; }
+  .step-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+  .step-label.active { color: var(--primary); }
+  .step-label.completed { color: #059669; }
+  .step-value { font-size: 10px; color: var(--text-secondary); max-width: 120px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .step-connector { flex: 0 0 60px; height: 2px; background: #E2E8F0; margin: 0 -8px; margin-bottom: 24px; }
+  .step-connector.completed { background: #059669; }
+  /* Bid amount display */
+  .bid-amount-box { background: linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 100%); border: 1.5px solid #FDE68A; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+  .bid-amount-label { font-size: 11px; color: #92400E; font-weight: 600; }
+  .bid-amount-value { font-size: 20px; font-weight: 800; color: #B45309; }
+  /* Stats cards row */
+  .stats-cards { display: flex; gap: 12px; margin-top: 12px; }
+  .stat-card { flex: 1; background: #F8FAFC; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #E2E8F0; }
+  .stat-card-label { font-size: 10px; color: var(--text-secondary); font-weight: 500; margin-bottom: 4px; }
+  .stat-card-value { font-size: 16px; font-weight: 800; color: var(--text-primary); }
+  .stat-card-sub { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+  /* Empty state */
+  .empty-state { text-align: center; padding: 48px 24px; }
+  .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+  .empty-state-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
+  /* Number line */
+  .number-line-container { position: relative; padding: 20px 40px 20px 60px; }
+  .number-line { position: relative; height: 400px; border-left: 2px solid #94A3B8; margin-left: 30px; }
+  .number-line-dot { position: absolute; left: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); cursor: pointer; transition: all 0.15s; z-index: 2; }
+  .number-line-dot:hover { transform: scale(1.5); }
+  .number-line-dot.gap-dot { background: #DC2626; }
+  .number-line-label { position: absolute; left: 20px; font-size: 11px; white-space: nowrap; transform: translateY(-50%); }
+  .number-line-tick { position: absolute; left: -4px; width: 8px; height: 1px; background: #CBD5E1; }
+  .gap-highlight { position: absolute; left: -20px; right: -20px; background: rgba(220,38,38,0.08); border: 1px dashed rgba(220,38,38,0.3); border-radius: 4px; cursor: pointer; z-index: 1; transition: background 0.15s; }
+  .gap-highlight:hover { background: rgba(220,38,38,0.15); }
+  .gap-label { position: absolute; right: -80px; font-size: 10px; font-weight: 700; color: #DC2626; white-space: nowrap; }
+  .gap-midpoint { position: absolute; left: -8px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #DC2626; z-index: 3; cursor: pointer; }
+  /* D-Day */
+  .d-day { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .d-day.urgent { background: #FEF2F2; color: #DC2626; }
+  .d-day.soon { background: #FFFBEB; color: #D97706; }
+  .d-day.normal { background: #F0FDF4; color: #059669; }
+  .d-day.passed { background: #F1F5F9; color: #94A3B8; }
+  /* Quick Preview Panel */
+  .quick-preview { position: fixed; right: 0; top: 56px; bottom: 0; width: 380px; background: var(--surface); box-shadow: -4px 0 20px rgba(0,0,0,0.1); z-index: 100; overflow-y: auto; padding: 24px; transform: translateX(100%); transition: transform 0.25s ease; }
+  .quick-preview.open { transform: translateX(0); }
+  .quick-preview-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); padding: 4px 8px; border-radius: 4px; }
+  .quick-preview-close:hover { background: var(--bg); }
+  /* Matching rate bar */
+  .match-bar-container { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .match-bar-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); min-width: 60px; text-align: right; }
+  .match-bar-track { flex: 1; height: 24px; background: #E2E8F0; border-radius: 6px; overflow: hidden; position: relative; }
+  .match-bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding: 0 8px; font-size: 11px; font-weight: 700; color: #fff; min-width: 40px; transition: width 0.5s ease; }
+  .match-bar-count { font-size: 11px; color: var(--text-secondary); min-width: 60px; }
+  /* Confirmed rate input */
+  .confirmed-rate-input { width: 100px; padding: 7px 12px; border: 1.5px solid #F59E0B; border-radius: 7px; font-size: 14px; font-weight: 700; text-align: center; font-family: 'Pretendard', sans-serif; outline: none; background: #FFFBEB; }
+  .confirmed-rate-input:focus { border-color: #D97706; box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+  /* Strategy card */
+  .strategy-card { background: linear-gradient(135deg, #1E3A5F 0%, #0052A3 100%); border-radius: 12px; padding: 24px; color: #fff; }
+  .strategy-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .strategy-row:last-child { border-bottom: none; }
+  .strategy-label { font-size: 13px; opacity: 0.8; }
+  .strategy-value { font-size: 15px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useContext, createContext } = React;
+const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line, Legend, ComposedChart } = Recharts;
+
+const API = '/api/v1';
+
+function fmtAmount(n) {
+  if (n == null) return '-';
+  return new Intl.NumberFormat('ko-KR').format(Math.round(n / 10000)) + '만원';
+}
+
+function fmt(n) {
+  if (n == null) return '-';
+  return Math.round(n / 10000).toLocaleString();
+}
+
+// ── Toast Context ─────────────────────────────────────────────────────────────
+const ToastContext = createContext();
+function useToast() { return useContext(ToastContext); }
+
+function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+  const addToast = useCallback((message, type = 'info') => {
+    const id = Date.now();
+    setToasts(t => [...t, { id, message, type }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000);
+  }, []);
+  return (
+    <ToastContext.Provider value={addToast}>
+      {children}
+      <div className="toast-container">
+        {toasts.map(t => <div key={t.id} className={`toast toast-${t.type}`}>{t.message}</div>)}
+      </div>
+    </ToastContext.Provider>
+  );
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────────
+function Modal({ open, onClose, title, children }) {
+  if (!open) return null;
+  return (
+    <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-content">
+        <div className="modal-header">
+          <div className="modal-title">{title}</div>
+          <button className="modal-close" onClick={onClose}>&times;</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ── CSV Download ──────────────────────────────────────────────────────────────
+function downloadCSV(data, columns, filename) {
+  const header = columns.map(c => c.label).join(',');
+  const rows = data.map(d => columns.map(c => {
+    let v = typeof c.fmt === 'function' ? c.fmt(d[c.key]) : (d[c.key] ?? '');
+    v = String(v).replace(/"/g, '""');
+    return `"${v}"`;
+  }).join(','));
+  const csv = '\uFEFF' + [header, ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Page 1: 공고화면 ─────────────────────────────────────────────────────────
+function getDDay(deadlineStr) {
+  if (!deadlineStr) return null;
+  const deadline = new Date(deadlineStr);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  deadline.setHours(0,0,0,0);
+  const diff = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+  if (diff < 0) return { text: '마감', cls: 'passed' };
+  if (diff === 0) return { text: 'D-Day', cls: 'urgent' };
+  if (diff <= 3) return { text: `D-${diff}`, cls: 'urgent' };
+  if (diff <= 7) return { text: `D-${diff}`, cls: 'soon' };
+  return { text: `D-${diff}`, cls: 'normal' };
+}
+
+function AnnouncementPage({ onSelectAnnouncement }) {
+  const [filter, setFilter] = useState({ type: 'all', area: 'all', source: 'all', status: 'all', search: '' });
+  const [data, setData] = useState({ items: [], total: 0, page: 1, total_pages: 0 });
+  const [kpi, setKpi] = useState(null);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [previewItem, setPreviewItem] = useState(null);
+  const [quickRate, setQuickRate] = useState('');
+  const addToast = useToast();
+
+  const fetchData = () => {
+    setLoading(true);
+    const params = new URLSearchParams({ page, page_size: 20 });
+    if (filter.type !== 'all') {
+      params.set('category', filter.type);
+    } else {
+      params.set('category', '공사,용역');
+    }
+    if (filter.area !== 'all') params.set('region', filter.area);
+    if (filter.source !== 'all') params.set('source', filter.source);
+    if (filter.status !== 'all') params.set('status', filter.status);
+    if (filter.search) params.set('keyword', filter.search);
+
+    fetch(`${API}/announcements?${params}`)
+      .then(r => r.json())
+      .then(d => {
+        const filtered = (d.items || []).filter(i => i.type === '공사' || i.type === '용역');
+        setData({ ...d, items: filtered });
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchData(); }, [page]);
+  useEffect(() => {
+    fetch(`${API}/stats/kpi`).then(r => r.json()).then(setKpi);
+  }, []);
+
+  const handleFilter = () => { setPage(1); fetchData(); };
+
+  const handleCSV = () => {
+    const cols = [
+      { key: 'bid_number', label: '공고번호' },
+      { key: 'title', label: '공고명' },
+      { key: 'org', label: '발주기관' },
+      { key: 'type', label: '유형' },
+      { key: 'area', label: '지역' },
+      { key: 'budget', label: '예산(만원)', fmt: v => fmt(v) },
+      { key: 'deadline', label: '마감일' },
+      { key: 'rate', label: '사정률(%)' },
+      { key: 'first_place_rate', label: '1순위 사정률(%)' },
+    ];
+    downloadCSV(data.items, cols, '공고목록.csv');
+    addToast('CSV 다운로드 완료', 'success');
+  };
+
+  const handleRowClick = (item) => {
+    setPreviewItem(item);
+    setQuickRate(item.rate ? String(item.rate) : '');
+  };
+
+  const quickBidAmount = quickRate && previewItem?.budget
+    ? Math.round(previewItem.budget * parseFloat(quickRate) / 100) : null;
+
+  return (
+    <div>
+      <div className="page-header">
+        <div className="page-title">공고화면</div>
+        <div className="page-desc">공사/용역 공고 목록 조회 - 행 클릭 시 퀵 프리뷰, "상세 분석" 버튼으로 종합화면 이동</div>
+      </div>
+      <div className="grid-4 mb-16">
+        {kpi ? [
+          { label: '전체공고', value: `${kpi.total_announcements?.toLocaleString() || 0}건` },
+          { label: '공사', value: `${kpi.construction_count?.toLocaleString() || 0}건` },
+          { label: '용역', value: `${kpi.service_count?.toLocaleString() || 0}건` },
+          { label: '평균사정률', value: `${kpi.avg_assessment_rate || '-'}%` },
+        ].map((k, i) => (
+          <div key={i} className="kpi-card">
+            <div className="kpi-label">{k.label}</div>
+            <div className="kpi-value">{k.value}</div>
+          </div>
+        )) : <div className="loading">KPI 로딩 중...</div>}
+      </div>
+      <div className="filter-bar">
+        <input className="search-input" placeholder="공고명, 발주기관 검색" value={filter.search}
+          onChange={e => setFilter(f => ({...f, search: e.target.value}))}
+          onKeyDown={e => e.key === 'Enter' && handleFilter()} />
+        <select className="filter-select" value={filter.type} onChange={e => setFilter(f => ({...f, type: e.target.value}))}>
+          <option value="all">전체 유형</option>
+          <option value="공사">공사</option>
+          <option value="용역">용역</option>
+        </select>
+        <select className="filter-select" value={filter.source} onChange={e => setFilter(f => ({...f, source: e.target.value}))}>
+          <option value="all">전체 출처</option>
+          <option value="G2B">나라장터(G2B)</option>
+          <option value="D2B">국방조달(D2B)</option>
+        </select>
+        <select className="filter-select" value={filter.status} onChange={e => setFilter(f => ({...f, status: e.target.value}))}>
+          <option value="all">전체 상태</option>
+          <option value="진행중">진행중</option>
+          <option value="개찰완료">개찰완료</option>
+        </select>
+        <select className="filter-select" value={filter.area} onChange={e => setFilter(f => ({...f, area: e.target.value}))}>
+          <option value="all">전체 지역</option>
+          {['서울','경기','부산','대전','인천','광주','대구','울산','세종','강원','충북','충남','전북','전남','경북','경남','제주'].map(a => <option key={a} value={a}>{a}</option>)}
+        </select>
+        <button className="btn btn-primary" onClick={handleFilter}>필터 적용</button>
+      </div>
+      <div className="card">
+        <div className="card-header">
+          <div>
+            <div className="card-title">공고 목록</div>
+            <div className="card-sub">총 {data.total?.toLocaleString() || 0}건 조회됨 (페이지 {data.page}/{data.total_pages})</div>
+          </div>
+          <button className="btn btn-outline" onClick={handleCSV}>CSV 다운로드</button>
+        </div>
+        {loading ? <div className="loading">데이터 로딩 중...</div> : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>공고번호</th><th>공고명</th><th>발주기관</th><th>유형</th><th>지역</th><th>예산(만원)</th><th>마감일</th><th>상태</th><th>사정률</th><th>1순위 사정률</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.items.map(a => {
+                  const dday = getDDay(a.deadline);
+                  return (
+                  <tr key={a.id} onClick={() => handleRowClick(a)} style={{cursor:'pointer', background: previewItem?.id === a.id ? '#EFF6FF' : undefined}}>
+                    <td style={{fontFamily:'monospace',fontSize:'12px',color:'#64748B'}}>{a.bid_number}</td>
+                    <td style={{fontWeight:'600',maxWidth:'260px',whiteSpace:'normal',wordBreak:'keep-all'}}>{a.title}</td>
+                    <td style={{fontSize:'12.5px',color:'#64748B'}}>{a.org}</td>
+                    <td><span className={`tag ${a.type === '공사' ? 'tag-construction' : 'tag-service'}`}>{a.type}</span></td>
+                    <td style={{fontSize:'13px'}}>{a.area}</td>
+                    <td style={{fontWeight:'700',textAlign:'right'}}>{fmt(a.budget)}</td>
+                    <td>
+                      <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
+                        <span style={{fontSize:'12px',color:'#64748B'}}>{a.deadline}</span>
+                        {dday && <span className={`d-day ${dday.cls}`}>{dday.text}</span>}
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`tag ${a.status === '진행중' ? 'tag-construction' : 'tag-service'}`}>
+                        {a.status || '-'}
+                      </span>
+                    </td>
+                    <td>
+                      {a.rate ? (
+                        <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
+                          <div className="prog-bar" style={{width:'60px',margin:0}}>
+                            <div className="prog-fill" style={{width:`${Math.min(a.rate, 100)}%`}}></div>
+                          </div>
+                          <span style={{fontWeight:'700',color:'var(--primary)',fontSize:'13px'}}>{a.rate}%</span>
+                        </div>
+                      ) : <span style={{color:'#94A3B8',fontSize:'12px'}}>-</span>}
+                    </td>
+                    <td>
+                      {a.first_place_rate ? (
+                        <span style={{fontWeight:'700',color:'#059669',fontSize:'13px'}}>{a.first_place_rate}%</span>
+                      ) : <span style={{color:'#94A3B8',fontSize:'12px'}}>-</span>}
+                    </td>
+                  </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {data.total_pages > 1 && (
+              <div className="pagination">
+                <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>이전</button>
+                {Array.from({length: Math.min(data.total_pages, 7)}, (_, i) => {
+                  const start = Math.max(1, Math.min(page - 3, data.total_pages - 6));
+                  const p = start + i;
+                  return <button key={p} className={p === page ? 'active' : ''} onClick={() => setPage(p)}>{p}</button>;
+                })}
+                <span>/ {data.total_pages}</span>
+                <button disabled={page >= data.total_pages} onClick={() => setPage(p => p + 1)}>다음</button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Quick Preview Panel */}
+      <div className={`quick-preview ${previewItem ? 'open' : ''}`}>
+        {previewItem && (
+          <>
+            <button className="quick-preview-close" onClick={() => setPreviewItem(null)}>&times;</button>
+            <h3 style={{fontSize:'15px',fontWeight:'700',marginBottom:'16px',paddingRight:'30px',lineHeight:'1.4'}}>{previewItem.title}</h3>
+            <div style={{marginBottom:'16px'}}>
+              {[
+                { label: '발주기관', value: previewItem.org },
+                { label: '유형', value: previewItem.type },
+                { label: '지역', value: previewItem.area },
+                { label: '기초금액', value: fmtAmount(previewItem.budget) },
+                { label: '사정률', value: previewItem.rate ? `${previewItem.rate}%` : '-' },
+                { label: '1순위 사정률', value: previewItem.first_place_rate ? `${previewItem.first_place_rate}%` : '-' },
+                { label: '상태', value: previewItem.status || '-' },
+              ].map((r, i) => (
+                <div key={i} className="detail-row">
+                  <span className="detail-key">{r.label}</span>
+                  <span className="detail-val">{r.value}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{marginBottom:'16px'}}>
+              <div style={{fontSize:'12px',fontWeight:'600',color:'var(--text-secondary)',marginBottom:'8px'}}>간편 투찰금액 계산</div>
+              <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px'}}>
+                <span style={{fontSize:'12px',color:'var(--text-secondary)'}}>사정률:</span>
+                <input className="rate-input" type="number" step="0.01" value={quickRate}
+                  onChange={e => setQuickRate(e.target.value)} placeholder="사정률" style={{width:'80px'}} />
+                <span style={{fontSize:'12px',color:'var(--text-secondary)'}}>%</span>
+              </div>
+              {quickBidAmount && (
+                <div className="bid-amount-box">
+                  <div>
+                    <div className="bid-amount-label">예상 투찰금액</div>
+                    <div className="bid-amount-value">{fmtAmount(quickBidAmount)}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div style={{display:'flex',gap:'8px'}}>
+              <button className="btn btn-primary" style={{flex:1}} onClick={() => { onSelectAnnouncement(previewItem); setPreviewItem(null); }}>
+                상세 분석 (종합화면)
+              </button>
+              <button className="btn btn-outline" style={{whiteSpace:'nowrap'}}
+                onClick={() => {
+                  const bidNo = previewItem.bid_number || '';
+                  const url = previewItem.source === 'D2B'
+                    ? 'https://www.d2b.go.kr/internet/catalog/catalogView.do?bidNo=' + encodeURIComponent(bidNo)
+                    : 'https://www.g2b.go.kr:8340/search.do?category=PNPE&kwd=' + encodeURIComponent(bidNo);
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}>
+                공고 바로가기 ↗
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Page 2: 종합화면 ─────────────────────────────────────────────────────────
+function ComprehensivePage({ announcement }) {
+  const [activeTab, setActiveTab] = useState(0);
+  const [selectedRate, setSelectedRate] = useState('');
+  const [confirmedRate, setConfirmedRate] = useState('');
+  const [confirmedRateInput, setConfirmedRateInput] = useState('');
+  const [periodMonths, setPeriodMonths] = useState(12);
+  const [orgScope, setOrgScope] = useState('specific');
+  const [gapRangeStart, setGapRangeStart] = useState('');
+  const [gapRangeEnd, setGapRangeEnd] = useState('');
+
+  // Tab 1 data
+  const [freqData, setFreqData] = useState(null);
+  const [freqLoading, setFreqLoading] = useState(false);
+  const [showFirstOnly, setShowFirstOnly] = useState(false);
+
+  // Tab 2 data
+  const [companyData, setCompanyData] = useState(null);
+  const [companyLoading, setCompanyLoading] = useState(false);
+
+  // Tab 3 data
+  const [comprehensiveData, setComprehensiveData] = useState(null);
+  const [comprehensiveLoading, setComprehensiveLoading] = useState(false);
+
+  // Phase 7: preliminary frequency
+  const [prelimFreqData, setPrelimFreqData] = useState(null);
+
+  const addToast = useToast();
+
+  // Compute bid amount from rate
+  const calcBidAmount = (rate) => {
+    if (!announcement?.budget || !rate) return null;
+    const r = parseFloat(rate);
+    return isNaN(r) ? null : Math.round(announcement.budget * r / 100);
+  };
+
+  const selectedBidAmount = calcBidAmount(selectedRate);
+  const confirmedBidAmount = calcBidAmount(confirmedRate);
+
+  // Step guide state
+  const step1Done = !!selectedRate;
+  const step2Done = !!confirmedRate;
+  const currentStep = activeTab;
+
+  // Fetch frequency data (Tab 1)
+  useEffect(() => {
+    if (!announcement) return;
+    setFreqLoading(true);
+    const params = new URLSearchParams({
+      period_months: periodMonths,
+      org_scope: orgScope,
+    });
+    fetch(`${API}/analysis/frequency/${announcement.id}?${params}`)
+      .then(r => r.json())
+      .then(d => { setFreqData(d); setFreqLoading(false); })
+      .catch(() => { setFreqData(null); setFreqLoading(false); });
+  }, [announcement?.id, periodMonths, orgScope]);
+
+  // Fetch preliminary frequency (Phase 7)
+  useEffect(() => {
+    if (!announcement) return;
+    const params = new URLSearchParams({ period_months: periodMonths, org_scope: orgScope });
+    fetch(`${API}/analysis/preliminary-frequency/${announcement.id}?${params}`)
+      .then(r => r.json())
+      .then(d => setPrelimFreqData(d))
+      .catch(() => setPrelimFreqData(null));
+  }, [announcement?.id, periodMonths, orgScope]);
+
+  // Fetch company rates data (Tab 2)
+  useEffect(() => {
+    if (!announcement || activeTab !== 1 || !selectedRate) return;
+    setCompanyLoading(true);
+    const rateNum = parseFloat(selectedRate);
+    if (isNaN(rateNum)) { setCompanyLoading(false); return; }
+    const rangeStart = gapRangeStart ? parseFloat(gapRangeStart) : (rateNum - 0.5);
+    const rangeEnd = gapRangeEnd ? parseFloat(gapRangeEnd) : (rateNum + 0.5);
+    const params = new URLSearchParams({
+      rate_range_start: rangeStart.toFixed(2),
+      rate_range_end: rangeEnd.toFixed(2),
+      period_months: periodMonths,
+    });
+    fetch(`${API}/analysis/company-rates/${announcement.id}?${params}`)
+      .then(r => r.json())
+      .then(d => {
+        setCompanyData(d);
+        if (d.refined_rate) {
+          setConfirmedRate(String(d.refined_rate));
+          setConfirmedRateInput(String(d.refined_rate));
+        }
+        setCompanyLoading(false);
+      })
+      .catch(() => { setCompanyData(null); setCompanyLoading(false); });
+  }, [announcement?.id, activeTab, selectedRate, periodMonths, gapRangeStart, gapRangeEnd]);
+
+  // Fetch comprehensive data (Tab 3, also used in Tab 1 for past comparisons)
+  useEffect(() => {
+    if (!announcement || !confirmedRate) return;
+    setComprehensiveLoading(true);
+    const params = new URLSearchParams({
+      confirmed_rate: confirmedRate,
+      period_months: periodMonths,
+      org_scope: orgScope,
+    });
+    fetch(`${API}/analysis/comprehensive/${announcement.id}?${params}`)
+      .then(r => r.json())
+      .then(d => { setComprehensiveData(d); setComprehensiveLoading(false); })
+      .catch(() => { setComprehensiveData(null); setComprehensiveLoading(false); });
+  }, [announcement?.id, confirmedRate, periodMonths, orgScope]);
+
+  // Sync confirmedRateInput with confirmedRate
+  useEffect(() => { setConfirmedRateInput(confirmedRate); }, [confirmedRate]);
+
+  // Set gap range defaults when selectedRate changes
+  useEffect(() => {
+    if (selectedRate) {
+      const r = parseFloat(selectedRate);
+      if (!isNaN(r)) {
+        setGapRangeStart((r - 0.5).toFixed(2));
+        setGapRangeEnd((r + 0.5).toFixed(2));
+      }
+    }
+  }, [selectedRate]);
+
+  const handleBarClick = (data) => {
+    if (data && data.rate != null) {
+      setSelectedRate(String(data.rate));
+    }
+  };
+
+  const handleConfirmedRateInputBlur = () => {
+    if (confirmedRateInput && !isNaN(parseFloat(confirmedRateInput))) {
+      setConfirmedRate(confirmedRateInput);
+    }
+  };
+
+  const handleGapMidpointClick = (midpoint) => {
+    const val = String(midpoint);
+    setConfirmedRate(val);
+    setConfirmedRateInput(val);
+    addToast(`확정사정률이 ${val}%로 설정되었습니다`, 'success');
+  };
+
+  if (!announcement) {
+    return (
+      <div>
+        <div className="page-header">
+          <div className="page-title">종합화면</div>
+        </div>
+        <div className="card empty-state">
+          <div className="empty-state-icon">📊</div>
+          <div className="empty-state-title">공고를 선택해주세요</div>
+          <div className="empty-state-desc">공고화면에서 분석할 공고를 클릭하면<br/>사정률 분석이 시작됩니다.</div>
+        </div>
+      </div>
+    );
+  }
+
+  const freqBins = freqData?.bins || [];
+  const freqPeaks = freqData?.peaks || [];
+  const freqStats = freqData?.stats || {};
+  const peakRate = freqPeaks.length > 0 ? freqPeaks[0].rate : null;
+
+  // Build past comparisons from comprehensive data period results
+  const freqPastComparisons = (() => {
+    if (!comprehensiveData?.period_results) return [];
+    const key = `${periodMonths}m`;
+    const pr = comprehensiveData.period_results[key];
+    if (!pr?.comparisons) return [];
+    return pr.comparisons.map(c => ({
+      title: c.title, org: c.org, rate: c.assessment_rate,
+      first_rank_rate: c.first_place_rate, predicted_rate: c.predicted_rate,
+      date: c.date, is_first_rank: c.is_match, is_matched: c.is_match,
+    }));
+  })();
+  const pastComparisons = freqPastComparisons;
+  const filteredComparisons = showFirstOnly
+    ? pastComparisons.filter(c => c.is_first_rank)
+    : pastComparisons;
+
+  const companyRates = companyData?.company_rates || [];
+  const gaps = companyData?.gaps || [];
+  const gapAnalysis = {
+    largest_gap: gaps[0]?.size || null,
+    gap_position: gaps[0] ? `${gaps[0].start?.toFixed(4)}% ~ ${gaps[0].end?.toFixed(4)}%` : null,
+    largest_gap_index: null,
+    candidates: gaps.map(g => ({ rate: g.midpoint?.toFixed(4) })),
+  };
+  const refinedRate = companyData?.refined_rate;
+
+  // Comprehensive data mapping
+  const periodComparisons = (() => {
+    if (!comprehensiveData?.period_results) return [];
+    return Object.entries(comprehensiveData.period_results).map(([k, v]) => ({
+      period: v.period_months, match_count: v.match_count,
+      total_count: v.total, match_rate: v.match_rate != null ? Math.round(v.match_rate * 10) / 10 : null,
+    }));
+  })();
+  const parentOrg = comprehensiveData?.parent_analysis ? {
+    name: comprehensiveData.parent_analysis.parent_org,
+    avg_rate: null,
+    match_rate: comprehensiveData.parent_analysis.match_rate,
+  } : null;
+  const compPastTable = (() => {
+    if (!comprehensiveData?.period_results) return [];
+    const key = `${periodMonths}m`;
+    const pr = comprehensiveData.period_results[key];
+    if (!pr?.comparisons) return [];
+    return pr.comparisons.map(c => ({
+      title: c.title, org: c.org, rate: c.assessment_rate,
+      first_rank_rate: c.first_place_rate, amount: c.first_place_amount,
+      date: c.date, is_first_rank: c.is_match,
+    }));
+  })();
+  const finalPrediction = comprehensiveData?.predicted_first_place?.amount;
+  const finalRate = comprehensiveData?.predicted_first_place?.rate;
+
+  const TABS = [
+    '사정률 발생빈도와 구간분석',
+    '업체사정률 분석',
+    '종합분석',
+  ];
+
+  // Number line visualization helper
+  const renderNumberLine = () => {
+    if (companyRates.length === 0) return <div style={{color:'var(--text-secondary)',fontSize:'13px',padding:'12px 0'}}>업체 데이터가 없습니다.</div>;
+
+    const rates = companyRates.map(c => c.rate).filter(r => r != null);
+    const minRate = Math.min(...rates);
+    const maxRate = Math.max(...rates);
+    const range = maxRate - minRate || 0.1;
+    const padding = range * 0.15;
+    const viewMin = minRate - padding;
+    const viewMax = maxRate + padding;
+    const viewRange = viewMax - viewMin;
+
+    // Group companies by proximity to avoid overlap (within 0.002% = same row)
+    const LINE_HEIGHT = 16; // px per label row
+    const sorted = [...companyRates].sort((a, b) => (b.rate || 0) - (a.rate || 0));
+
+    // Calculate non-overlapping label positions
+    const labelPositions = [];
+    const dynamicHeight = Math.max(400, sorted.length * (LINE_HEIGHT + 2));
+    const getY = (rate) => dynamicHeight - ((rate - viewMin) / viewRange) * dynamicHeight;
+
+    sorted.forEach((cr, i) => {
+      const naturalY = getY(cr.rate) + 20;
+      let labelY = naturalY;
+      // Push down if overlapping with previous label
+      for (const prev of labelPositions) {
+        if (Math.abs(labelY - prev) < LINE_HEIGHT) {
+          labelY = prev + LINE_HEIGHT;
+        }
+      }
+      labelPositions.push(labelY);
+    });
+
+    return (
+      <div style={{position:'relative',padding:'20px 20px 20px 80px',minHeight: dynamicHeight + 40 + 'px',overflowX:'auto'}}>
+        {/* Vertical line */}
+        <div style={{position:'absolute',left:'80px',top:'20px',height: dynamicHeight + 'px',width:'2px',background:'#94A3B8'}}></div>
+
+        {/* Tick marks and labels */}
+        {Array.from({length: 11}, (_, i) => {
+          const rate = viewMin + (viewRange * i / 10);
+          const y = getY(rate);
+          return (
+            <div key={i}>
+              <div style={{position:'absolute',left:'72px',top: y + 20 + 'px',width:'16px',height:'1px',background:'#CBD5E1'}}></div>
+              <div style={{position:'absolute',left:'10px',top: y + 14 + 'px',fontSize:'10px',color:'#94A3B8',width:'60px',textAlign:'right'}}>
+                {rate.toFixed(2)}%
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Gap highlights */}
+        {gaps.map((gap, i) => {
+          const y1 = getY(gap.end) + 20;
+          const y2 = getY(gap.start) + 20;
+          const gapHeight = Math.max(y2 - y1, 2);
+          const midY = (y1 + y2) / 2;
+          return (
+            <div key={'gap-'+i}>
+              <div className="gap-highlight" onClick={() => handleGapMidpointClick(gap.midpoint?.toFixed(4))}
+                style={{position:'absolute',left:'60px',top: y1 + 'px',height: gapHeight + 'px',width:'40px',
+                  background: i === 0 ? 'rgba(220,38,38,0.12)' : 'rgba(220,38,38,0.06)',
+                  border: i === 0 ? '1px dashed rgba(220,38,38,0.4)' : '1px dashed rgba(220,38,38,0.2)',
+                  borderRadius:'4px',cursor:'pointer',zIndex:1}}>
+              </div>
+              {/* Gap size label */}
+              <div style={{position:'absolute',left:'106px',top: midY - 8 + 'px',fontSize:'10px',fontWeight:'700',color:'#DC2626',whiteSpace:'nowrap',zIndex:4}}>
+                {gap.size?.toFixed(4)}%
+              </div>
+              {/* Midpoint marker */}
+              <div onClick={() => handleGapMidpointClick(gap.midpoint?.toFixed(4))}
+                style={{position:'absolute',left:'74px',top: midY - 5 + 'px',width:0,height:0,
+                  borderTop:'6px solid transparent',borderBottom:'6px solid transparent',borderRight:'10px solid #DC2626',
+                  cursor:'pointer',zIndex:4}} title={`클릭: 확정사정률 ${gap.midpoint?.toFixed(4)}% 설정`}>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Company dots + labels with collision avoidance */}
+        {sorted.map((cr, i) => {
+          const dotY = getY(cr.rate) + 20;
+          const labelY = labelPositions[i];
+          const needsConnector = Math.abs(dotY - labelY) > 4;
+          return (
+            <div key={i}>
+              {/* Dot on the line */}
+              <div style={{position:'absolute',left:'75px',top: dotY - 5 + 'px',width:'10px',height:'10px',
+                borderRadius:'50%',background:'var(--primary)',zIndex:2,cursor:'pointer',
+                border:'2px solid #fff',boxShadow:'0 1px 3px rgba(0,0,0,0.2)'}}
+                title={`${cr.company || '업체 ' + (i+1)}: ${cr.rate}%`}>
+              </div>
+              {/* Connector line from dot to label if displaced */}
+              {needsConnector && (
+                <div style={{position:'absolute',left:'86px',
+                  top: Math.min(dotY, labelY) - 2 + 'px',
+                  height: Math.abs(labelY - dotY) + 'px',
+                  width:'1px',background:'#CBD5E1',zIndex:1}}>
+                </div>
+              )}
+              {/* Label */}
+              <div style={{position:'absolute',left:'92px',top: labelY - 8 + 'px',fontSize:'11px',whiteSpace:'nowrap',zIndex:2,
+                background:'rgba(255,255,255,0.9)',padding:'1px 4px',borderRadius:'3px'}}>
+                <span style={{fontWeight:'600',color:'var(--text-primary)'}}>{cr.company || `업체 ${i+1}`}</span>
+                <span style={{marginLeft:'6px',fontWeight:'700',color:'var(--primary)'}}>{cr.rate}%</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      <div className="page-header">
+        <div className="page-title">종합화면</div>
+        <div className="page-desc">선택된 공고의 사정률 분석, 업체분석, 종합분석</div>
+      </div>
+
+      {/* Summary Card — Phase 1: 투찰금액 행 추가 */}
+      <div className="summary-card">
+        <div className="summary-title">{announcement.title}</div>
+        <div className="summary-meta">
+          <div className="summary-item">
+            <div className="summary-item-label">발주기관</div>
+            <div className="summary-item-value">{announcement.org || '-'}</div>
+          </div>
+          <div className="summary-item">
+            <div className="summary-item-label">기초금액</div>
+            <div className="summary-item-value">{fmtAmount(announcement.budget)}</div>
+          </div>
+          <div className="summary-item">
+            <div className="summary-item-label">유형</div>
+            <div className="summary-item-value">{announcement.type || '-'}</div>
+          </div>
+          <div className="summary-item">
+            <div className="summary-item-label">지역</div>
+            <div className="summary-item-value">{announcement.area || '-'}</div>
+          </div>
+          {selectedBidAmount && (
+            <div className="summary-item">
+              <div className="summary-item-label">투찰금액 (선택)</div>
+              <div className="summary-item-value" style={{color:'#FDE68A'}}>{fmtAmount(selectedBidAmount)}</div>
+            </div>
+          )}
+          {confirmedBidAmount && (
+            <div className="summary-item">
+              <div className="summary-item-label">투찰금액 (확정)</div>
+              <div className="summary-item-value" style={{color:'#34D399'}}>{fmtAmount(confirmedBidAmount)}</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Phase 2: Step Guide */}
+      <div className="step-guide">
+        <div className="step-item">
+          <div className={`step-circle ${step1Done ? 'completed' : currentStep === 0 ? 'active' : 'pending'}`}>
+            {step1Done ? '✓' : '1'}
+          </div>
+          <div className={`step-label ${step1Done ? 'completed' : currentStep === 0 ? 'active' : ''}`}>빈도분석</div>
+          <div className="step-value">{selectedRate ? `선택: ${selectedRate}%` : '사정률 선택'}</div>
+        </div>
+        <div className={`step-connector ${step1Done ? 'completed' : ''}`}></div>
+        <div className="step-item">
+          <div className={`step-circle ${step2Done ? 'completed' : currentStep === 1 ? 'active' : 'pending'}`}>
+            {step2Done ? '✓' : '2'}
+          </div>
+          <div className={`step-label ${step2Done ? 'completed' : currentStep === 1 ? 'active' : ''}`}>갭분석</div>
+          <div className="step-value">{confirmedRate ? `확정: ${confirmedRate}%` : '확정사정률 설정'}</div>
+        </div>
+        <div className={`step-connector ${step2Done ? 'completed' : ''}`}></div>
+        <div className="step-item">
+          <div className={`step-circle ${step2Done && currentStep === 2 ? 'active' : step2Done ? 'completed' : 'pending'}`}>
+            {step2Done && currentStep !== 2 ? '✓' : '3'}
+          </div>
+          <div className={`step-label ${currentStep === 2 ? 'active' : step2Done ? 'completed' : ''}`}>종합분석</div>
+          <div className="step-value">{finalPrediction ? fmtAmount(finalPrediction) : '결과 확인'}</div>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="tab-nav">
+        {TABS.map((label, idx) => (
+          <button key={idx} className={`tab-btn ${activeTab === idx ? 'active' : ''}`}
+            onClick={() => setActiveTab(idx)}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div className="tab-content">
+        {/* ── Tab 1: 사정률 발생빈도와 구간분석 ── */}
+        {activeTab === 0 && (
+          <div>
+            {/* Controls */}
+            <div className="filter-bar" style={{marginBottom:'16px'}}>
+              <span style={{fontSize:'13px',fontWeight:'600',color:'var(--text-secondary)'}}>기간:</span>
+              <div className="period-btn-group">
+                {[3,6,9,12,24].map(m => (
+                  <button key={m} className={`period-btn ${periodMonths === m ? 'active' : ''}`}
+                    onClick={() => setPeriodMonths(m)}>{m}개월</button>
+                ))}
+              </div>
+              <span style={{fontSize:'13px',fontWeight:'600',color:'var(--text-secondary)',marginLeft:'16px'}}>기관범위:</span>
+              <div className="scope-toggle">
+                <button className={`scope-btn ${orgScope === 'specific' ? 'active' : ''}`}
+                  onClick={() => setOrgScope('specific')}>개별기관</button>
+                <button className={`scope-btn ${orgScope === 'parent' ? 'active' : ''}`}
+                  onClick={() => setOrgScope('parent')}>상위기관</button>
+              </div>
+              <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap'}}>
+                <span style={{fontSize:'12px',color:'var(--text-secondary)'}}>선택사정률:</span>
+                <input className="rate-input" type="number" step="0.01" value={selectedRate}
+                  onChange={e => setSelectedRate(e.target.value)}
+                  placeholder="클릭 선택" />
+                {selectedBidAmount && (
+                  <span style={{fontSize:'12px',fontWeight:'700',color:'#B45309',background:'#FFFBEB',padding:'4px 8px',borderRadius:'4px'}}>
+                    = {fmtAmount(selectedBidAmount)}
+                  </span>
+                )}
+                <span style={{fontSize:'12px',color:'var(--text-secondary)',marginLeft:'8px'}}>확정사정률:</span>
+                <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
+                  <select className="filter-select" value={confirmedRate}
+                    onChange={e => { setConfirmedRate(e.target.value); setConfirmedRateInput(e.target.value); }}
+                    style={{minWidth:'100px'}}>
+                    <option value="">선택</option>
+                    {gapAnalysis.candidates?.map((c, i) => (
+                      <option key={i} value={c.rate}>{c.rate}%</option>
+                    ))}
+                    {refinedRate && <option value={refinedRate}>{refinedRate}% (추천)</option>}
+                    {selectedRate && <option value={selectedRate}>{selectedRate}% (선택)</option>}
+                  </select>
+                  <input className="confirmed-rate-input" type="number" step="0.0001" value={confirmedRateInput}
+                    onChange={e => setConfirmedRateInput(e.target.value)}
+                    onBlur={handleConfirmedRateInputBlur}
+                    onKeyDown={e => e.key === 'Enter' && handleConfirmedRateInputBlur()}
+                    placeholder="직접 입력" title="확정사정률 직접 입력" />
+                </div>
+                {confirmedBidAmount && (
+                  <span style={{fontSize:'12px',fontWeight:'700',color:'#059669',background:'#F0FDF4',padding:'4px 8px',borderRadius:'4px'}}>
+                    = {fmtAmount(confirmedBidAmount)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Frequency Chart — Phase 3: peak highlight + stats */}
+            <div className="card mb-16">
+              <div className="card-header">
+                <div>
+                  <div className="card-title">사정률 발생빈도 히스토그램</div>
+                  <div className="card-sub">막대를 클릭하면 해당 사정률이 선택됩니다 {peakRate != null && `| 피크 구간: ${peakRate}%`}</div>
+                </div>
+              </div>
+              {freqLoading ? <div className="loading">데이터 로딩 중...</div> : freqBins.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <BarChart data={freqBins} margin={{top:20,right:16,bottom:0,left:0}} barCategoryGap="15%">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                      <XAxis dataKey="rate" tick={{fontSize:11,fill:'#94A3B8'}} axisLine={false} tickLine={false}
+                        tickFormatter={v => v + '%'} />
+                      <YAxis tick={{fontSize:11,fill:'#94A3B8'}} axisLine={false} tickLine={false} />
+                      <Tooltip
+                        formatter={(v, n) => [v + '건', '발생횟수']}
+                        labelFormatter={v => `사정률: ${v}%`}
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload?.length) return null;
+                          return (
+                            <div style={{background:'#fff',border:'1px solid #E2E8F0',borderRadius:'8px',padding:'10px 14px',boxShadow:'0 4px 12px rgba(0,0,0,0.1)'}}>
+                              <div style={{fontWeight:'700',fontSize:'13px',marginBottom:'4px'}}>사정률: {label}%</div>
+                              <div style={{fontSize:'12px',color:'var(--text-secondary)'}}>발생횟수: {payload[0].value}건</div>
+                              {announcement?.budget && (
+                                <div style={{fontSize:'12px',color:'#B45309',marginTop:'2px'}}>투찰금액: {fmtAmount(Math.round(announcement.budget * label / 100))}</div>
+                              )}
+                            </div>
+                          );
+                        }}
+                      />
+                      <Bar dataKey="count" radius={[4,4,0,0]} cursor="pointer" minPointSize={3}
+                        onClick={(data) => handleBarClick(data)}>
+                        {freqBins.map((entry, idx) => {
+                          const isSelected = String(entry.rate) === selectedRate;
+                          const isPeak = peakRate != null && entry.rate === peakRate;
+                          return (
+                            <Cell key={idx}
+                              fill={isSelected ? '#059669' : isPeak ? '#F59E0B' : '#0066CC'}
+                              opacity={isSelected ? 1 : isPeak ? 0.9 : 0.7} />
+                          );
+                        })}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  {/* Phase 3: Stats cards */}
+                  <div className="stats-cards">
+                    <div className="stat-card">
+                      <div className="stat-card-label">최고빈도 구간</div>
+                      <div className="stat-card-value" style={{color:'#F59E0B'}}>
+                        {freqPeaks[0] ? `${freqPeaks[0].range_start}% ~ ${freqPeaks[0].range_end}%` : '-'}
+                      </div>
+                      <div className="stat-card-sub">{freqPeaks[0] ? `${freqPeaks[0].count}회` : ''}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-card-label">평균 사정률</div>
+                      <div className="stat-card-value" style={{color:'var(--primary)'}}>{freqStats.mean ? `${freqStats.mean}%` : '-'}</div>
+                      <div className="stat-card-sub">중앙값: {freqStats.median ? `${freqStats.median}%` : '-'}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-card-label">표준편차</div>
+                      <div className="stat-card-value">{freqStats.std ? `${freqStats.std}%` : '-'}</div>
+                      <div className="stat-card-sub">범위: {freqStats.min && freqStats.max ? `${freqStats.min}% ~ ${freqStats.max}%` : '-'}</div>
+                    </div>
+                  </div>
+                </>
+              ) : <div className="loading">빈도 데이터 없음</div>}
+            </div>
+
+            {/* Phase 7: 추첨예가 빈도수 */}
+            {prelimFreqData && prelimFreqData.bins && prelimFreqData.total_cases > 0 && (
+              <div className="card mb-16">
+                <div className="card-header">
+                  <div>
+                    <div className="card-title">추첨된 예가 빈도수</div>
+                    <div className="card-sub">복수예비가격 15개 번호 중 추첨 빈도 (총 {prelimFreqData.total_cases}건, 매회 {prelimFreqData.selected_per_case}개 추첨)</div>
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={prelimFreqData.bins} margin={{top:8,right:16,bottom:0,left:0}}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                    <XAxis dataKey="number" tick={{fontSize:11,fill:'#94A3B8'}} axisLine={false} tickLine={false}
+                      tickFormatter={v => `#${v}`} />
+                    <YAxis tick={{fontSize:11,fill:'#94A3B8'}} axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(v) => [v + '회', '추첨횟수']} labelFormatter={v => `예비가격 #${v}`} />
+                    <Bar dataKey="count" radius={[4,4,0,0]}>
+                      {prelimFreqData.bins.map((entry, idx) => (
+                        <Cell key={idx}
+                          fill={prelimFreqData.peak_numbers?.includes(entry.number) ? '#F59E0B' : '#6366F1'}
+                          opacity={prelimFreqData.peak_numbers?.includes(entry.number) ? 1 : 0.7} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Past 1순위 comparison table */}
+            <div className="card">
+              <div className="card-header">
+                <div>
+                  <div className="card-title">과거 1순위 비교 테이블</div>
+                  <div className="card-sub">과거 낙찰 데이터와 비교 분석</div>
+                </div>
+                <label style={{display:'flex',alignItems:'center',gap:'6px',fontSize:'12px',color:'var(--text-secondary)',cursor:'pointer'}}>
+                  <input type="checkbox" checked={showFirstOnly}
+                    onChange={e => setShowFirstOnly(e.target.checked)} />
+                  1순위만 보기
+                </label>
+              </div>
+              {filteredComparisons.length > 0 ? (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>공고명</th><th>발주기관</th><th>사정률</th><th>1순위사정률</th><th>예측사정률</th><th>날짜</th><th>매칭여부</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredComparisons.map((c, i) => (
+                        <tr key={i}>
+                          <td style={{fontWeight:'600',maxWidth:'200px'}}>{c.title}</td>
+                          <td style={{fontSize:'12.5px',color:'var(--text-secondary)'}}>{c.org}</td>
+                          <td><span style={{fontWeight:'700',color:'var(--primary)'}}>{c.rate}%</span></td>
+                          <td><span style={{fontWeight:'700',color:'#059669'}}>{c.first_rank_rate || '-'}%</span></td>
+                          <td>{c.predicted_rate ? `${c.predicted_rate}%` : '-'}</td>
+                          <td style={{fontSize:'12.5px',color:'var(--text-secondary)'}}>{c.date}</td>
+                          <td>
+                            {c.is_matched
+                              ? <span className="match-yes">일치</span>
+                              : <span className="match-no">불일치</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : <div style={{color:'var(--text-secondary)',fontSize:'13px',padding:'12px 0'}}>비교 데이터가 없습니다.</div>}
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab 2: 업체사정률 분석 (Phase 4 리디자인) ── */}
+        {activeTab === 1 && (
+          <div>
+            {!selectedRate ? (
+              <div className="card empty-state">
+                <div className="empty-state-icon">🎯</div>
+                <div className="empty-state-title">사정률을 먼저 선택해주세요</div>
+                <div className="empty-state-desc">
+                  Tab 1 (빈도분석)에서 히스토그램 막대를 클릭하여<br/>
+                  선택사정률을 설정하면 업체 갭 분석이 시작됩니다.
+                </div>
+                <button className="btn btn-primary" onClick={() => setActiveTab(0)}>
+                  Tab 1 빈도분석으로 이동
+                </button>
+              </div>
+            ) : companyLoading ? (
+              <div className="card loading">업체 사정률 분석 중...</div>
+            ) : (
+              <>
+                {/* Phase 4-4: Range adjustment */}
+                <div className="filter-bar" style={{marginBottom:'16px'}}>
+                  <span style={{fontSize:'13px',fontWeight:'600',color:'var(--text-secondary)'}}>분석 범위:</span>
+                  <input className="rate-input" type="number" step="0.01" value={gapRangeStart}
+                    onChange={e => setGapRangeStart(e.target.value)} style={{width:'80px'}} />
+                  <span style={{fontSize:'13px',color:'var(--text-secondary)'}}>% ~</span>
+                  <input className="rate-input" type="number" step="0.01" value={gapRangeEnd}
+                    onChange={e => setGapRangeEnd(e.target.value)} style={{width:'80px'}} />
+                  <span style={{fontSize:'13px',color:'var(--text-secondary)'}}>%</span>
+                  <span style={{fontSize:'11px',color:'#94A3B8',marginLeft:'8px'}}>(기본: 선택사정률 ±0.5%)</span>
+                </div>
+
+                {/* Refined rate display */}
+                {refinedRate && (
+                  <div className="card mb-16" style={{textAlign:'center'}}>
+                    <div className="card-title" style={{marginBottom:'12px'}}>정제된 사정률 (Refined Rate)</div>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'16px',flexWrap:'wrap'}}>
+                      <div className="rate-highlight">{refinedRate}%</div>
+                      {announcement?.budget && (
+                        <div className="bid-amount-box">
+                          <div>
+                            <div className="bid-amount-label">투찰금액</div>
+                            <div className="bid-amount-value">{fmtAmount(calcBidAmount(refinedRate))}</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{fontSize:'12px',color:'var(--text-secondary)',marginTop:'8px'}}>
+                      분석 범위: {gapRangeStart}% ~ {gapRangeEnd}%
+                    </div>
+                  </div>
+                )}
+
+                {/* Phase 4: Number line visualization */}
+                <div className="card mb-16">
+                  <div className="card-header">
+                    <div>
+                      <div className="card-title">업체별 투찰률 넘버라인</div>
+                      <div className="card-sub">수직선 위에 업체 투찰률 표시 | 빨간 영역(갭)을 클릭하면 확정사정률로 설정</div>
+                    </div>
+                  </div>
+                  {renderNumberLine()}
+                </div>
+
+                {/* Gap analysis info */}
+                {gapAnalysis.largest_gap != null && (
+                  <div className="card mb-16">
+                    <div className="card-title" style={{marginBottom:'12px'}}>갭 분석 결과</div>
+                    <div className="grid-3">
+                      <div className="metric-box">
+                        <div className="metric-label">최대 갭</div>
+                        <div className="metric-val" style={{color:'#DC2626'}}>{gapAnalysis.largest_gap?.toFixed(4)}%</div>
+                      </div>
+                      <div className="metric-box">
+                        <div className="metric-label">갭 위치</div>
+                        <div className="metric-val" style={{fontSize:'15px'}}>{gapAnalysis.gap_position || '-'}</div>
+                      </div>
+                      <div className="metric-box">
+                        <div className="metric-label">분석 업체수</div>
+                        <div className="metric-val">{companyRates.length}개</div>
+                      </div>
+                    </div>
+                    {gapAnalysis.candidates.length > 0 && (
+                      <div style={{marginTop:'12px'}}>
+                        <div style={{fontSize:'12px',fontWeight:'600',color:'var(--text-secondary)',marginBottom:'8px'}}>갭 중간점 후보 (클릭 시 확정사정률 설정):</div>
+                        <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
+                          {gapAnalysis.candidates.map((c, i) => (
+                            <button key={i} className="btn btn-outline btn-sm"
+                              onClick={() => handleGapMidpointClick(c.rate)}
+                              style={{borderColor: confirmedRate === c.rate ? '#059669' : undefined, color: confirmedRate === c.rate ? '#059669' : undefined}}>
+                              {c.rate}%
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── Tab 3: 종합분석 (Phase 5 보강) ── */}
+        {activeTab === 2 && (
+          <div>
+            {!confirmedRate ? (
+              <div className="card empty-state">
+                <div className="empty-state-icon">📈</div>
+                <div className="empty-state-title">확정사정률을 설정해주세요</div>
+                <div className="empty-state-desc">
+                  Step 1에서 선택사정률을 설정한 후,<br/>
+                  Step 2 (갭분석)에서 갭 중간점을 클릭하거나<br/>
+                  확정사정률을 직접 입력하면 종합분석이 시작됩니다.
+                </div>
+                <div style={{display:'flex',gap:'8px',justifyContent:'center'}}>
+                  {!selectedRate && (
+                    <button className="btn btn-primary" onClick={() => setActiveTab(0)}>
+                      Step 1 빈도분석
+                    </button>
+                  )}
+                  {selectedRate && (
+                    <button className="btn btn-primary" onClick={() => setActiveTab(1)}>
+                      Step 2 갭분석
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : comprehensiveLoading ? (
+              <div className="card loading">종합분석 중...</div>
+            ) : (
+              <>
+                {/* Final prediction card — Phase 5-3: 강화 */}
+                {finalPrediction != null && (
+                  <div className="prediction-card mb-16">
+                    <div className="pred-label">1순위 예상 낙찰가</div>
+                    <div className="pred-value">{fmtAmount(finalPrediction)}</div>
+                    <div className="pred-sub">
+                      확정 사정률: {confirmedRate}%
+                      {finalRate && ` | 예측 사정률: ${finalRate}%`}
+                    </div>
+                  </div>
+                )}
+
+                {/* Phase 5-3: Strategy card */}
+                {confirmedRate && announcement?.budget && (
+                  <div className="strategy-card mb-16">
+                    <div style={{fontSize:'14px',fontWeight:'700',marginBottom:'16px'}}>투찰 전략 요약</div>
+                    <div className="strategy-row">
+                      <span className="strategy-label">확정사정률 기반 투찰금액</span>
+                      <span className="strategy-value">{fmtAmount(confirmedBidAmount)}</span>
+                    </div>
+                    <div className="strategy-row">
+                      <span className="strategy-label">권장 투찰 범위 (±0.02%)</span>
+                      <span className="strategy-value">
+                        {fmtAmount(calcBidAmount(parseFloat(confirmedRate) - 0.02))} ~ {fmtAmount(calcBidAmount(parseFloat(confirmedRate) + 0.02))}
+                      </span>
+                    </div>
+                    <div className="strategy-row">
+                      <span className="strategy-label">예상 적중 확률</span>
+                      <span className="strategy-value" style={{color:'#34D399'}}>
+                        {periodComparisons.length > 0
+                          ? `${(periodComparisons.reduce((s, p) => s + (p.match_rate || 0), 0) / periodComparisons.length).toFixed(1)}%`
+                          : '-'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Phase 5-1: Period matching rate bar chart */}
+                {periodComparisons.length > 0 && (
+                  <div className="card mb-16">
+                    <div className="card-title" style={{marginBottom:'16px'}}>기간별 매칭률 비교</div>
+                    {periodComparisons.map((pc, i) => {
+                      const rate = pc.match_rate || 0;
+                      const color = rate >= 70 ? '#059669' : rate >= 40 ? '#D97706' : '#DC2626';
+                      return (
+                        <div key={i} className="match-bar-container">
+                          <div className="match-bar-label">{pc.period}개월</div>
+                          <div className="match-bar-track">
+                            <div className="match-bar-fill" style={{width: `${Math.max(rate, 5)}%`, background: color}}>
+                              {rate >= 15 ? `${rate}%` : ''}
+                            </div>
+                          </div>
+                          <div className="match-bar-count">{pc.total_count || 0}건 중 {pc.match_count || 0}건</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Parent org analysis */}
+                {parentOrg && (
+                  <div className="card mb-16">
+                    <div className="card-title" style={{marginBottom:'12px'}}>상위기관 분석</div>
+                    <div className="grid-3">
+                      <div className="metric-box">
+                        <div className="metric-label">상위기관</div>
+                        <div style={{fontSize:'16px',fontWeight:'700',margin:'4px 0'}}>{parentOrg.name || '-'}</div>
+                      </div>
+                      <div className="metric-box">
+                        <div className="metric-label">평균 사정률</div>
+                        <div className="metric-val" style={{color:'var(--primary)'}}>{parentOrg.avg_rate || '-'}%</div>
+                      </div>
+                      <div className="metric-box">
+                        <div className="metric-label">매칭률</div>
+                        <div className="metric-val" style={{color:'#059669'}}>{parentOrg.match_rate || '-'}%</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Past comparison table */}
+                <div className="card">
+                  <div className="card-header">
+                    <div>
+                      <div className="card-title">과거 비교 테이블</div>
+                      <div className="card-sub">행 클릭 시 1순위 상태 확인</div>
+                    </div>
+                  </div>
+                  {compPastTable.length > 0 ? (
+                    <div className="table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>공고명</th><th>발주기관</th><th>사정률</th><th>1순위사정률</th><th>낙찰금액</th><th>날짜</th><th>1순위</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {compPastTable.map((c, i) => (
+                            <tr key={i} style={{cursor:'pointer'}}>
+                              <td style={{fontWeight:'600',maxWidth:'200px'}}>{c.title}</td>
+                              <td style={{fontSize:'12.5px',color:'var(--text-secondary)'}}>{c.org}</td>
+                              <td><span style={{fontWeight:'700',color:'var(--primary)'}}>{c.rate}%</span></td>
+                              <td><span style={{fontWeight:'700',color:'#059669'}}>{c.first_rank_rate || '-'}%</span></td>
+                              <td style={{fontWeight:'600',textAlign:'right'}}>{c.amount ? fmtAmount(c.amount) : '-'}</td>
+                              <td style={{fontSize:'12.5px',color:'var(--text-secondary)'}}>{c.date}</td>
+                              <td>
+                                {c.is_first_rank
+                                  ? <span className="match-yes">1순위</span>
+                                  : <span className="match-no">-</span>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : <div style={{color:'var(--text-secondary)',fontSize:'13px',padding:'12px 0'}}>비교 데이터가 없습니다.</div>}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Page 3: 관리자 ────────────────────────────────────────────────────────────
+function AdminPage() {
+  const [admin, setAdmin] = useState(null);
+  const [nasStatus, setNasStatus] = useState(null);
+  const [syncing, setSyncing] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const addToast = useToast();
+
+  const loadAdmin = () => {
+    fetch(`${API}/admin/dashboard`).then(r => r.json()).then(setAdmin);
+  };
+  const loadNas = () => {
+    fetch(`${API}/admin/nas-status`).then(r => r.json()).then(setNasStatus).catch(() => setNasStatus(null));
+  };
+  useEffect(() => { loadAdmin(); loadNas(); }, []);
+
+  const handleSync = () => {
+    setSyncing(true);
+    fetch(`${API}/admin/sync`, { method: 'POST' })
+      .then(r => r.json())
+      .then(d => { addToast(`${d.message} (${d.records}건)`, 'success'); loadAdmin(); })
+      .catch(() => addToast('수집 실패', 'error'))
+      .finally(() => setSyncing(false));
+  };
+
+  if (!admin) return <div className="loading">관리자 데이터 로딩 중...</div>;
+
+  const filteredUsers = (admin.users || []).filter(u =>
+    u.name.includes(userSearch) || u.email.includes(userSearch)
+  );
+
+  return (
+    <div>
+      <div className="page-header">
+        <div className="page-title">관리자 모니터링</div>
+        <div className="page-desc">데이터 파이프라인 상태 &middot; 사용자 관리</div>
+      </div>
+      <div className="grid-4 mb-16" style={{gridTemplateColumns: nasStatus ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)'}}>
+        {[
+          { label: '전체 사용자', value: `${admin.total_users}명` },
+          { label: '프리미엄 구독', value: `${admin.premium_users}명` },
+          { label: '수집 공고 총계', value: `${admin.total_announcements?.toLocaleString()}건` },
+          { label: '낙찰결과 총계', value: `${admin.total_results?.toLocaleString()}건` },
+        ].map((k, i) => (
+          <div key={i} className="kpi-card">
+            <div className="kpi-label">{k.label}</div>
+            <div className="kpi-value">{k.value}</div>
+          </div>
+        ))}
+        {/* NAS Status Card */}
+        {nasStatus && (
+          <div className="kpi-card">
+            <div className="kpi-label">NAS 상태</div>
+            <div style={{display:'flex',alignItems:'center',gap:'8px',marginTop:'6px'}}>
+              <div className={`nas-dot ${nasStatus.status === 'online' ? 'online' : 'offline'}`}></div>
+              <span style={{fontSize:'16px',fontWeight:'800',color: nasStatus.status === 'online' ? '#059669' : '#DC2626'}}>
+                {nasStatus.status === 'online' ? '정상' : '오프라인'}
+              </span>
+            </div>
+            {nasStatus.disk_usage && (
+              <div style={{fontSize:'11px',color:'var(--text-secondary)',marginTop:'4px'}}>
+                사용량: {nasStatus.disk_usage}%
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="mb-16">
+        <div className="card">
+          <div className="card-header">
+            <div><div className="card-title">데이터 파이프라인 현황</div><div className="card-sub">실시간 배치 상태</div></div>
+            <button className="btn btn-primary" disabled={syncing} onClick={handleSync}>
+              {syncing ? '수집 중...' : '수동 수집'}
+            </button>
+          </div>
+          {(admin.pipelines || []).map((p, i) => (
+            <div key={i} className="pipeline-row">
+              <span className={`dot ${p.status === 'success' ? 'dot-green' : p.status === 'running' ? 'dot-amber' : 'dot-red'}`}></span>
+              <div style={{flex:1}}>
+                <div className="pipeline-name">{p.name}</div>
+                <div className="pipeline-time">마지막 실행: {p.last} &middot; {p.count}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-header">
+          <div><div className="card-title">사용자 목록</div></div>
+          <input className="search-input" style={{flex:'none',minWidth:'180px'}} placeholder="이름/이메일 검색"
+            value={userSearch} onChange={e => setUserSearch(e.target.value)} />
+        </div>
+        <table>
+          <thead><tr><th>이름</th><th>이메일</th><th>플랜</th><th>가입일</th><th>마지막 접속</th><th>조회 횟수</th></tr></thead>
+          <tbody>
+            {filteredUsers.map((u, i) => (
+              <tr key={i}>
+                <td style={{fontWeight:'600'}}>{u.name}</td>
+                <td style={{fontSize:'12.5px',color:'var(--text-secondary)'}}>{u.email}</td>
+                <td>
+                  <span className={`badge ${u.plan === '프리미엄' ? 'badge-blue' : u.plan === '스탠다드' ? 'badge-green' : 'badge-amber'}`}>{u.plan}</span>
+                </td>
+                <td style={{fontSize:'12.5px',color:'var(--text-secondary)'}}>{u.joined}</td>
+                <td style={{fontSize:'12.5px'}}>{u.last}</td>
+                <td style={{fontWeight:'700'}}>{u.queries}회</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ── Auth Context ──────────────────────────────────────────────────────────────
+const AuthContext = createContext();
+function useAuth() { return useContext(AuthContext); }
+
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (token) {
+      fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+        .then(u => { setUser(u); setLoading(false); })
+        .catch(() => { localStorage.removeItem('token'); setToken(null); setUser(null); setLoading(false); });
+    } else {
+      setLoading(false);
+    }
+  }, [token]);
+
+  const login = async (username, password) => {
+    const r = await fetch(`${API}/auth/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, { method: 'POST' });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || '로그인 실패'); }
+    const data = await r.json();
+    localStorage.setItem('token', data.access_token);
+    setToken(data.access_token);
+    setUser(data.user);
+    return data;
+  };
+
+  const register = async (username, email, password, name) => {
+    const params = new URLSearchParams({ username, email, password, ...(name ? { name } : {}) });
+    const r = await fetch(`${API}/auth/register?${params}`, { method: 'POST' });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || '회원가입 실패'); }
+    const data = await r.json();
+    localStorage.setItem('token', data.access_token);
+    setToken(data.access_token);
+    setUser(data.user);
+    return data;
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+  };
+
+  const authHeaders = () => token ? { Authorization: `Bearer ${token}` } : {};
+
+  return (
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, authHeaders }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// ── Login Page ───────────────────────────────────────────────────────────────
+function LoginPage({ onSwitch }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try { await login(username, password); }
+    catch (err) { setError(err.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'linear-gradient(135deg,#1E3A5F 0%,#0066CC 100%)'}}>
+      <div style={{background:'#fff',borderRadius:'16px',padding:'48px 40px',width:'400px',boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}}>
+        <div style={{textAlign:'center',marginBottom:'32px'}}>
+          <div style={{fontSize:'32px',marginBottom:'8px'}}>📡</div>
+          <h1 style={{fontSize:'22px',fontWeight:'800',color:'#0F172A',margin:'0 0 4px'}}>입찰 인사이트</h1>
+          <p style={{fontSize:'13px',color:'#64748B'}}>조달 입찰 사정률 분석 플랫폼</p>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div style={{marginBottom:'16px'}}>
+            <label style={{display:'block',fontSize:'13px',fontWeight:'600',color:'#374151',marginBottom:'6px'}}>아이디</label>
+            <input type="text" value={username} onChange={e => setUsername(e.target.value)}
+              placeholder="아이디 입력" required
+              style={{width:'100%',padding:'10px 14px',border:'1px solid #D1D5DB',borderRadius:'8px',fontSize:'14px',outline:'none'}} />
+          </div>
+          <div style={{marginBottom:'20px'}}>
+            <label style={{display:'block',fontSize:'13px',fontWeight:'600',color:'#374151',marginBottom:'6px'}}>비밀번호</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+              placeholder="비밀번호 입력" required
+              style={{width:'100%',padding:'10px 14px',border:'1px solid #D1D5DB',borderRadius:'8px',fontSize:'14px',outline:'none'}} />
+          </div>
+          {error && <div style={{color:'#DC2626',fontSize:'13px',marginBottom:'12px',textAlign:'center'}}>{error}</div>}
+          <button type="submit" disabled={loading}
+            style={{width:'100%',padding:'12px',background:'#0066CC',color:'#fff',border:'none',borderRadius:'8px',fontSize:'15px',fontWeight:'700',cursor:'pointer',opacity: loading ? 0.7 : 1}}>
+            {loading ? '로그인 중...' : '로그인'}
+          </button>
+        </form>
+        <div style={{textAlign:'center',marginTop:'20px',fontSize:'13px',color:'#64748B'}}>
+          계정이 없으신가요?{' '}
+          <span onClick={onSwitch} style={{color:'#0066CC',cursor:'pointer',fontWeight:'600'}}>회원가입</span>
+        </div>
+        <div style={{textAlign:'center',marginTop:'12px',fontSize:'11px',color:'#94A3B8'}}>
+          데모 계정: admin / demo1234
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Register Page ────────────────────────────────────────────────────────────
+function RegisterPage({ onSwitch }) {
+  const [form, setForm] = useState({ username: '', email: '', password: '', confirmPw: '', name: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (form.password !== form.confirmPw) { setError('비밀번호가 일치하지 않습니다.'); return; }
+    if (form.password.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return; }
+    setLoading(true);
+    try { await register(form.username, form.email, form.password, form.name); }
+    catch (err) { setError(err.message); }
+    finally { setLoading(false); }
+  };
+
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const inputStyle = {width:'100%',padding:'10px 14px',border:'1px solid #D1D5DB',borderRadius:'8px',fontSize:'14px',outline:'none'};
+  const labelStyle = {display:'block',fontSize:'13px',fontWeight:'600',color:'#374151',marginBottom:'6px'};
+
+  return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'linear-gradient(135deg,#1E3A5F 0%,#0066CC 100%)'}}>
+      <div style={{background:'#fff',borderRadius:'16px',padding:'48px 40px',width:'420px',boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}}>
+        <div style={{textAlign:'center',marginBottom:'28px'}}>
+          <h1 style={{fontSize:'22px',fontWeight:'800',color:'#0F172A',margin:'0 0 4px'}}>회원가입</h1>
+          <p style={{fontSize:'13px',color:'#64748B'}}>새 계정을 만들어 시작하세요</p>
+        </div>
+        <form onSubmit={handleSubmit}>
+          {[
+            { key: 'username', label: '아이디', ph: '아이디 입력', type: 'text' },
+            { key: 'name', label: '이름', ph: '이름 입력', type: 'text' },
+            { key: 'email', label: '이메일', ph: 'email@example.com', type: 'email' },
+            { key: 'password', label: '비밀번호', ph: '6자 이상', type: 'password' },
+            { key: 'confirmPw', label: '비밀번호 확인', ph: '비밀번호 재입력', type: 'password' },
+          ].map(f => (
+            <div key={f.key} style={{marginBottom:'14px'}}>
+              <label style={labelStyle}>{f.label}</label>
+              <input type={f.type} value={form[f.key]} onChange={set(f.key)}
+                placeholder={f.ph} required={f.key !== 'name'} style={inputStyle} />
+            </div>
+          ))}
+          {error && <div style={{color:'#DC2626',fontSize:'13px',marginBottom:'12px',textAlign:'center'}}>{error}</div>}
+          <button type="submit" disabled={loading}
+            style={{width:'100%',padding:'12px',background:'#0066CC',color:'#fff',border:'none',borderRadius:'8px',fontSize:'15px',fontWeight:'700',cursor:'pointer',opacity: loading ? 0.7 : 1}}>
+            {loading ? '처리 중...' : '가입하기'}
+          </button>
+        </form>
+        <div style={{textAlign:'center',marginTop:'20px',fontSize:'13px',color:'#64748B'}}>
+          이미 계정이 있으신가요?{' '}
+          <span onClick={onSwitch} style={{color:'#0066CC',cursor:'pointer',fontWeight:'600'}}>로그인</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── App ───────────────────────────────────────────────────────────────────────
+const PAGES = [
+  { id: 'announcements', label: '공고화면', icon: '', section: '분석' },
+  { id: 'comprehensive', label: '종합화면', icon: '', section: '분석' },
+  { id: 'admin', label: '관리자', icon: '', section: '시스템', adminOnly: true },
+];
+
+function App() {
+  const { user, loading: authLoading, logout } = useAuth();
+  const [authPage, setAuthPage] = useState('login');
+  const [page, setPage] = useState('announcements');
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [syncingTopbar, setSyncingTopbar] = useState(false);
+  const addToast = useToast();
+
+  if (authLoading) {
+    return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'#F0F4F8'}}>
+      <div className="loading">로딩 중...</div>
+    </div>;
+  }
+
+  if (!user) {
+    return authPage === 'login'
+      ? <LoginPage onSwitch={() => setAuthPage('register')} />
+      : <RegisterPage onSwitch={() => setAuthPage('login')} />;
+  }
+
+  const visiblePages = PAGES.filter(p => !p.adminOnly || user.role === 'admin');
+  const sections = [...new Set(visiblePages.map(p => p.section))];
+  const current = visiblePages.find(p => p.id === page);
+
+  const handleTopbarSync = () => {
+    setSyncingTopbar(true);
+    fetch(`${API}/admin/sync`, { method: 'POST' })
+      .then(r => r.json())
+      .then(d => addToast(`${d.message} (${d.records}건)`, 'success'))
+      .catch(() => addToast('수집 실패', 'error'))
+      .finally(() => setSyncingTopbar(false));
+  };
+
+  const handleSelectAnnouncement = (announcement) => {
+    setSelectedAnnouncement(announcement);
+    setPage('comprehensive');
+  };
+
+  const renderPage = () => {
+    switch(page) {
+      case 'announcements': return <AnnouncementPage onSelectAnnouncement={handleSelectAnnouncement} />;
+      case 'comprehensive': return <ComprehensivePage announcement={selectedAnnouncement} />;
+      case 'admin': return user.role === 'admin' ? <AdminPage /> : null;
+      default: return null;
+    }
+  };
+
+  return (
+    <div className="layout">
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <div className="logo-mark">
+            <div className="logo-icon">📡</div>
+            <div>
+              <div>입찰 인사이트</div>
+              <div className="logo-sub">조달 입찰 분석 플랫폼</div>
+            </div>
+          </div>
+        </div>
+        {sections.map(sec => (
+          <div key={sec} className="sidebar-section">
+            <div className="sidebar-label">{sec}</div>
+            {visiblePages.filter(p => p.section === sec).map(p => (
+              <button key={p.id} className={`nav-item ${page === p.id ? 'active' : ''}`}
+                onClick={() => { setPage(p.id); }}>
+                <span className="nav-icon">{p.icon}</span>
+                {p.label}
+              </button>
+            ))}
+          </div>
+        ))}
+        <div className="sidebar-bottom">
+          <div className="user-badge">
+            <div className="avatar">{(user.name || user.username || '?')[0]}</div>
+            <div className="user-info" style={{flex:1}}>
+              <div className="name">{user.name || user.username}</div>
+              <div className="plan">{user.plan || '무료'} 플랜</div>
+            </div>
+            <button onClick={logout} title="로그아웃"
+              style={{background:'none',border:'none',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:'13px',padding:'4px'}}>
+              ↪
+            </button>
+          </div>
+        </div>
+      </aside>
+      <div className="main">
+        <div className="topbar">
+          <div className="topbar-title">{current?.icon} {current?.label}</div>
+          <div className="topbar-right">
+            <span className="badge badge-green">● API 연결됨</span>
+            <span className="badge badge-blue">실시간 데이터</span>
+            <button className="btn btn-primary" disabled={syncingTopbar} onClick={handleTopbarSync}>
+              {syncingTopbar ? '수집 중...' : '수동 수집'}
+            </button>
+          </div>
+        </div>
+        <div className="content">
+          {renderPage()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <AuthProvider><ToastProvider><App /></ToastProvider></AuthProvider>
+);
+</script>
+</body>
+</html>
