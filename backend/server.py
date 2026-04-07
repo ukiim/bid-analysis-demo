@@ -27,7 +27,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base, Session, sessionmaker
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 
 # ─── DB 설정 (SQLite) ──────────────────────────────────────────────────────
 
@@ -348,7 +348,7 @@ def seed_database():
             ))
 
     # ── 사용자 ── (username, name, email, role, plan, query_count)
-    _pwd = CryptContext(schemes=["bcrypt"]).hash("demo1234")
+    _pwd = bcrypt.hashpw(b"demo1234", bcrypt.gensalt()).decode("utf-8")
     users_data = [
         ("admin", "관리자", "admin@bidinsight.kr", "admin", "프리미엄", 0),
         ("ykim", "김영호", "ykim@guncorp.co.kr", "user", "프리미엄", 342),
@@ -395,16 +395,15 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "bid-insight-secret-key-change-in-prod
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24시간
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
