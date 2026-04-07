@@ -1449,8 +1449,11 @@ def serve_proposal():
 if __name__ == "__main__":
     import uvicorn
     Base.metadata.create_all(engine)
-    seed_database()
+    try:
+        seed_database()
+    except Exception as e:
+        print(f"⚠️ 시드 데이터 생성 중 오류 (무시하고 계속): {e}")
     port = int(os.environ.get("PORT", 8000))
-    print(f"\n🚀 서버 시작: http://localhost:{port}")
+    print(f"\n🚀 서버 시작: http://0.0.0.0:{port}")
     print(f"   API 문서: http://localhost:{port}/docs\n")
     uvicorn.run(app, host="0.0.0.0", port=port)
