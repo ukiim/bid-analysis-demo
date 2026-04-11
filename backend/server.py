@@ -202,7 +202,7 @@ REGION_RATE_ADJ = {
 
 
 def seed_database():
-    """600건의 현실적 데모 데이터 생성 (용역/공사만)"""
+    """3000건의 현실적 데모 데이터 생성 (용역/공사만, 2019~현재)"""
     db = SessionLocal()
 
     if db.query(BidAnnouncement).first():
@@ -214,7 +214,7 @@ def seed_database():
     random.seed(42)
 
     announcements = []
-    for i in range(600):
+    for i in range(3000):
         is_construction = random.random() < 0.55
         category = "공사" if is_construction else "용역"
         source = "D2B" if random.random() < 0.12 else "G2B"
@@ -230,7 +230,7 @@ def seed_database():
             title = f"{org_name} {random.choice(SERVICE_TITLES)}"
             base_amount = random.randint(1000, 100000) * 10000
 
-        days_ago = random.randint(1, 730)
+        days_ago = random.randint(1, 2650)
         announced_at = datetime.now() - timedelta(days=days_ago)
         deadline_at = announced_at + timedelta(days=random.randint(10, 30))
         status = "개찰완료" if days_ago > 30 else "진행중"
@@ -514,10 +514,22 @@ def refresh_token(current_user: User = Depends(require_auth)):
 
 # ─── API: 공고 목록 ──────────────────────────────────────────────────────
 
+@app.get("/api/v1/meta/industry-codes")
+def get_industry_codes():
+    """공종 코드 목록"""
+    db = SessionLocal()
+    codes = db.query(BidAnnouncement.industry_code).distinct().filter(
+        BidAnnouncement.industry_code.isnot(None)
+    ).all()
+    db.close()
+    return {"codes": sorted([c[0] for c in codes if c[0]])}
+
+
 @app.get("/api/v1/announcements")
 def list_announcements(
     category: str = None, source: str = None, region: str = None,
     keyword: str = None, status: str = None,
+    industry_code: str = None, date_from: str = None, date_to: str = None,
     page: int = 1, page_size: int = 20,
 ):
     db = SessionLocal()
@@ -538,6 +550,18 @@ def list_announcements(
         q = q.filter(BidAnnouncement.region == region)
     if status and status != "all":
         q = q.filter(BidAnnouncement.status == status)
+    if industry_code and industry_code != "all":
+        q = q.filter(BidAnnouncement.industry_code == industry_code)
+    if date_from:
+        try:
+            q = q.filter(BidAnnouncement.announced_at >= datetime.strptime(date_from, "%Y-%m-%d"))
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            q = q.filter(BidAnnouncement.announced_at <= datetime.strptime(date_to, "%Y-%m-%d"))
+        except ValueError:
+            pass
     if keyword:
         q = q.filter(
             BidAnnouncement.title.contains(keyword) |
@@ -608,7 +632,7 @@ def get_announcement(announcement_id: str):
 @app.get("/api/v1/analysis/frequency/{announcement_id}")
 def analysis_frequency(
     announcement_id: str,
-    period_months: int = Query(12, ge=3, le=24),
+    period_months: int = Query(12, ge=1, le=24),
     org_scope: str = Query("specific"),  # specific | parent
 ):
     """사정률 발생빈도 히스토그램 + 피크 구간 분석"""
@@ -618,7 +642,8 @@ def analysis_frequency(
         db.close()
         return {"error": "공고를 찾을 수 없습니다."}
 
-    cutoff = datetime.now() - timedelta(days=period_months * 30)
+    ref_date = ann.announced_at or datetime.now()
+    cutoff = ref_date - timedelta(days=period_months * 30)
 
     # 동일 카테고리 + 발주처 범위의 과거 사정률
     q = db.query(BidResult.assessment_rate, BidResult.first_place_rate).join(
@@ -683,6 +708,35 @@ def analysis_frequency(
                 "count": b["count"],
             })
 
+    # 1순위 예측 후보 (10개 이상) — 빈도 + 1순위 비율 점수
+    total_fp = len(first_place_rates)
+    prediction_candidates = []
+    for b in bins:
+        if b["count"] == 0:
+            continue
+        fp_ratio = round(b["first_place_count"] / b["count"] * 100, 1) if b["count"] > 0 else 0
+        # 점수 = 빈도 비율(0.5) + 1순위 비율(0.5)
+        freq_score = b["count"] / max(bb["count"] for bb in bins) if max(bb["count"] for bb in bins) > 0 else 0
+        fp_score = b["first_place_count"] / max((max(bb["first_place_count"] for bb in bins), 1))
+        combined_score = round(freq_score * 0.5 + fp_score * 0.5, 4)
+        bid_amount = int(ann.base_amount * b["rate"] / 100) if ann.base_amount else 0
+        prediction_candidates.append({
+            "rate": b["rate"],
+            "frequency": b["count"],
+            "first_place_count": b["first_place_count"],
+            "first_place_ratio": fp_ratio,
+            "score": combined_score,
+            "bid_amount": bid_amount,
+            "is_recommended": False,
+        })
+    prediction_candidates.sort(key=lambda c: c["score"], reverse=True)
+    # 상위 후보에 추천 마크
+    for i, c in enumerate(prediction_candidates[:3]):
+        c["is_recommended"] = True
+    # 순위 부여
+    for i, c in enumerate(prediction_candidates):
+        c["rank"] = i + 1
+
     stat = {
         "mean": round(statistics.mean(rates), 4),
         "median": round(statistics.median(rates), 4),
@@ -697,6 +751,8 @@ def analysis_frequency(
         "peaks": peaks,
         "stats": stat,
         "data_count": len(rates),
+        "first_place_total": total_fp,
+        "prediction_candidates": prediction_candidates[:15],
         "announcement": {
             "id": ann.id, "title": ann.title, "type": ann.category,
             "org": ann.ordering_org_name, "area": ann.region,
@@ -712,7 +768,7 @@ def analysis_company_rates(
     announcement_id: str,
     rate_range_start: float = Query(99.0),
     rate_range_end: float = Query(100.0),
-    period_months: int = Query(12, ge=3, le=24),
+    period_months: int = Query(12, ge=1, le=24),
 ):
     """선택 구간 내 업체 투찰률 분포 + 최대 갭 분석"""
     db = SessionLocal()
@@ -721,7 +777,8 @@ def analysis_company_rates(
         db.close()
         return {"error": "공고를 찾을 수 없습니다."}
 
-    cutoff = datetime.now() - timedelta(days=period_months * 30)
+    ref_date = ann.announced_at or datetime.now()
+    cutoff = ref_date - timedelta(days=period_months * 30)
 
     # 선택 구간 내 업체 투찰률
     records = db.query(CompanyBidRecord).join(
@@ -785,6 +842,45 @@ def analysis_company_rates(
         for r, a in first_place_in_range
     ]
 
+    # Phase 7: 갭 중간점 차기연도 검증
+    next_year_validation = []
+    if gaps:
+        next_year_start = ref_date
+        next_year_end = ref_date + timedelta(days=365)
+        next_year_results = db.query(BidResult, BidAnnouncement).join(
+            BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
+        ).filter(
+            BidAnnouncement.category == ann.category,
+            BidResult.assessment_rate.isnot(None),
+            BidResult.first_place_rate.isnot(None),
+            BidResult.opened_at >= next_year_start,
+            BidResult.opened_at <= next_year_end,
+        ).all()
+
+        for g in gaps[:10]:
+            mid = g["midpoint"]
+            matches = []
+            for res, past_ann in next_year_results:
+                diff = abs(mid - res.assessment_rate)
+                actual_diff = abs(res.first_place_rate - res.assessment_rate)
+                is_first = diff <= actual_diff + 0.02
+                matches.append({
+                    "actual_rate": round(res.assessment_rate, 4),
+                    "first_place_rate": round(res.first_place_rate, 4),
+                    "diff": round(abs(mid - res.first_place_rate), 4),
+                    "is_first_place": is_first,
+                    "date": res.opened_at.strftime("%Y-%m-%d") if res.opened_at else "",
+                })
+            match_count = sum(1 for m in matches if m["is_first_place"])
+            next_year_validation.append({
+                "gap_midpoint": mid,
+                "gap_size": g["size"],
+                "total_cases": len(matches),
+                "match_count": match_count,
+                "match_rate": round(match_count / len(matches) * 100, 1) if matches else 0,
+                "cases": matches[:5],
+            })
+
     db.close()
     return {
         "company_rates": company_rates[:100],  # 최대 100건
@@ -794,6 +890,7 @@ def analysis_company_rates(
         "total_companies": len(company_rates),
         "unique_rate_count": len(unique_rates),
         "first_place_predictions": first_place_list,
+        "next_year_validation": next_year_validation,
     }
 
 
@@ -803,7 +900,7 @@ def analysis_company_rates(
 def analysis_comprehensive(
     announcement_id: str,
     confirmed_rate: float = Query(99.5),
-    period_months: int = Query(12, ge=3, le=24),
+    period_months: int = Query(12, ge=1, le=24),
     org_scope: str = Query("specific"),
 ):
     """확정사정률 기반 과거 1순위 비교 + 종합 분석"""
@@ -814,13 +911,14 @@ def analysis_comprehensive(
         return {"error": "공고를 찾을 수 없습니다."}
 
     # 기간별 분석 (밀어내기식)
-    periods = [3, 6, 9, 12, 24]
+    ref_date = ann.announced_at or datetime.now()
+    periods = [1, 3, 6, 12, 24]
     period_results = {}
 
     for pm in periods:
         if pm > period_months:
             continue
-        cutoff = datetime.now() - timedelta(days=pm * 30)
+        cutoff = ref_date - timedelta(days=pm * 30)
 
         q = db.query(BidResult, BidAnnouncement).join(
             BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
@@ -879,7 +977,7 @@ def analysis_comprehensive(
     # 상위기관 동시 분석
     parent_analysis = None
     if ann.parent_org_name and org_scope == "specific":
-        cutoff = datetime.now() - timedelta(days=period_months * 30)
+        cutoff = ref_date - timedelta(days=period_months * 30)
         parent_q = db.query(BidResult, BidAnnouncement).join(
             BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
         ).filter(
@@ -918,6 +1016,367 @@ def analysis_comprehensive(
     }
 
 
+# ─── API: 결합 예측 (빈도 + 갭 결합) ─────────────────────────────────────
+
+@app.get("/api/v1/analysis/combined-prediction/{announcement_id}")
+def analysis_combined_prediction(
+    announcement_id: str,
+    period_months: int = Query(12, ge=1, le=24),
+    org_scope: str = Query("specific"),
+):
+    """빈도분석 피크 + 갭분석 중간점을 결합하여 최적 후보 10개 이상 산출"""
+    db = SessionLocal()
+    ann = db.query(BidAnnouncement).filter(BidAnnouncement.id == announcement_id).first()
+    if not ann:
+        db.close()
+        return {"error": "공고를 찾을 수 없습니다."}
+
+    ref_date = ann.announced_at or datetime.now()
+    cutoff = ref_date - timedelta(days=period_months * 30)
+
+    # 1) 빈도분석: 사정률 히스토그램 피크
+    q = db.query(BidResult.assessment_rate, BidResult.first_place_rate).join(
+        BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
+    ).filter(
+        BidAnnouncement.category == ann.category,
+        BidResult.assessment_rate.isnot(None),
+        BidResult.opened_at >= cutoff,
+    )
+    if org_scope == "parent" and ann.parent_org_name:
+        q = q.filter(BidAnnouncement.parent_org_name == ann.parent_org_name)
+    else:
+        q = q.filter(BidAnnouncement.ordering_org_name == ann.ordering_org_name)
+    rows = q.all()
+
+    if not rows:
+        q = db.query(BidResult.assessment_rate, BidResult.first_place_rate).join(
+            BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
+        ).filter(
+            BidAnnouncement.category == ann.category,
+            BidAnnouncement.region == ann.region,
+            BidResult.assessment_rate.isnot(None),
+            BidResult.opened_at >= cutoff,
+        )
+        rows = q.all()
+
+    rates = [r.assessment_rate for r in rows if r.assessment_rate]
+    first_place_rates = [r.first_place_rate for r in rows if r.first_place_rate]
+
+    # 빈도 히스토그램 (0.1% 단위)
+    freq_map = {}
+    if rates:
+        bin_size = 0.1
+        for r in rates:
+            key = round(round(r / bin_size) * bin_size, 2)
+            freq_map[key] = freq_map.get(key, 0) + 1
+    fp_map = {}
+    for r in first_place_rates:
+        key = round(round(r / 0.1) * 0.1, 2)
+        fp_map[key] = fp_map.get(key, 0) + 1
+    max_freq = max(freq_map.values()) if freq_map else 1
+
+    # 상위 빈도 피크 10개
+    freq_peaks = sorted(freq_map.items(), key=lambda x: x[1], reverse=True)[:10]
+
+    # 2) 갭분석: 업체 투찰률 빈 공간 중간점
+    mean_rate = statistics.mean(rates) if rates else 99.5
+    gap_range_start = round(mean_rate - 0.5, 2)
+    gap_range_end = round(mean_rate + 0.5, 2)
+    company_records = db.query(CompanyBidRecord).join(
+        BidAnnouncement, CompanyBidRecord.announcement_id == BidAnnouncement.id
+    ).filter(
+        BidAnnouncement.category == ann.category,
+        BidAnnouncement.announced_at >= cutoff,
+        CompanyBidRecord.bid_rate >= gap_range_start,
+        CompanyBidRecord.bid_rate <= gap_range_end,
+    ).order_by(CompanyBidRecord.bid_rate).all()
+
+    unique_rates = sorted(set(r.bid_rate for r in company_records))
+    gap_midpoints = []
+    if len(unique_rates) >= 2:
+        for i in range(len(unique_rates) - 1):
+            gap_size = unique_rates[i + 1] - unique_rates[i]
+            if gap_size > 0.01:
+                gap_midpoints.append({
+                    "rate": round((unique_rates[i] + unique_rates[i + 1]) / 2, 4),
+                    "gap_size": round(gap_size, 4),
+                })
+    gap_midpoints.sort(key=lambda g: g["gap_size"], reverse=True)
+
+    # 3) 결합 점수 산출
+    candidates = {}
+    # 빈도 피크에서 후보 추가
+    for rate_val, count in freq_peaks:
+        fp_cnt = fp_map.get(rate_val, 0)
+        freq_score = count / max_freq
+        fp_score = fp_cnt / max(max(fp_map.values(), default=1), 1)
+        candidates[rate_val] = {
+            "rate": rate_val,
+            "source": "빈도",
+            "freq_count": count,
+            "first_place_count": fp_cnt,
+            "freq_score": round(freq_score, 4),
+            "gap_score": 0,
+            "combined_score": 0,
+        }
+
+    # 갭 중간점에서 후보 추가/보강
+    max_gap = gap_midpoints[0]["gap_size"] if gap_midpoints else 1
+    for gm in gap_midpoints[:15]:
+        rate_val = round(gm["rate"], 2)
+        gap_s = gm["gap_size"] / max_gap
+        if rate_val in candidates:
+            candidates[rate_val]["source"] = "빈도+갭"
+            candidates[rate_val]["gap_score"] = round(gap_s, 4)
+        else:
+            # 근접 빈도 구간 찾기
+            nearest_freq = 0
+            nearest_fp = 0
+            for fr, fc in freq_map.items():
+                if abs(fr - rate_val) <= 0.15:
+                    nearest_freq = max(nearest_freq, fc)
+                    nearest_fp = max(nearest_fp, fp_map.get(fr, 0))
+            candidates[rate_val] = {
+                "rate": rate_val,
+                "source": "갭",
+                "freq_count": nearest_freq,
+                "first_place_count": nearest_fp,
+                "freq_score": round(nearest_freq / max_freq, 4) if max_freq > 0 else 0,
+                "gap_score": round(gap_s, 4),
+                "combined_score": 0,
+            }
+
+    # 결합 점수 = 빈도(0.4) + 갭(0.4) + 1순위 이력(0.2)
+    max_fp_score = max((c["first_place_count"] for c in candidates.values()), default=1) or 1
+    for c in candidates.values():
+        fp_s = c["first_place_count"] / max_fp_score
+        c["combined_score"] = round(
+            c["freq_score"] * 0.4 + c["gap_score"] * 0.4 + fp_s * 0.2, 4
+        )
+        c["bid_amount"] = int(ann.base_amount * c["rate"] / 100) if ann.base_amount else 0
+
+    result_list = sorted(candidates.values(), key=lambda c: c["combined_score"], reverse=True)
+    for i, c in enumerate(result_list):
+        c["rank"] = i + 1
+        c["is_recommended"] = i < 3
+        c["confidence"] = "높음" if c["combined_score"] > 0.6 else "보통" if c["combined_score"] > 0.3 else "낮음"
+
+    db.close()
+    return {
+        "candidates": result_list[:15],
+        "total_candidates": len(result_list),
+        "data_summary": {
+            "freq_data_count": len(rates),
+            "gap_data_count": len(company_records),
+            "first_place_count": len(first_place_rates),
+        },
+        "announcement": {
+            "id": ann.id, "title": ann.title, "type": ann.category,
+            "org": ann.ordering_org_name, "area": ann.region,
+            "budget": ann.base_amount,
+        },
+    }
+
+
+# ─── API: 밀어내기식 검토 (Sliding Window Backtesting) ────────────────────
+
+@app.get("/api/v1/analysis/sliding-review/{announcement_id}")
+def analysis_sliding_review(
+    announcement_id: str,
+    window_size: str = Query("3m"),
+    confirmed_rate: float = Query(99.5),
+    org_scope: str = Query("specific"),
+):
+    """밀어내기식 검토: 윈도우를 이동하며 예측 vs 실제 비교"""
+    db = SessionLocal()
+    ann = db.query(BidAnnouncement).filter(BidAnnouncement.id == announcement_id).first()
+    if not ann:
+        db.close()
+        return {"error": "공고를 찾을 수 없습니다."}
+
+    ref_date = ann.announced_at or datetime.now()
+
+    # 윈도우 크기 → 일수 변환
+    window_days_map = {"1d": 1, "5d": 5, "1m": 30, "3m": 90, "6m": 180, "1y": 365}
+    w_days = window_days_map.get(window_size, 90)
+
+    # 전체 과거 데이터 가져오기 (최대 7년)
+    full_cutoff = ref_date - timedelta(days=2650)
+    q = db.query(BidResult, BidAnnouncement).join(
+        BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
+    ).filter(
+        BidAnnouncement.category == ann.category,
+        BidResult.assessment_rate.isnot(None),
+        BidResult.first_place_rate.isnot(None),
+        BidResult.opened_at >= full_cutoff,
+        BidResult.opened_at < ref_date,
+    )
+    if org_scope == "parent" and ann.parent_org_name:
+        q = q.filter(BidAnnouncement.parent_org_name == ann.parent_org_name)
+    elif org_scope == "specific":
+        q = q.filter(BidAnnouncement.ordering_org_name == ann.ordering_org_name)
+
+    all_data = q.order_by(BidResult.opened_at).all()
+    if not all_data:
+        # 폴백
+        q = db.query(BidResult, BidAnnouncement).join(
+            BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
+        ).filter(
+            BidAnnouncement.category == ann.category,
+            BidAnnouncement.region == ann.region,
+            BidResult.assessment_rate.isnot(None),
+            BidResult.first_place_rate.isnot(None),
+            BidResult.opened_at >= full_cutoff,
+            BidResult.opened_at < ref_date,
+        ).order_by(BidResult.opened_at).all()
+        all_data = q.order_by(BidResult.opened_at).all() if not all_data else all_data
+
+    # 슬라이딩 윈도우: 각 시점에서 window 크기만큼의 데이터로 예측
+    timeline = []
+    match_count = 0
+    step_days = max(w_days // 3, 1)  # 스텝 크기
+
+    current_date = full_cutoff + timedelta(days=w_days)
+    while current_date < ref_date:
+        window_start = current_date - timedelta(days=w_days)
+        window_data = [
+            (r, a) for r, a in all_data
+            if r.opened_at and window_start <= r.opened_at < current_date
+        ]
+
+        if len(window_data) >= 3:
+            # 윈도우 내 사정률 평균/중앙값으로 예측
+            window_rates = [r.assessment_rate for r, a in window_data]
+            predicted_rate = round(statistics.median(window_rates), 4)
+
+            # 해당 시점 이후 가장 가까운 실제 결과 찾기
+            next_results = [
+                (r, a) for r, a in all_data
+                if r.opened_at and current_date <= r.opened_at < current_date + timedelta(days=step_days)
+            ]
+
+            for res, res_ann in next_results:
+                diff = abs(confirmed_rate - res.assessment_rate)
+                actual_diff = abs(res.first_place_rate - res.assessment_rate)
+                is_first = diff <= actual_diff + 0.02
+
+                if is_first:
+                    match_count += 1
+
+                timeline.append({
+                    "date": current_date.strftime("%Y-%m-%d"),
+                    "window_start": window_start.strftime("%Y-%m-%d"),
+                    "predicted_rate": predicted_rate,
+                    "actual_rate": round(res.assessment_rate, 4),
+                    "first_place_rate": round(res.first_place_rate, 4),
+                    "confirmed_rate": round(confirmed_rate, 4),
+                    "was_first_place": is_first,
+                    "diff": round(diff, 4),
+                    "data_count": len(window_data),
+                })
+
+        current_date += timedelta(days=step_days)
+
+    total = len(timeline)
+    hit_rate = round(match_count / total * 100, 1) if total > 0 else 0
+
+    db.close()
+    return {
+        "timeline": timeline[-60:],  # 최근 60개 포인트
+        "summary": {
+            "total_points": total,
+            "match_count": match_count,
+            "hit_rate": hit_rate,
+            "window_size": window_size,
+            "window_days": w_days,
+        },
+        "announcement": {
+            "id": ann.id, "title": ann.title,
+            "org": ann.ordering_org_name,
+        },
+    }
+
+
+# ─── API: 연도별 낙찰확률 검증 ──────────────────────────────────────────
+
+@app.get("/api/v1/analysis/yearly-validation/{announcement_id}")
+def analysis_yearly_validation(
+    announcement_id: str,
+    confirmed_rate: float = Query(99.5),
+    org_scope: str = Query("specific"),
+):
+    """연도별(2020~2026) 낙찰확률 검증"""
+    db = SessionLocal()
+    ann = db.query(BidAnnouncement).filter(BidAnnouncement.id == announcement_id).first()
+    if not ann:
+        db.close()
+        return {"error": "공고를 찾을 수 없습니다."}
+
+    years_result = []
+    for year in range(2020, 2027):
+        year_start = datetime(year, 1, 1)
+        year_end = datetime(year, 12, 31)
+        prev_cutoff = datetime(year - 1, 1, 1)
+
+        # 해당 연도 실제 낙찰 데이터
+        q = db.query(BidResult, BidAnnouncement).join(
+            BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
+        ).filter(
+            BidAnnouncement.category == ann.category,
+            BidResult.assessment_rate.isnot(None),
+            BidResult.first_place_rate.isnot(None),
+            BidResult.opened_at >= year_start,
+            BidResult.opened_at <= year_end,
+        )
+        if org_scope == "parent" and ann.parent_org_name:
+            q = q.filter(BidAnnouncement.parent_org_name == ann.parent_org_name)
+        elif org_scope == "specific":
+            q = q.filter(BidAnnouncement.ordering_org_name == ann.ordering_org_name)
+
+        year_data = q.all()
+        if not year_data:
+            continue
+
+        match_count = 0
+        cases = []
+        for res, past_ann in year_data:
+            diff = abs(confirmed_rate - res.assessment_rate)
+            actual_diff = abs(res.first_place_rate - res.assessment_rate)
+            is_match = diff <= actual_diff + 0.02
+
+            if is_match:
+                match_count += 1
+
+            cases.append({
+                "title": past_ann.title,
+                "org": past_ann.ordering_org_name,
+                "predicted_rate": round(confirmed_rate, 4),
+                "actual_rate": round(res.assessment_rate, 4),
+                "first_place_rate": round(res.first_place_rate, 4),
+                "is_match": is_match,
+                "date": res.opened_at.strftime("%Y-%m-%d") if res.opened_at else "",
+            })
+
+        total = len(cases)
+        years_result.append({
+            "year": year,
+            "total": total,
+            "first_place_count": match_count,
+            "match_rate": round(match_count / total * 100, 1) if total > 0 else 0,
+            "cases": cases[:20],
+        })
+
+    db.close()
+    return {
+        "years": years_result,
+        "confirmed_rate": round(confirmed_rate, 4),
+        "announcement": {
+            "id": ann.id, "title": ann.title,
+            "org": ann.ordering_org_name,
+        },
+    }
+
+
 # ─── API: 기관 계층 조회 ──────────────────────────────────────────────────
 
 @app.get("/api/v1/orgs/hierarchy")
@@ -930,7 +1389,7 @@ def get_org_hierarchy():
 @app.get("/api/v1/analysis/preliminary-frequency/{announcement_id}")
 def analysis_preliminary_frequency(
     announcement_id: str,
-    period_months: int = Query(12, ge=3, le=24),
+    period_months: int = Query(12, ge=1, le=24),
     org_scope: str = Query("specific"),
 ):
     """복수예비가격 15개 번호 중 추첨 빈도 분석"""
@@ -940,7 +1399,8 @@ def analysis_preliminary_frequency(
         db.close()
         return {"error": "공고를 찾을 수 없습니다."}
 
-    cutoff = datetime.now() - timedelta(days=period_months * 30)
+    ref_date = ann.announced_at or datetime.now()
+    cutoff = ref_date - timedelta(days=period_months * 30)
     q = db.query(BidResult).join(
         BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
     ).filter(

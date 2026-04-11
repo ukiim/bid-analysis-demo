@@ -421,13 +421,14 @@ function getDDay(deadlineStr) {
 }
 
 function AnnouncementPage({ onSelectAnnouncement }) {
-  const [filter, setFilter] = useState({ type: 'all', area: 'all', source: 'all', status: 'all', search: '' });
+  const [filter, setFilter] = useState({ type: 'all', area: 'all', source: 'all', status: 'all', search: '', industry: 'all', dateFrom: '', dateTo: '' });
   const [data, setData] = useState({ items: [], total: 0, page: 1, total_pages: 0 });
   const [kpi, setKpi] = useState(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [previewItem, setPreviewItem] = useState(null);
   const [quickRate, setQuickRate] = useState('');
+  const [industryCodes, setIndustryCodes] = useState([]);
   const addToast = useToast();
 
   const fetchData = () => {
@@ -441,6 +442,9 @@ function AnnouncementPage({ onSelectAnnouncement }) {
     if (filter.area !== 'all') params.set('region', filter.area);
     if (filter.source !== 'all') params.set('source', filter.source);
     if (filter.status !== 'all') params.set('status', filter.status);
+    if (filter.industry !== 'all') params.set('industry_code', filter.industry);
+    if (filter.dateFrom) params.set('date_from', filter.dateFrom);
+    if (filter.dateTo) params.set('date_to', filter.dateTo);
     if (filter.search) params.set('keyword', filter.search);
 
     fetch(`${API}/announcements?${params}`)
@@ -456,6 +460,7 @@ function AnnouncementPage({ onSelectAnnouncement }) {
   useEffect(() => { fetchData(); }, [page]);
   useEffect(() => {
     fetch(`${API}/stats/kpi`).then(r => r.json()).then(setKpi);
+    fetch(`${API}/meta/industry-codes`).then(r => r.json()).then(d => setIndustryCodes(d.codes || [])).catch(() => {});
   }, []);
 
   const handleFilter = () => { setPage(1); fetchData(); };
@@ -526,6 +531,19 @@ function AnnouncementPage({ onSelectAnnouncement }) {
           <option value="all">전체 지역</option>
           {['서울','경기','부산','대전','인천','광주','대구','울산','세종','강원','충북','충남','전북','전남','경북','경남','제주'].map(a => <option key={a} value={a}>{a}</option>)}
         </select>
+        {industryCodes.length > 0 && (
+          <select className="filter-select" value={filter.industry} onChange={e => setFilter(f => ({...f, industry: e.target.value}))}>
+            <option value="all">전체 공종</option>
+            {industryCodes.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        )}
+        <input type="date" className="filter-select" value={filter.dateFrom}
+          onChange={e => setFilter(f => ({...f, dateFrom: e.target.value}))}
+          style={{minWidth:'130px'}} title="시작일" />
+        <span style={{fontSize:'12px',color:'var(--text-secondary)'}}>~</span>
+        <input type="date" className="filter-select" value={filter.dateTo}
+          onChange={e => setFilter(f => ({...f, dateTo: e.target.value}))}
+          style={{minWidth:'130px'}} title="종료일" />
         <button className="btn btn-primary" onClick={handleFilter}>필터 적용</button>
       </div>
       <div className="card">
@@ -696,6 +714,20 @@ function ComprehensivePage({ announcement }) {
   // Phase 7: preliminary frequency
   const [prelimFreqData, setPrelimFreqData] = useState(null);
 
+  // Phase 3: combined prediction
+  const [combinedData, setCombinedData] = useState(null);
+  const [combinedLoading, setCombinedLoading] = useState(false);
+
+  // Phase 4: sliding review
+  const [slidingData, setSlidingData] = useState(null);
+  const [slidingLoading, setSlidingLoading] = useState(false);
+  const [slidingWindow, setSlidingWindow] = useState('3m');
+
+  // Phase 5: yearly validation
+  const [yearlyData, setYearlyData] = useState(null);
+  const [yearlyLoading, setYearlyLoading] = useState(false);
+  const [yearlyExpanded, setYearlyExpanded] = useState(null);
+
   const addToast = useToast();
 
   // Compute bid amount from rate
@@ -777,6 +809,39 @@ function ComprehensivePage({ announcement }) {
       .then(d => { setComprehensiveData(d); setComprehensiveLoading(false); })
       .catch(() => { setComprehensiveData(null); setComprehensiveLoading(false); });
   }, [announcement?.id, confirmedRate, periodMonths, orgScope]);
+
+  // Fetch combined prediction (Tab 3)
+  useEffect(() => {
+    if (!announcement) return;
+    setCombinedLoading(true);
+    const params = new URLSearchParams({ period_months: periodMonths, org_scope: orgScope });
+    fetch(`${API}/analysis/combined-prediction/${announcement.id}?${params}`)
+      .then(r => r.json())
+      .then(d => { setCombinedData(d); setCombinedLoading(false); })
+      .catch(() => { setCombinedData(null); setCombinedLoading(false); });
+  }, [announcement?.id, periodMonths, orgScope]);
+
+  // Fetch sliding review (Phase 4)
+  useEffect(() => {
+    if (!announcement || !confirmedRate) return;
+    setSlidingLoading(true);
+    const params = new URLSearchParams({ window_size: slidingWindow, confirmed_rate: confirmedRate, org_scope: orgScope });
+    fetch(`${API}/analysis/sliding-review/${announcement.id}?${params}`)
+      .then(r => r.json())
+      .then(d => { setSlidingData(d); setSlidingLoading(false); })
+      .catch(() => { setSlidingData(null); setSlidingLoading(false); });
+  }, [announcement?.id, confirmedRate, slidingWindow, orgScope]);
+
+  // Fetch yearly validation (Phase 5)
+  useEffect(() => {
+    if (!announcement || !confirmedRate) return;
+    setYearlyLoading(true);
+    const params = new URLSearchParams({ confirmed_rate: confirmedRate, org_scope: orgScope });
+    fetch(`${API}/analysis/yearly-validation/${announcement.id}?${params}`)
+      .then(r => r.json())
+      .then(d => { setYearlyData(d); setYearlyLoading(false); })
+      .catch(() => { setYearlyData(null); setYearlyLoading(false); });
+  }, [announcement?.id, confirmedRate, orgScope]);
 
   // Sync confirmedRateInput with confirmedRate
   useEffect(() => { setConfirmedRateInput(confirmedRate); }, [confirmedRate]);
@@ -1094,7 +1159,7 @@ function ComprehensivePage({ announcement }) {
             <div className="filter-bar" style={{marginBottom:'16px'}}>
               <span style={{fontSize:'13px',fontWeight:'600',color:'var(--text-secondary)'}}>기간:</span>
               <div className="period-btn-group">
-                {[3,6,9,12,24].map(m => (
+                {[1,3,6,12,24].map(m => (
                   <button key={m} className={`period-btn ${periodMonths === m ? 'active' : ''}`}
                     onClick={() => setPeriodMonths(m)}>{m}개월</button>
                 ))}
@@ -1163,10 +1228,15 @@ function ComprehensivePage({ announcement }) {
                         labelFormatter={v => `사정률: ${v}%`}
                         content={({ active, payload, label }) => {
                           if (!active || !payload?.length) return null;
+                          const bin = freqBins.find(b => b.rate === label);
+                          const cand = freqData?.prediction_candidates?.find(c => c.rate === label);
                           return (
                             <div style={{background:'#fff',border:'1px solid #E2E8F0',borderRadius:'8px',padding:'10px 14px',boxShadow:'0 4px 12px rgba(0,0,0,0.1)'}}>
-                              <div style={{fontWeight:'700',fontSize:'13px',marginBottom:'4px'}}>사정률: {label}%</div>
+                              <div style={{fontWeight:'700',fontSize:'13px',marginBottom:'4px'}}>사정률: {label}%{cand?.is_recommended ? ' ★추천' : ''}</div>
                               <div style={{fontSize:'12px',color:'var(--text-secondary)'}}>발생횟수: {payload[0].value}건</div>
+                              {bin?.first_place_count > 0 && (
+                                <div style={{fontSize:'12px',color:'#059669',marginTop:'2px'}}>1순위 횟수: {bin.first_place_count}건 ({cand?.first_place_ratio || 0}%)</div>
+                              )}
                               {announcement?.budget && (
                                 <div style={{fontSize:'12px',color:'#B45309',marginTop:'2px'}}>투찰금액: {fmtAmount(Math.round(announcement.budget * label / 100))}</div>
                               )}
@@ -1211,6 +1281,54 @@ function ComprehensivePage({ announcement }) {
                 </>
               ) : <div className="loading">빈도 데이터 없음</div>}
             </div>
+
+            {/* 1순위 예측 후보 리스트 (10개 이상) */}
+            {freqData?.prediction_candidates?.length > 0 && (
+              <div className="card mb-16">
+                <div className="card-header">
+                  <div>
+                    <div className="card-title">1순위 예측 후보 리스트</div>
+                    <div className="card-sub">빈도 + 1순위 비율 기반 점수순 (상위 {freqData.prediction_candidates.length}개) | 총 1순위 데이터: {freqData.first_place_total || 0}건</div>
+                  </div>
+                </div>
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>순위</th><th>사정률</th><th>발생빈도</th><th>1순위 횟수</th><th>1순위 비율</th><th>점수</th><th>예상투찰금액</th><th>추천</th><th>선택</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {freqData.prediction_candidates.map((c, i) => (
+                        <tr key={i} style={{background: c.is_recommended ? '#FFFBEB' : 'transparent'}}>
+                          <td style={{fontWeight:'700',color:'var(--primary)'}}>{c.rank}</td>
+                          <td style={{fontWeight:'700'}}>{c.rate}%</td>
+                          <td>{c.frequency}건</td>
+                          <td style={{fontWeight:'600',color:'#059669'}}>{c.first_place_count}건</td>
+                          <td>{c.first_place_ratio}%</td>
+                          <td>
+                            <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
+                              <div style={{width:'60px',height:'6px',background:'#E2E8F0',borderRadius:'3px',overflow:'hidden'}}>
+                                <div style={{width:`${c.score * 100}%`,height:'100%',background: c.score > 0.7 ? '#059669' : c.score > 0.4 ? '#F59E0B' : '#94A3B8',borderRadius:'3px'}}></div>
+                              </div>
+                              <span style={{fontSize:'11px',color:'var(--text-secondary)'}}>{(c.score * 100).toFixed(0)}</span>
+                            </div>
+                          </td>
+                          <td style={{fontSize:'12px',color:'#B45309'}}>{c.bid_amount ? fmtAmount(c.bid_amount) : '-'}</td>
+                          <td>{c.is_recommended ? <span style={{color:'#F59E0B',fontSize:'16px'}}>★</span> : ''}</td>
+                          <td>
+                            <button className="btn btn-outline" style={{padding:'2px 8px',fontSize:'11px'}}
+                              onClick={() => { setSelectedRate(String(c.rate)); if(announcement?.budget) setSelectedBidAmount(Math.round(announcement.budget * c.rate / 100)); }}>
+                              선택
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Phase 7: 추첨예가 빈도수 */}
             {prelimFreqData && prelimFreqData.bins && prelimFreqData.total_cases > 0 && (
@@ -1383,6 +1501,54 @@ function ComprehensivePage({ announcement }) {
                   </div>
                 )}
 
+                {/* Phase 7: 갭 차기연도 검증 */}
+                {companyData?.next_year_validation?.length > 0 && (
+                  <div className="card mb-16">
+                    <div className="card-header">
+                      <div>
+                        <div className="card-title">갭 중간점 차기연도 검증</div>
+                        <div className="card-sub">식별된 빈공간 중간점이 다음 연도에 실제 1순위와 일치했는지 검증</div>
+                      </div>
+                    </div>
+                    <div className="table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>갭 중간점</th><th>갭 크기</th><th>검증 건수</th><th>적중 건수</th><th>적중률</th><th>결과</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {companyData.next_year_validation.map((v, i) => (
+                            <tr key={i}>
+                              <td style={{fontWeight:'700',color:'var(--primary)'}}>{v.gap_midpoint}%</td>
+                              <td>{v.gap_size}%</td>
+                              <td>{v.total_cases}건</td>
+                              <td style={{fontWeight:'600',color:'#059669'}}>{v.match_count}건</td>
+                              <td>
+                                <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
+                                  <div style={{width:'50px',height:'5px',background:'#E2E8F0',borderRadius:'3px',overflow:'hidden'}}>
+                                    <div style={{width:`${v.match_rate}%`,height:'100%',borderRadius:'3px',
+                                      background:v.match_rate>=50?'#059669':v.match_rate>=25?'#F59E0B':'#DC2626'}}></div>
+                                  </div>
+                                  <span style={{fontSize:'12px',fontWeight:'600',
+                                    color:v.match_rate>=50?'#059669':v.match_rate>=25?'#D97706':'#DC2626'}}>{v.match_rate}%</span>
+                                </div>
+                              </td>
+                              <td>
+                                {v.match_rate >= 50
+                                  ? <span className="match-yes">유효</span>
+                                  : v.match_rate >= 25
+                                  ? <span style={{fontSize:'11px',padding:'2px 8px',borderRadius:'4px',background:'#FEF3C7',color:'#92400E'}}>보통</span>
+                                  : <span className="match-no">미흡</span>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
               </>
             )}
           </div>
@@ -1454,6 +1620,74 @@ function ComprehensivePage({ announcement }) {
                   </div>
                 )}
 
+                {/* 결합 예측 후보 리스트 */}
+                {combinedData?.candidates?.length > 0 && (
+                  <div className="card mb-16">
+                    <div className="card-header">
+                      <div>
+                        <div className="card-title">결합 예측 후보 (빈도+갭)</div>
+                        <div className="card-sub">빈도 피크와 갭 중간점을 결합한 최적 후보 | 빈도 데이터 {combinedData.data_summary?.freq_data_count || 0}건, 갭 데이터 {combinedData.data_summary?.gap_data_count || 0}건</div>
+                      </div>
+                    </div>
+                    <div className="table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>순위</th><th>사정률</th><th>출처</th><th>빈도</th><th>1순위</th><th>빈도점수</th><th>갭점수</th><th>결합점수</th><th>예상투찰금액</th><th>신뢰도</th><th>선택</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {combinedData.candidates.map((c, i) => (
+                            <tr key={i} style={{background: c.is_recommended ? '#F0FDF4' : 'transparent'}}>
+                              <td style={{fontWeight:'700',color:'var(--primary)'}}>{c.rank}{c.is_recommended ? ' ★' : ''}</td>
+                              <td style={{fontWeight:'700'}}>{c.rate}%</td>
+                              <td><span style={{
+                                fontSize:'11px',padding:'2px 6px',borderRadius:'4px',
+                                background: c.source === '빈도+갭' ? '#DBEAFE' : c.source === '빈도' ? '#FEF3C7' : '#E0E7FF',
+                                color: c.source === '빈도+갭' ? '#1E40AF' : c.source === '빈도' ? '#92400E' : '#3730A3',
+                              }}>{c.source}</span></td>
+                              <td>{c.freq_count}건</td>
+                              <td style={{color:'#059669',fontWeight:'600'}}>{c.first_place_count}건</td>
+                              <td>
+                                <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
+                                  <div style={{width:'40px',height:'5px',background:'#E2E8F0',borderRadius:'3px',overflow:'hidden'}}>
+                                    <div style={{width:`${c.freq_score * 100}%`,height:'100%',background:'#F59E0B',borderRadius:'3px'}}></div>
+                                  </div>
+                                  <span style={{fontSize:'10px',color:'#94A3B8'}}>{(c.freq_score * 100).toFixed(0)}</span>
+                                </div>
+                              </td>
+                              <td>
+                                <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
+                                  <div style={{width:'40px',height:'5px',background:'#E2E8F0',borderRadius:'3px',overflow:'hidden'}}>
+                                    <div style={{width:`${c.gap_score * 100}%`,height:'100%',background:'#6366F1',borderRadius:'3px'}}></div>
+                                  </div>
+                                  <span style={{fontSize:'10px',color:'#94A3B8'}}>{(c.gap_score * 100).toFixed(0)}</span>
+                                </div>
+                              </td>
+                              <td>
+                                <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
+                                  <div style={{width:'50px',height:'6px',background:'#E2E8F0',borderRadius:'3px',overflow:'hidden'}}>
+                                    <div style={{width:`${c.combined_score * 100}%`,height:'100%',background: c.combined_score > 0.6 ? '#059669' : c.combined_score > 0.3 ? '#F59E0B' : '#94A3B8',borderRadius:'3px'}}></div>
+                                  </div>
+                                  <span style={{fontSize:'11px',fontWeight:'600'}}>{(c.combined_score * 100).toFixed(0)}</span>
+                                </div>
+                              </td>
+                              <td style={{fontSize:'12px',color:'#B45309'}}>{c.bid_amount ? fmtAmount(c.bid_amount) : '-'}</td>
+                              <td><span style={{fontSize:'11px',color: c.confidence === '높음' ? '#059669' : c.confidence === '보통' ? '#D97706' : '#94A3B8',fontWeight:'600'}}>{c.confidence}</span></td>
+                              <td>
+                                <button className="btn btn-outline" style={{padding:'2px 8px',fontSize:'11px'}}
+                                  onClick={() => { setConfirmedRate(String(c.rate)); setConfirmedRateInput(String(c.rate)); }}>
+                                  확정
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
                 {/* Phase 5-1: Period matching rate bar chart */}
                 {periodComparisons.length > 0 && (
                   <div className="card mb-16">
@@ -1493,6 +1727,142 @@ function ComprehensivePage({ announcement }) {
                         <div className="metric-label">매칭률</div>
                         <div className="metric-val" style={{color:'#059669'}}>{parentOrg.match_rate || '-'}%</div>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Phase 4: 밀어내기식 검토 */}
+                {confirmedRate && (
+                  <div className="card mb-16">
+                    <div className="card-header">
+                      <div>
+                        <div className="card-title">밀어내기식 검토 (Sliding Window)</div>
+                        <div className="card-sub">윈도우를 이동하며 확정사정률({confirmedRate}%)의 1순위 적중 여부를 시계열로 검증</div>
+                      </div>
+                    </div>
+                    <div className="filter-bar" style={{marginBottom:'12px',padding:'0 16px'}}>
+                      <span style={{fontSize:'12px',fontWeight:'600',color:'var(--text-secondary)'}}>윈도우 크기:</span>
+                      <div className="period-btn-group">
+                        {[{k:'1d',l:'1일'},{k:'5d',l:'5일'},{k:'1m',l:'1개월'},{k:'3m',l:'3개월'},{k:'6m',l:'6개월'},{k:'1y',l:'1년'}].map(w => (
+                          <button key={w.k} className={`period-btn ${slidingWindow === w.k ? 'active' : ''}`}
+                            onClick={() => setSlidingWindow(w.k)}>{w.l}</button>
+                        ))}
+                      </div>
+                      {slidingData?.summary && (
+                        <div style={{marginLeft:'auto',display:'flex',gap:'16px',alignItems:'center'}}>
+                          <span style={{fontSize:'12px',color:'var(--text-secondary)'}}>검증 포인트: <b>{slidingData.summary.total_points}</b>건</span>
+                          <span style={{fontSize:'12px',fontWeight:'700',color: slidingData.summary.hit_rate >= 50 ? '#059669' : '#DC2626'}}>
+                            적중률: {slidingData.summary.hit_rate}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {slidingLoading ? <div className="loading" style={{padding:'16px'}}>분석 중...</div> : slidingData?.timeline?.length > 0 ? (
+                      <>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <LineChart data={slidingData.timeline} margin={{top:10,right:20,bottom:0,left:0}}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                            <XAxis dataKey="date" tick={{fontSize:10,fill:'#94A3B8'}} axisLine={false} tickLine={false}
+                              tickFormatter={v => v.slice(5)} interval="preserveStartEnd" />
+                            <YAxis tick={{fontSize:10,fill:'#94A3B8'}} axisLine={false} tickLine={false} domain={['auto','auto']} />
+                            <Tooltip content={({active,payload}) => {
+                              if(!active||!payload?.length) return null;
+                              const d = payload[0].payload;
+                              return (
+                                <div style={{background:'#fff',border:'1px solid #E2E8F0',borderRadius:'8px',padding:'10px 14px',boxShadow:'0 4px 12px rgba(0,0,0,0.1)',fontSize:'12px'}}>
+                                  <div style={{fontWeight:'700',marginBottom:'4px'}}>{d.date}</div>
+                                  <div>실제 사정률: <b>{d.actual_rate}%</b></div>
+                                  <div>1순위 사정률: <b style={{color:'#059669'}}>{d.first_place_rate}%</b></div>
+                                  <div>확정사정률: <b>{d.confirmed_rate}%</b> (차이: {d.diff}%)</div>
+                                  <div style={{marginTop:'4px',fontWeight:'700',color:d.was_first_place?'#059669':'#DC2626'}}>
+                                    {d.was_first_place ? '✓ 1순위 적중' : '✗ 미적중'}
+                                  </div>
+                                </div>
+                              );
+                            }} />
+                            <Line type="monotone" dataKey="actual_rate" stroke="#0066CC" strokeWidth={2} dot={false} name="실제 사정률" />
+                            <Line type="monotone" dataKey="first_place_rate" stroke="#059669" strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="1순위 사정률" />
+                            <Line type="monotone" dataKey="confirmed_rate" stroke="#DC2626" strokeWidth={1} dot={false} strokeDasharray="8 4" name="확정사정률" />
+                          </LineChart>
+                        </ResponsiveContainer>
+                        <div style={{padding:'8px 16px',display:'flex',gap:'16px',fontSize:'11px',color:'var(--text-secondary)'}}>
+                          <span><span style={{display:'inline-block',width:'12px',height:'2px',background:'#0066CC',marginRight:'4px',verticalAlign:'middle'}}></span>실제 사정률</span>
+                          <span><span style={{display:'inline-block',width:'12px',height:'2px',background:'#059669',marginRight:'4px',verticalAlign:'middle',borderTop:'1px dashed #059669'}}></span>1순위 사정률</span>
+                          <span><span style={{display:'inline-block',width:'12px',height:'2px',background:'#DC2626',marginRight:'4px',verticalAlign:'middle',borderTop:'1px dashed #DC2626'}}></span>확정사정률</span>
+                        </div>
+                      </>
+                    ) : <div style={{color:'var(--text-secondary)',fontSize:'13px',padding:'16px'}}>검증 데이터가 부족합니다.</div>}
+                  </div>
+                )}
+
+                {/* Phase 5: 연도별 낙찰확률 검증 */}
+                {confirmedRate && yearlyData?.years?.length > 0 && (
+                  <div className="card mb-16">
+                    <div className="card-header">
+                      <div>
+                        <div className="card-title">연도별 낙찰확률 검증 (2020~2026)</div>
+                        <div className="card-sub">확정사정률({confirmedRate}%)로 각 연도의 1순위 적중률 검증</div>
+                      </div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart data={yearlyData.years} margin={{top:10,right:20,bottom:0,left:0}}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                        <XAxis dataKey="year" tick={{fontSize:12,fill:'#94A3B8'}} axisLine={false} tickLine={false} />
+                        <YAxis tick={{fontSize:11,fill:'#94A3B8'}} axisLine={false} tickLine={false}
+                          tickFormatter={v => v + '%'} domain={[0, 100]} />
+                        <Tooltip formatter={(v,n) => [v + '%', '적중률']} />
+                        <Bar dataKey="match_rate" radius={[4,4,0,0]} cursor="pointer"
+                          onClick={(data) => setYearlyExpanded(yearlyExpanded === data.year ? null : data.year)}>
+                          {yearlyData.years.map((entry, idx) => (
+                            <Cell key={idx}
+                              fill={entry.match_rate >= 60 ? '#059669' : entry.match_rate >= 30 ? '#F59E0B' : '#DC2626'}
+                              opacity={yearlyExpanded === entry.year ? 1 : 0.8} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                    <div style={{padding:'0 16px 12px'}}>
+                      {yearlyData.years.map((yr, i) => (
+                        <div key={i} style={{marginBottom:'4px'}}>
+                          <div style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',cursor:'pointer',borderBottom:'1px solid #F1F5F9'}}
+                            onClick={() => setYearlyExpanded(yearlyExpanded === yr.year ? null : yr.year)}>
+                            <span style={{fontSize:'13px',fontWeight:'700',width:'50px'}}>{yr.year}년</span>
+                            <div style={{flex:1,height:'6px',background:'#E2E8F0',borderRadius:'3px',overflow:'hidden'}}>
+                              <div style={{width:`${yr.match_rate}%`,height:'100%',borderRadius:'3px',
+                                background:yr.match_rate>=60?'#059669':yr.match_rate>=30?'#F59E0B':'#DC2626'}}></div>
+                            </div>
+                            <span style={{fontSize:'12px',fontWeight:'600',width:'80px',textAlign:'right',
+                              color:yr.match_rate>=60?'#059669':yr.match_rate>=30?'#D97706':'#DC2626'}}>
+                              {yr.match_rate}% ({yr.first_place_count}/{yr.total})
+                            </span>
+                            <span style={{fontSize:'11px',color:'#94A3B8'}}>{yearlyExpanded === yr.year ? '▲' : '▼'}</span>
+                          </div>
+                          {yearlyExpanded === yr.year && yr.cases?.length > 0 && (
+                            <div style={{padding:'8px 0 8px 16px',fontSize:'12px'}}>
+                              <table style={{width:'100%'}}>
+                                <thead><tr style={{color:'var(--text-secondary)'}}>
+                                  <th style={{textAlign:'left',padding:'4px 8px'}}>공고명</th>
+                                  <th>발주기관</th><th>실제사정률</th><th>1순위사정률</th><th>날짜</th><th>적중</th>
+                                </tr></thead>
+                                <tbody>
+                                  {yr.cases.map((c,j) => (
+                                    <tr key={j}>
+                                      <td style={{padding:'3px 8px',maxWidth:'180px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c.title}</td>
+                                      <td style={{textAlign:'center',color:'var(--text-secondary)'}}>{c.org}</td>
+                                      <td style={{textAlign:'center',fontWeight:'600'}}>{c.actual_rate}%</td>
+                                      <td style={{textAlign:'center',color:'#059669',fontWeight:'600'}}>{c.first_place_rate}%</td>
+                                      <td style={{textAlign:'center',color:'var(--text-secondary)'}}>{c.date}</td>
+                                      <td style={{textAlign:'center'}}>
+                                        {c.is_match ? <span className="match-yes">적중</span> : <span className="match-no">미적중</span>}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
