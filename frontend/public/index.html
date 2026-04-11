@@ -13,48 +13,64 @@
 <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F0F4F8; color: #0F172A; }
+  body { font-family: 'Pretendard', -apple-system, sans-serif; background: #E8ECF0; color: #0F172A; }
   :root {
     --primary: #0066CC;
     --primary-dark: #0052A3;
     --secondary: #1E3A5F;
     --accent: #00A3FF;
-    --bg: #F0F4F8;
+    --bg: #E8ECF0;
     --surface: #FFFFFF;
     --text-primary: #0F172A;
     --text-secondary: #64748B;
     --border: #E2E8F0;
-    --sidebar-w: 260px;
+    --sidebar-w: 220px;
+    --sidebar-collapsed-w: 64px;
   }
   .layout { display: flex; height: 100vh; overflow: hidden; }
   .sidebar {
     width: var(--sidebar-w); background: var(--secondary);
     display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+    transition: width 0.25s ease;
   }
-  .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-  .logo-mark { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: #fff; }
-  .logo-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 16px; }
-  .logo-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
-  .sidebar-section { padding: 16px 12px 8px; }
-  .sidebar-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.8px; padding: 0 8px; margin-bottom: 6px; }
+  .sidebar.collapsed { width: var(--sidebar-collapsed-w); }
+  .sidebar.collapsed .logo-text, .sidebar.collapsed .sidebar-label,
+  .sidebar.collapsed .nav-item span:not(.nav-icon), .sidebar.collapsed .user-info,
+  .sidebar.collapsed .logo-sub { display: none; }
+  .sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
+  .sidebar.collapsed .nav-item .nav-icon { margin: 0; }
+  .sidebar.collapsed .user-badge { justify-content: center; padding: 8px; }
+  .sidebar.collapsed .sidebar-logo { padding: 16px 8px; }
+  .sidebar.collapsed .logo-mark { justify-content: center; }
+  .sidebar-toggle {
+    background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer;
+    font-size: 18px; padding: 4px 8px; border-radius: 4px; transition: all 0.15s;
+  }
+  .sidebar-toggle:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .sidebar-logo { padding: 16px 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; }
+  .logo-mark { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: #fff; }
+  .logo-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .logo-sub { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+  .sidebar-section { padding: 12px 8px 4px; }
+  .sidebar-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.8px; padding: 0 8px; margin-bottom: 4px; }
   .nav-item {
     display: flex; align-items: center; gap: 10px;
     padding: 9px 12px; border-radius: 8px; color: rgba(255,255,255,0.65);
-    cursor: pointer; font-size: 13.5px; font-weight: 500;
+    cursor: pointer; font-size: 13px; font-weight: 500;
     transition: all 0.15s; margin-bottom: 2px;
     border: none; background: none; width: 100%; text-align: left;
   }
   .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
   .nav-item.active { background: var(--primary); color: #fff; }
-  .nav-item .nav-icon { font-size: 15px; width: 18px; text-align: center; }
-  .sidebar-bottom { margin-top: auto; padding: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
-  .user-badge { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.06); }
+  .nav-item .nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+  .sidebar-bottom { margin-top: auto; padding: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .user-badge { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.06); }
   .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
   .user-info .name { font-size: 13px; font-weight: 600; color: #fff; }
   .user-info .plan { font-size: 11px; color: rgba(255,255,255,0.45); }
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   .topbar {
-    height: 56px; background: var(--surface); border-bottom: 1px solid var(--border);
+    height: 52px; background: var(--surface); border-bottom: 1px solid var(--border);
     display: flex; align-items: center; padding: 0 24px; justify-content: space-between; flex-shrink: 0;
   }
   .topbar-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
@@ -75,7 +91,7 @@
   .btn:disabled { opacity: 0.5; cursor: default; }
   .btn-sm { padding: 5px 10px; font-size: 12px; }
   .content { flex: 1; overflow-y: auto; padding: 24px; }
-  .card { background: var(--surface); border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); padding: 20px; }
+  .card { background: var(--surface); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04); padding: 20px; }
   .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
   .card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
   .card-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
@@ -85,34 +101,59 @@
   .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
   .mb-16 { margin-bottom: 16px; }
   .mb-20 { margin-bottom: 20px; }
-  .kpi-card { background: var(--surface); border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); }
-  .kpi-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; margin-bottom: 6px; }
-  .kpi-value { font-size: 24px; font-weight: 800; color: var(--text-primary); }
+  .kpi-card { background: var(--surface); border-radius: 10px; padding: 16px 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04); }
+  .kpi-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; margin-bottom: 4px; }
+  .kpi-value { font-size: 22px; font-weight: 800; color: var(--text-primary); white-space: nowrap; }
   .kpi-change { font-size: 12px; margin-top: 4px; }
   .kpi-change.up { color: #059669; }
   .kpi-change.down { color: #DC2626; }
-  .table-wrap { overflow-x: auto; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; position: relative; }
+  .table-wrap::after {
+    content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 24px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9));
+    pointer-events: none; opacity: 0; transition: opacity 0.2s;
+  }
+  .table-wrap.has-scroll::after { opacity: 1; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
-  th { text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); border-bottom: 1.5px solid var(--border); background: #F8FAFC; white-space: nowrap; }
-  td { padding: 11px 12px; border-bottom: 1px solid var(--border); color: var(--text-primary); vertical-align: middle; white-space: nowrap; }
+  th { text-align: left; padding: 10px 12px; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); border-bottom: 1.5px solid var(--border); background: #F8FAFC; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-primary); vertical-align: middle; white-space: nowrap; }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #F8FAFC; }
+  tr:hover td { background: #EFF6FF; }
+  tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--primary); }
   .filter-bar {
     display: flex; align-items: center; gap: 10px;
-    padding: 14px 16px; background: var(--surface); border-radius: 10px; margin-bottom: 16px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); flex-wrap: wrap;
+    padding: 12px 16px; background: var(--surface); border-radius: 10px; margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04); flex-wrap: wrap;
   }
+  .filter-bar-main { display: flex; align-items: center; gap: 10px; width: 100%; }
+  .filter-bar-advanced { display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--border); margin-top: 10px; }
+  .filter-toggle-btn {
+    padding: 5px 10px; font-size: 11px; font-weight: 600; border-radius: 6px;
+    border: 1.5px solid var(--border); background: transparent; color: var(--text-secondary);
+    cursor: pointer; font-family: 'Pretendard', sans-serif; transition: all 0.15s; white-space: nowrap;
+  }
+  .filter-toggle-btn:hover { background: var(--bg); }
+  .filter-toggle-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
   .filter-select {
     padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 7px;
-    font-size: 13px; color: var(--text-primary); background: var(--bg);
-    font-family: 'Pretendard', sans-serif; cursor: pointer;
+    font-size: 13px; color: var(--text-primary); background: #F8FAFC;
+    font-family: 'Pretendard', sans-serif; cursor: pointer; transition: border-color 0.15s;
   }
+  .filter-select:focus { border-color: var(--primary); outline: none; }
   .search-input {
-    flex: 1; min-width: 200px; padding: 7px 12px;
+    flex: 1; min-width: 180px; padding: 7px 12px;
     border: 1.5px solid var(--border); border-radius: 7px;
-    font-size: 13px; font-family: 'Pretendard', sans-serif; outline: none;
+    font-size: 13px; font-family: 'Pretendard', sans-serif; outline: none; transition: border-color 0.15s;
   }
-  .search-input:focus { border-color: var(--primary); }
+  .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,102,204,0.1); }
+  /* Searchable dropdown */
+  .searchable-select { position: relative; }
+  .searchable-select-input { padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 7px; font-size: 13px; font-family: 'Pretendard', sans-serif; outline: none; width: 140px; background: #F8FAFC; cursor: pointer; }
+  .searchable-select-input:focus { border-color: var(--primary); }
+  .searchable-select-dropdown { position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: #fff; border: 1.5px solid var(--border); border-radius: 7px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 50; margin-top: 4px; }
+  .searchable-select-item { padding: 7px 12px; font-size: 12px; cursor: pointer; transition: background 0.1s; }
+  .searchable-select-item:hover { background: #EFF6FF; }
+  .searchable-select-item.selected { background: #DBEAFE; color: var(--primary); font-weight: 600; }
   .tag { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
   .tag-construction { background: #EFF6FF; color: #0066CC; }
   .tag-service { background: #F5F3FF; color: #7C3AED; }
@@ -143,6 +184,8 @@
   .alert { padding: 12px 14px; border-radius: 8px; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
   .alert-info { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
   .loading { text-align: center; padding: 40px; color: var(--text-secondary); font-size: 14px; }
+  .loading::before { content: ''; display: block; width: 28px; height: 28px; border: 3px solid #E2E8F0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; }
   .pagination button { padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 6px; background: var(--surface); cursor: pointer; font-size: 12px; font-family: 'Pretendard', sans-serif; }
   .pagination button:hover { background: var(--bg); }
@@ -313,7 +356,7 @@
   .d-day.normal { background: #F0FDF4; color: #059669; }
   .d-day.passed { background: #F1F5F9; color: #94A3B8; }
   /* Quick Preview Panel */
-  .quick-preview { position: fixed; right: 0; top: 56px; bottom: 0; width: 380px; background: var(--surface); box-shadow: -4px 0 20px rgba(0,0,0,0.1); z-index: 100; overflow-y: auto; padding: 24px; transform: translateX(100%); transition: transform 0.25s ease; }
+  .quick-preview { position: fixed; right: 0; top: 52px; bottom: 0; width: 340px; background: var(--surface); box-shadow: -4px 0 20px rgba(0,0,0,0.1); z-index: 100; overflow-y: auto; padding: 20px; transform: translateX(100%); transition: transform 0.25s ease; }
   .quick-preview.open { transform: translateX(0); }
   .quick-preview-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); padding: 4px 8px; border-radius: 4px; }
   .quick-preview-close:hover { background: var(--bg); }
@@ -332,15 +375,112 @@
   .strategy-row:last-child { border-bottom: none; }
   .strategy-label { font-size: 13px; opacity: 0.8; }
   .strategy-value { font-size: 15px; font-weight: 700; }
+
+  /* Skeleton loading */
+  .skeleton { position: relative; overflow: hidden; background: #E2E8F0; border-radius: 6px; }
+  .skeleton::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    animation: skeletonShimmer 1.5s infinite;
+  }
+  @keyframes skeletonShimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+  .skeleton-row { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #F1F5F9; }
+  .skeleton-cell { height: 14px; border-radius: 4px; }
+
+  /* Focus visible */
+  button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--primary); outline-offset: 2px;
+  }
+
+  /* Status dot (instead of tag for status) */
+  .status-indicator { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .status-dot.active { background: #10B981; }
+  .status-dot.completed { background: #94A3B8; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .sidebar { position: fixed; z-index: 200; height: 100vh; transform: translateX(-100%); }
+    .sidebar.mobile-open { transform: translateX(0); }
+    .sidebar.collapsed { transform: translateX(-100%); }
+    .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 199; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: 1fr; }
+    .topbar { padding: 0 16px; }
+    .content { padding: 16px; }
+    .quick-preview { width: 100%; }
+    .mobile-menu-btn { display: block !important; }
+  }
+  @media (min-width: 769px) {
+    .mobile-menu-btn { display: none !important; }
+    .mobile-overlay { display: none !important; }
+  }
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useEffect, useCallback, useContext, createContext } = React;
+const { useState, useEffect, useCallback, useContext, createContext, useRef } = React;
 const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line, Legend, ComposedChart } = Recharts;
 
 const API = '/api/v1';
+
+// ── Searchable Select ────────────────────────────────────────────────────────
+function SearchableSelect({ options, value, onChange, placeholder = '전체' }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filtered = options.filter(o => o.toLowerCase().includes(search.toLowerCase())).slice(0, 50);
+  const displayValue = value === 'all' ? '' : value;
+
+  return (
+    <div className="searchable-select" ref={ref}>
+      <input className="searchable-select-input"
+        value={open ? search : displayValue}
+        placeholder={placeholder}
+        onFocus={() => { setOpen(true); setSearch(''); }}
+        onChange={e => setSearch(e.target.value)} />
+      {open && (
+        <div className="searchable-select-dropdown">
+          <div className={`searchable-select-item ${value === 'all' ? 'selected' : ''}`}
+            onClick={() => { onChange('all'); setOpen(false); setSearch(''); }}>
+            {placeholder}
+          </div>
+          {filtered.map(o => (
+            <div key={o} className={`searchable-select-item ${value === o ? 'selected' : ''}`}
+              onClick={() => { onChange(o); setOpen(false); setSearch(''); }}>
+              {o}
+            </div>
+          ))}
+          {filtered.length === 0 && <div style={{padding:'8px 12px',fontSize:'12px',color:'#94A3B8'}}>결과 없음</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Skeleton Table ───────────────────────────────────────────────────────────
+function SkeletonTable({ rows = 8, cols = 6 }) {
+  return (
+    <div style={{padding:'8px 0'}}>
+      {Array.from({length: rows}).map((_, r) => (
+        <div key={r} className="skeleton-row">
+          {Array.from({length: cols}).map((_, c) => (
+            <div key={c} className="skeleton skeleton-cell"
+              style={{flex: c === 0 ? 2 : 1, width: '100%'}}>&nbsp;</div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function fmtAmount(n) {
   if (n == null) return '-';
@@ -429,7 +569,21 @@ function AnnouncementPage({ onSelectAnnouncement }) {
   const [previewItem, setPreviewItem] = useState(null);
   const [quickRate, setQuickRate] = useState('');
   const [industryCodes, setIndustryCodes] = useState([]);
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
+  const tableWrapRef = useRef(null);
   const addToast = useToast();
+
+  // Detect table horizontal scroll
+  useEffect(() => {
+    const el = tableWrapRef.current;
+    if (!el) return;
+    const check = () => el.classList.toggle('has-scroll', el.scrollWidth > el.clientWidth && el.scrollLeft < el.scrollWidth - el.clientWidth - 5);
+    check();
+    el.addEventListener('scroll', check);
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', check); ro.disconnect(); };
+  });
 
   const fetchData = () => {
     setLoading(true);
@@ -491,60 +645,83 @@ function AnnouncementPage({ onSelectAnnouncement }) {
 
   return (
     <div>
-      <div className="page-header">
-        <div className="page-title">공고화면</div>
-        <div className="page-desc">공사/용역 공고 목록 조회 - 행 클릭 시 퀵 프리뷰, "상세 분석" 버튼으로 종합화면 이동</div>
-      </div>
       <div className="grid-4 mb-16">
         {kpi ? [
-          { label: '전체공고', value: `${kpi.total_announcements?.toLocaleString() || 0}건` },
-          { label: '공사', value: `${kpi.construction_count?.toLocaleString() || 0}건` },
-          { label: '용역', value: `${kpi.service_count?.toLocaleString() || 0}건` },
-          { label: '평균사정률', value: `${kpi.avg_assessment_rate || '-'}%` },
+          { label: '전체공고', value: (kpi.total_announcements?.toLocaleString() || 0) + '건', icon: '📋' },
+          { label: '공사', value: (kpi.construction_count?.toLocaleString() || 0) + '건', icon: '🏗️' },
+          { label: '용역', value: (kpi.service_count?.toLocaleString() || 0) + '건', icon: '📐' },
+          { label: '평균사정률', value: (kpi.avg_assessment_rate || '-') + '%', icon: '📊' },
         ].map((k, i) => (
           <div key={i} className="kpi-card">
-            <div className="kpi-label">{k.label}</div>
+            <div className="kpi-label">{k.icon} {k.label}</div>
             <div className="kpi-value">{k.value}</div>
           </div>
-        )) : <div className="loading">KPI 로딩 중...</div>}
+        )) : (
+          <React.Fragment>
+            {[1,2,3,4].map(i => (
+              <div key={i} className="kpi-card">
+                <div className="skeleton" style={{width:'60px',height:'12px',marginBottom:'8px'}}>&nbsp;</div>
+                <div className="skeleton" style={{width:'80px',height:'24px'}}>&nbsp;</div>
+              </div>
+            ))}
+          </React.Fragment>
+        )}
       </div>
       <div className="filter-bar">
-        <input className="search-input" placeholder="공고명, 발주기관 검색" value={filter.search}
-          onChange={e => setFilter(f => ({...f, search: e.target.value}))}
-          onKeyDown={e => e.key === 'Enter' && handleFilter()} />
-        <select className="filter-select" value={filter.type} onChange={e => setFilter(f => ({...f, type: e.target.value}))}>
-          <option value="all">전체 유형</option>
-          <option value="공사">공사</option>
-          <option value="용역">용역</option>
-        </select>
-        <select className="filter-select" value={filter.source} onChange={e => setFilter(f => ({...f, source: e.target.value}))}>
-          <option value="all">전체 출처</option>
-          <option value="G2B">나라장터(G2B)</option>
-          <option value="D2B">국방조달(D2B)</option>
-        </select>
-        <select className="filter-select" value={filter.status} onChange={e => setFilter(f => ({...f, status: e.target.value}))}>
-          <option value="all">전체 상태</option>
-          <option value="진행중">진행중</option>
-          <option value="개찰완료">개찰완료</option>
-        </select>
-        <select className="filter-select" value={filter.area} onChange={e => setFilter(f => ({...f, area: e.target.value}))}>
-          <option value="all">전체 지역</option>
-          {['서울','경기','부산','대전','인천','광주','대구','울산','세종','강원','충북','충남','전북','전남','경북','경남','제주'].map(a => <option key={a} value={a}>{a}</option>)}
-        </select>
-        {industryCodes.length > 0 && (
-          <select className="filter-select" value={filter.industry} onChange={e => setFilter(f => ({...f, industry: e.target.value}))}>
-            <option value="all">전체 공종</option>
-            {industryCodes.map(c => <option key={c} value={c}>{c}</option>)}
+        <div className="filter-bar-main">
+          <input className="search-input" placeholder="공고명, 발주기관 검색..." value={filter.search}
+            onChange={e => setFilter(f => ({...f, search: e.target.value}))}
+            onKeyDown={e => e.key === 'Enter' && handleFilter()} />
+          <select className="filter-select" value={filter.type}
+            onChange={e => { setFilter(f => ({...f, type: e.target.value})); setTimeout(() => { setPage(1); fetchData(); }, 0); }}>
+            <option value="all">전체 유형</option>
+            <option value="공사">공사</option>
+            <option value="용역">용역</option>
           </select>
+          <select className="filter-select" value={filter.status}
+            onChange={e => { setFilter(f => ({...f, status: e.target.value})); setTimeout(() => { setPage(1); fetchData(); }, 0); }}>
+            <option value="all">전체 상태</option>
+            <option value="진행중">진행중</option>
+            <option value="개찰완료">개찰완료</option>
+          </select>
+          <button className={`filter-toggle-btn ${showAdvancedFilter ? 'active' : ''}`}
+            onClick={() => setShowAdvancedFilter(v => !v)}>
+            {showAdvancedFilter ? '필터 접기 ▲' : '고급 필터 ▼'}
+          </button>
+          <button className="btn btn-primary" onClick={handleFilter}>검색</button>
+        </div>
+        {showAdvancedFilter && (
+          <div className="filter-bar-advanced">
+            <select className="filter-select" value={filter.source}
+              onChange={e => { setFilter(f => ({...f, source: e.target.value})); setTimeout(() => { setPage(1); fetchData(); }, 0); }}>
+              <option value="all">전체 출처</option>
+              <option value="G2B">나라장터(G2B)</option>
+              <option value="D2B">국방조달(D2B)</option>
+            </select>
+            <select className="filter-select" value={filter.area}
+              onChange={e => { setFilter(f => ({...f, area: e.target.value})); setTimeout(() => { setPage(1); fetchData(); }, 0); }}>
+              <option value="all">전체 지역</option>
+              {['서울','경기','부산','대전','인천','광주','대구','울산','세종','강원','충북','충남','전북','전남','경북','경남','제주'].map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+            {industryCodes.length > 0 && (
+              <SearchableSelect
+                options={industryCodes}
+                value={filter.industry}
+                onChange={v => { setFilter(f => ({...f, industry: v})); setTimeout(() => { setPage(1); fetchData(); }, 0); }}
+                placeholder="전체 공종" />
+            )}
+            <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
+              <span style={{fontSize:'12px',color:'var(--text-secondary)',whiteSpace:'nowrap'}}>기간:</span>
+              <input type="date" className="filter-select" value={filter.dateFrom}
+                onChange={e => setFilter(f => ({...f, dateFrom: e.target.value}))}
+                style={{minWidth:'130px'}} placeholder="시작일" />
+              <span style={{fontSize:'12px',color:'var(--text-secondary)'}}>~</span>
+              <input type="date" className="filter-select" value={filter.dateTo}
+                onChange={e => setFilter(f => ({...f, dateTo: e.target.value}))}
+                style={{minWidth:'130px'}} placeholder="종료일" />
+            </div>
+          </div>
         )}
-        <input type="date" className="filter-select" value={filter.dateFrom}
-          onChange={e => setFilter(f => ({...f, dateFrom: e.target.value}))}
-          style={{minWidth:'130px'}} title="시작일" />
-        <span style={{fontSize:'12px',color:'var(--text-secondary)'}}>~</span>
-        <input type="date" className="filter-select" value={filter.dateTo}
-          onChange={e => setFilter(f => ({...f, dateTo: e.target.value}))}
-          style={{minWidth:'130px'}} title="종료일" />
-        <button className="btn btn-primary" onClick={handleFilter}>필터 적용</button>
       </div>
       <div className="card">
         <div className="card-header">
@@ -554,8 +731,8 @@ function AnnouncementPage({ onSelectAnnouncement }) {
           </div>
           <button className="btn btn-outline" onClick={handleCSV}>CSV 다운로드</button>
         </div>
-        {loading ? <div className="loading">데이터 로딩 중...</div> : (
-          <div className="table-wrap">
+        {loading ? <SkeletonTable rows={10} cols={8} /> : (
+          <div className="table-wrap" ref={tableWrapRef}>
             <table>
               <thead>
                 <tr>
@@ -580,18 +757,14 @@ function AnnouncementPage({ onSelectAnnouncement }) {
                       </div>
                     </td>
                     <td>
-                      <span className={`tag ${a.status === '진행중' ? 'tag-construction' : 'tag-service'}`}>
+                      <span className="status-indicator">
+                        <span className={`status-dot ${a.status === '진행중' ? 'active' : 'completed'}`}></span>
                         {a.status || '-'}
                       </span>
                     </td>
                     <td>
                       {a.rate ? (
-                        <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
-                          <div className="prog-bar" style={{width:'60px',margin:0}}>
-                            <div className="prog-fill" style={{width:`${Math.min(a.rate, 100)}%`}}></div>
-                          </div>
-                          <span style={{fontWeight:'700',color:'var(--primary)',fontSize:'13px'}}>{a.rate}%</span>
-                        </div>
+                        <span style={{fontWeight:'700',color:'var(--primary)',fontSize:'13px'}}>{a.rate}%</span>
                       ) : <span style={{color:'#94A3B8',fontSize:'12px'}}>-</span>}
                     </td>
                     <td>
@@ -879,9 +1052,6 @@ function ComprehensivePage({ announcement }) {
   if (!announcement) {
     return (
       <div>
-        <div className="page-header">
-          <div className="page-title">종합화면</div>
-        </div>
         <div className="card empty-state">
           <div className="empty-state-icon">📊</div>
           <div className="empty-state-title">공고를 선택해주세요</div>
@@ -1073,12 +1243,7 @@ function ComprehensivePage({ announcement }) {
 
   return (
     <div>
-      <div className="page-header">
-        <div className="page-title">종합화면</div>
-        <div className="page-desc">선택된 공고의 사정률 분석, 업체분석, 종합분석</div>
-      </div>
-
-      {/* Summary Card — Phase 1: 투찰금액 행 추가 */}
+      {/* Summary Card */}
       <div className="summary-card">
         <div className="summary-title">{announcement.title}</div>
         <div className="summary-meta">
@@ -1212,10 +1377,10 @@ function ComprehensivePage({ announcement }) {
               <div className="card-header">
                 <div>
                   <div className="card-title">사정률 발생빈도 히스토그램</div>
-                  <div className="card-sub">막대를 클릭하면 해당 사정률이 선택됩니다 {peakRate != null && `| 피크 구간: ${peakRate}%`}</div>
+                  <div className="card-sub">💡 막대를 클릭하여 사정률을 선택하세요 {peakRate != null && `| 피크 구간: ${peakRate}%`}</div>
                 </div>
               </div>
-              {freqLoading ? <div className="loading">데이터 로딩 중...</div> : freqBins.length > 0 ? (
+              {freqLoading ? <div className="loading">분석 데이터 로딩 중...</div> : freqBins.length > 0 ? (
                 <>
                   <ResponsiveContainer width="100%" height={320}>
                     <BarChart data={freqBins} margin={{top:20,right:16,bottom:0,left:0}} barCategoryGap="15%">
@@ -1946,10 +2111,6 @@ function AdminPage() {
 
   return (
     <div>
-      <div className="page-header">
-        <div className="page-title">관리자 모니터링</div>
-        <div className="page-desc">데이터 파이프라인 상태 &middot; 사용자 관리</div>
-      </div>
       <div className="grid-4 mb-16" style={{gridTemplateColumns: nasStatus ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)'}}>
         {[
           { label: '전체 사용자', value: `${admin.total_users}명` },
@@ -2210,6 +2371,8 @@ function App() {
   const [page, setPage] = useState('announcements');
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [syncingTopbar, setSyncingTopbar] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const addToast = useToast();
 
   if (authLoading) {
@@ -2253,26 +2416,29 @@ function App() {
 
   return (
     <div className="layout">
-      <aside className="sidebar">
+      {mobileMenuOpen && <div className="mobile-overlay" onClick={() => setMobileMenuOpen(false)}></div>}
+      <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-logo">
           <div className="logo-mark">
             <div className="logo-icon">📡</div>
-            <div>
+            <div className="logo-text">
               <div>입찰 인사이트</div>
               <div className="logo-sub">조달 입찰 분석 플랫폼</div>
             </div>
           </div>
+          <button className="sidebar-toggle" onClick={() => { setSidebarCollapsed(c => !c); setMobileMenuOpen(false); }}
+            title={sidebarCollapsed ? '사이드바 펼치기' : '사이드바 접기'}>
+            {sidebarCollapsed ? '▶' : '◀'}
+          </button>
         </div>
-        {sections.map(sec => (
-          <div key={sec} className="sidebar-section">
-            <div className="sidebar-label">{sec}</div>
-            {visiblePages.filter(p => p.section === sec).map(p => (
-              <button key={p.id} className={`nav-item ${page === p.id ? 'active' : ''}`}
-                onClick={() => { setPage(p.id); }}>
-                <span className="nav-icon">{p.icon}</span>
-                {p.label}
-              </button>
-            ))}
+        {visiblePages.map(p => (
+          <div key={p.id} style={{padding:'2px 8px'}}>
+            <button className={`nav-item ${page === p.id ? 'active' : ''}`}
+              onClick={() => { setPage(p.id); setMobileMenuOpen(false); }}
+              title={p.label}>
+              <span className="nav-icon">{p.icon}</span>
+              <span>{p.label}</span>
+            </button>
           </div>
         ))}
         <div className="sidebar-bottom">
@@ -2291,13 +2457,18 @@ function App() {
       </aside>
       <div className="main">
         <div className="topbar">
-          <div className="topbar-title">{current?.icon} {current?.label}</div>
+          <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+            <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)}
+              style={{background:'none',border:'none',fontSize:'20px',cursor:'pointer',padding:'4px'}}>☰</button>
+            <div className="topbar-title">{current?.label}</div>
+          </div>
           <div className="topbar-right">
-            <span className="badge badge-green">● API 연결됨</span>
-            <span className="badge badge-blue">실시간 데이터</span>
-            <button className="btn btn-primary" disabled={syncingTopbar} onClick={handleTopbarSync}>
-              {syncingTopbar ? '수집 중...' : '수동 수집'}
-            </button>
+            <span className="badge badge-green" style={{fontSize:'10px'}}>● 연결됨</span>
+            {user.role === 'admin' && (
+              <button className="btn btn-primary btn-sm" disabled={syncingTopbar} onClick={handleTopbarSync}>
+                {syncingTopbar ? '수집 중...' : '수동 수집'}
+              </button>
+            )}
           </div>
         </div>
         <div className="content">
