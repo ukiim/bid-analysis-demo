@@ -72,19 +72,17 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import (
-    create_engine, Column, String, Integer, Float, Text, DateTime, Boolean,
+    Column, String, Integer, Float, Text, DateTime, Boolean,
     func, text, Index,
 )
-from sqlalchemy.orm import sessionmaker
 from jose import JWTError, jwt
 import bcrypt
 
-# ─── DB 설정 (SQLite) ──────────────────────────────────────────────────────
+# ─── DB 엔진 (app/core/database 에서 정의 — F2 분리) ───────────────────────
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "demo.db")
+from app.core.database import engine, SessionLocal, DB_PATH  # noqa: E402
+
 NAS_PATH = os.environ.get("NAS_MOUNT_PATH", os.path.join(os.path.dirname(__file__), "data"))
-engine = create_engine(f"sqlite:///{DB_PATH}", echo=False)
-SessionLocal = sessionmaker(bind=engine)
 
 
 # ─── 모델 (app/models 에서 정의 — F1 분리) ────────────────────────────────
@@ -402,36 +400,8 @@ def _apply_schedule_config(config: dict):
 
 from contextlib import asynccontextmanager, contextmanager
 
-
-@contextmanager
-def db_session():
-    """SessionLocal 컨텍스트 매니저 — 예외 발생 시도 자동 close.
-
-    헬퍼 함수에서 사용:
-        with db_session() as db:
-            ann = db.query(BidAnnouncement).filter(...).first()
-
-    FastAPI 엔드포인트는 Depends(get_db) 사용 권장.
-    """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def get_db():
-    """FastAPI dependency — 엔드포인트 자동 주입용.
-
-    Usage:
-        def list_announcements(db: Session = Depends(get_db)):
-            return db.query(...).all()
-    """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# db_session / get_db 는 app/core/database 에서 재import (F2 분리)
+from app.core.database import db_session, get_db  # noqa: E402, F401
 
 
 @asynccontextmanager
@@ -642,12 +612,7 @@ async def _access_log_middleware(request, call_next):
     return response
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# get_db 는 app/core/database 에서 이미 import 되어 있음 (F2)
 
 
 # ─── 인증 설정 ──────────────────────────────────────────────────────────
@@ -674,57 +639,21 @@ if _RUNTIME_ENV == "production":
 else:
     if SECRET_KEY == _DEFAULT_SECRET:
         logger.warning("SECRET_KEY 기본값 사용 중 — 프로덕션 배포 전 반드시 변경 필요")
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24시간
+# ─── 인증 헬퍼 (app/core/security 에서 정의 — F2 분리) ──────────────────
+# server.py 가 환경변수 검증 후 SECRET_KEY 를 주입한다.
+import app.core.security as _sec_mod  # noqa: E402
+_sec_mod.SECRET_KEY = SECRET_KEY
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
-
-
-def get_password_hash(password: str) -> str:
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-
-
-def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    """JWT 토큰에서 현재 사용자 조회. 토큰 없으면 None 반환."""
-    if not token:
-        return None
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            return None
-    except JWTError:
-        return None
-    db = SessionLocal()
-    try:
-        user = db.query(User).filter(User.id == user_id).first()
-    finally:
-        db.close()
-    return user
-
-
-def require_auth(current_user: User = Depends(get_current_user)):
-    """인증 필수 의존성"""
-    if not current_user:
-        raise HTTPException(status_code=401, detail="인증이 필요합니다.")
-    return current_user
-
-
-def require_admin(current_user: User = Depends(require_auth)):
-    """관리자 권한 필수 의존성"""
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="관리자 권한이 필요합니다.")
-    return current_user
+from app.core.security import (  # noqa: E402
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    oauth2_scheme,
+    verify_password,
+    get_password_hash,
+    create_access_token,
+    get_current_user,
+    require_auth,
+    require_admin,
+)
 
 
 # ─── API: 인증 ──────────────────────────────────────────────────────────
