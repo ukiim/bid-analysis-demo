@@ -1,9 +1,10 @@
-"""sync 라우터 — 현재 server.py 의 @app.* 핸들러로 정의됨.
+"""sync 라우터 — 사용처 없음 (placeholder).
 
-이 모듈은 향후 코드 이전을 위한 자리표시자.
-신규 라우터 추가 시 server.py 가 아닌 본 파일에 APIRouter 로 작성 권장.
-현재는 server.app 을 재노출.
+원래는 `/api/v1/sync/*` 전용 라우터로 계획되었으나,
+실제 동기화 엔드포인트는 모두 관리자 전용(`/api/v1/admin/sync/*`)이므로
+`app/routes/admin.py` 에 통합되었다. 본 모듈은 추후 일반 사용자용
+동기화 엔드포인트가 추가될 경우를 위해 유지한다.
 """
-from app.main import app  # noqa: F401
+from fastapi import APIRouter
 
-__all__ = ["app"]
+router = APIRouter(prefix="/api/v1/sync", tags=["동기화"])
