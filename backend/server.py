@@ -1753,64 +1753,9 @@ def analysis_correlation(
         db.close()
 
 
-# ─── API: 사용자 예측 설정 학습 저장 (스펙 §1 — 다음 공고 자동 적용) ─────
-
-@app.get("/api/v1/users/me/prediction-settings")
-@rate_limit("60/minute")
-def get_prediction_settings(request: Request, current_user: User = Depends(require_auth)):
-    """현재 로그인 사용자의 사정률 예측 설정 조회 (없으면 기본값 반환)"""
-    db = SessionLocal()
-    try:
-        s = db.query(PredictionSettings).filter(
-            PredictionSettings.user_id == current_user.id
-        ).first()
-        if not s:
-            return {
-                "period_months": 6, "category_filter": "same",
-                "bucket_mode": "A", "detail_rule": "max_gap",
-                "rate_range_start": None, "rate_range_end": None,
-                "confirmed_rate": None, "exists": False,
-            }
-        return {
-            "period_months": s.period_months,
-            "category_filter": s.category_filter,
-            "bucket_mode": s.bucket_mode,
-            "detail_rule": s.detail_rule,
-            "rate_range_start": s.rate_range_start,
-            "rate_range_end": s.rate_range_end,
-            "confirmed_rate": s.confirmed_rate,
-            "updated_at": s.updated_at.isoformat() if s.updated_at else None,
-            "exists": True,
-        }
-    finally:
-        db.close()
-
-
-@app.put("/api/v1/users/me/prediction-settings")
-@rate_limit("30/minute")
-def put_prediction_settings(
-    request: Request,
-    payload: dict,
-    current_user: User = Depends(require_auth),
-):
-    """사정률 예측 설정 upsert"""
-    db = SessionLocal()
-    try:
-        s = db.query(PredictionSettings).filter(
-            PredictionSettings.user_id == current_user.id
-        ).first()
-        if not s:
-            s = PredictionSettings(user_id=current_user.id)
-            db.add(s)
-        for field in ("period_months", "category_filter", "bucket_mode", "detail_rule",
-                      "rate_range_start", "rate_range_end", "confirmed_rate"):
-            if field in payload and payload[field] is not None:
-                setattr(s, field, payload[field])
-        s.updated_at = datetime.now()
-        db.commit()
-        return {"status": "ok", "updated_at": s.updated_at.isoformat()}
-    finally:
-        db.close()
+# ─── API: 사용자 예측 설정 (app/routes/users 로 이전 — F4) ──────────
+from app.routes.users import router as _users_router  # noqa: E402
+app.include_router(_users_router)
 
 
 # ─── API: 분석 결과 엑셀 export (스펙 §3.8/3.9) ──────────────────────────
