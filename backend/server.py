@@ -1,9 +1,27 @@
-"""통합 데모 서버 — KBID 스타일 1순위 예상 낙찰가 분석 시스템
+"""통합 데모 서버 — 비드스타 백엔드 진입점 (Inverted Façade).
 
-SQLite + FastAPI로 백엔드 API 서빙 + 프론트엔드 정적 파일 서빙
-단일 프로세스로 전체 데모 구동
+이 모듈은 FastAPI 앱 인스턴스(`app`)와 인프라(스케줄러·미들웨어·헬스체크·
+프론트엔드 서빙)을 보유하고, 도메인별 API 핸들러는 `app/routes/*.py` 의
+APIRouter 로 분리되어 있다 (MIGRATION.md F4 참조).
 
-실행: python3 server.py
+**아키텍처 (F1–F4 완료, F5 부분 적용)**
+- 모델: `app/models/` (User, BidAnnouncement, BidResult, …)
+- 코어: `app/core/{config,database,security,deps}.py`
+- 서비스: `app/services/{cache,analysis,sync,history}.py`
+- 라우터: `app/routes/{auth,meta,announcements,users,analysis,admin,
+  history,upload,stats}.py` — 총 54개 엔드포인트
+- 인프라(본 파일): FastAPI 앱·CORS·보안 헤더·접근 로그 미들웨어·
+  APScheduler(lifespan)·rate limiter·헬스체크/메트릭·SPA catchall
+
+**잔존 사유** (F5 ≤80 라인 미달, 약 800 라인):
+- 스케줄러 잡(`_scheduled_sync_job`, `_scheduled_model_retrain`,
+  `_apply_schedule_config`, `lifespan`)은 admin 라우터(`/api/v1/admin/schedule`)
+  와 강결합되어 본 파일에 유지. 추후 `app/services/scheduler.py` 분리 가능.
+- 보안 헤더·접근 로그 미들웨어는 `app.add_middleware`/`@app.middleware`
+  데코레이터가 앱 인스턴스 정의와 같은 모듈에 있어야 안전하므로 잔존.
+- `healthz`/`metrics`/SPA catchall 은 인프라 성격으로 본 파일에 유지.
+
+실행: `python3 server.py` (개발) 또는 `uvicorn server:app` / `uvicorn app.main:app`.
 """
 
 import os
