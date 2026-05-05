@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select, extract, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import BidAnnouncement, BidResult
-from app.db.session import get_db
-from app.schemas.stats import (
+from _legacy_app.db.models import BidAnnouncement, BidResult
+from _legacy_app.db.session import get_db
+from _legacy_app.schemas.stats import (
     DashboardKPI,
     IndustryStat,
     IndustryStatsResponse,

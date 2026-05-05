@@ -5,9 +5,9 @@ from sqlalchemy import func, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from app.db.models import BidAnnouncement, BidResult
-from app.db.session import get_db
-from app.schemas.announcement import (
+from _legacy_app.db.models import BidAnnouncement, BidResult
+from _legacy_app.db.session import get_db
+from _legacy_app.schemas.announcement import (
     AnnouncementFilter,
     AnnouncementListResponse,
     AnnouncementResponse,

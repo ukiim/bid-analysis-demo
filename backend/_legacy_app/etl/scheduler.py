@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import settings
-from app.db.models import BidAnnouncement, BidResult, DataSyncLog
-from app.db.session import async_session
-from app.etl.g2b_client import G2BClient, parse_bid_notice, parse_award_result
-from app.etl.d2b_client import D2BClient, parse_d2b_notice, parse_d2b_result
+from _legacy_app.config import settings
+from _legacy_app.db.models import BidAnnouncement, BidResult, DataSyncLog
+from _legacy_app.db.session import async_session
+from _legacy_app.etl.g2b_client import G2BClient, parse_bid_notice, parse_award_result
+from _legacy_app.etl.d2b_client import D2BClient, parse_d2b_notice, parse_d2b_result
 
 logger = logging.getLogger(__name__)
 

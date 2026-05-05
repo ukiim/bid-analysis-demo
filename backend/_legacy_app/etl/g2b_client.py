@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import httpx
 import xmltodict
 
-from app.config import settings
+from _legacy_app.config import settings
 
 logger = logging.getLogger(__name__)
 

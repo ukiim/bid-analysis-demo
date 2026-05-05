@@ -12,14 +12,14 @@ from datetime import datetime, timedelta
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import (
+from _legacy_app.db.models import (
     Base,
     BidAnnouncement,
     BidResult,
     DataSyncLog,
     User,
 )
-from app.db.session import engine, async_session
+from _legacy_app.db.session import engine, async_session
 
 
 # ── 시드 데이터 정의 ──

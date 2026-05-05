@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import (
+from _legacy_app.db.models import (
     BidAnnouncement,
     BidResult,
     DataSyncLog,
     User,
 )
-from app.db.session import get_db
-from app.schemas.stats import AdminDashboard, PipelineStatus
+from _legacy_app.db.session import get_db
+from _legacy_app.schemas.stats import AdminDashboard, PipelineStatus
 
 router = APIRouter()
 
@@ -70,6 +70,6 @@ async def trigger_sync(
     background_tasks: BackgroundTasks = None,
 ):
     """수동 데이터 수집 트리거"""
-    from app.etl.scheduler import run_sync
+    from _legacy_app.etl.scheduler import run_sync
     background_tasks.add_task(run_sync, source)
     return {"message": f"{source} 데이터 수집이 시작되었습니다.", "status": "started"}
