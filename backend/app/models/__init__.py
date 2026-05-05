@@ -1,42 +1,26 @@
-"""ORM 모델 — server.py 정의를 재노출.
+"""ORM 모델 패키지 — server.py 모놀리스에서 분리된 단일 진실 공급원.
 
-신규 코드는 `from app.models import BidAnnouncement` 형태 사용 가능.
-Alembic autogenerate 는 여전히 server.py 의 Base 를 참조한다.
+신규 코드는 `from app.models import BidAnnouncement` 등을 사용.
+server.py 는 이 모듈에서 모든 모델/Base 를 재import 한다.
+Alembic autogenerate 는 Base.metadata 를 통해 모든 테이블을 인식한다.
 """
 from __future__ import annotations
 
-import sys as _sys
-import os as _os
-
-_BACKEND_DIR = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
-if _BACKEND_DIR not in _sys.path:
-    _sys.path.insert(0, _BACKEND_DIR)
-
-import server as _server  # noqa: E402
-
-# 모델 클래스 8종
-BidAnnouncement = _server.BidAnnouncement
-BidResult = _server.BidResult
-CompanyBidRecord = _server.CompanyBidRecord
-DataSyncLog = _server.DataSyncLog
-User = _server.User
-QueryHistory = _server.QueryHistory
-UploadLog = _server.UploadLog
-ModelMetric = _server.ModelMetric
-PredictionSettings = _server.PredictionSettings
-
-# Base 도 함께 노출 — Alembic 등에서 참조
-Base = _server.Base
+from app.models._base import Base
+from app.models.announcement import BidAnnouncement
+from app.models.bid import BidResult, CompanyBidRecord
+from app.models.sync import DataSyncLog, ModelMetric, PredictionSettings
+from app.models.user import QueryHistory, UploadLog, User
 
 __all__ = [
+    "Base",
     "BidAnnouncement",
     "BidResult",
     "CompanyBidRecord",
     "DataSyncLog",
-    "User",
-    "QueryHistory",
-    "UploadLog",
     "ModelMetric",
     "PredictionSettings",
-    "Base",
+    "QueryHistory",
+    "UploadLog",
+    "User",
 ]

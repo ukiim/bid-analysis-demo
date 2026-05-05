@@ -75,7 +75,7 @@ from sqlalchemy import (
     create_engine, Column, String, Integer, Float, Text, DateTime, Boolean,
     func, text, Index,
 )
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from jose import JWTError, jwt
 import bcrypt
 
@@ -85,150 +85,22 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "demo.db")
 NAS_PATH = os.environ.get("NAS_MOUNT_PATH", os.path.join(os.path.dirname(__file__), "data"))
 engine = create_engine(f"sqlite:///{DB_PATH}", echo=False)
 SessionLocal = sessionmaker(bind=engine)
-Base = declarative_base()
 
 
-# ─── 모델 ──────────────────────────────────────────────────────────────────
+# ─── 모델 (app/models 에서 정의 — F1 분리) ────────────────────────────────
 
-class BidAnnouncement(Base):
-    __tablename__ = "bid_announcements"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    source = Column(String, nullable=False)
-    bid_number = Column(String, nullable=False, index=True)            # 매칭 조회용
-    category = Column(String, nullable=False, index=True)              # 공사 / 용역
-    title = Column(String, nullable=False)
-    ordering_org_name = Column(String, nullable=False)
-    ordering_org_type = Column(String)
-    parent_org_name = Column(String)                    # 상위 발주기관 (경기도 등)
-    region = Column(String, index=True)
-    industry_code = Column(String, index=True)
-    base_amount = Column(Integer)
-    bid_method = Column(String)
-    announced_at = Column(DateTime, index=True)        # 정렬·범위 필터 핵심
-    deadline_at = Column(DateTime)
-    status = Column(String, default="진행중", index=True)
-    is_defense = Column(Boolean, default=False, index=True)  # 국방부/군 발주 자동 태깅
-    external_url = Column(Text)  # 원본 공고 상세 페이지 URL (G2B 응답의 bidNtceDtlUrl)
-    bid_ord = Column(String, default="000")  # 차수 (URL fallback 생성 시 필요)
-    # 복합 인덱스 — 공고 목록의 (category 필터 + announced_at 정렬) 조합 가속
-    __table_args__ = (
-        Index("ix_bid_ann_cat_announced", "category", "announced_at"),
-    )
-
-
-class BidResult(Base):
-    __tablename__ = "bid_results"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    announcement_id = Column(String, nullable=False, index=True)        # batch 조회·매칭 가속
-    winning_amount = Column(Integer)
-    winning_rate = Column(Float)
-    assessment_rate = Column(Float)
-    first_place_rate = Column(Float)                    # 1순위 사정률
-    first_place_amount = Column(Integer)                # 1순위 낙찰가
-    num_bidders = Column(Integer)
-    winning_company = Column(String)
-    preliminary_prices = Column(Text)                   # JSON: 복수예비가격 15개
-    selected_price_indices = Column(Text)               # JSON: 추첨된 4개 인덱스
-    opened_at = Column(DateTime)
-
-
-class CompanyBidRecord(Base):
-    """업체별 투찰 기록"""
-    __tablename__ = "company_bid_records"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    announcement_id = Column(String, nullable=False)
-    company_name = Column(String, nullable=False)
-    bid_amount = Column(Integer)
-    bid_rate = Column(Float)                            # 업체 투찰률
-    ranking = Column(Integer)
-    is_first_place = Column(Boolean, default=False)
-
-
-class DataSyncLog(Base):
-    __tablename__ = "data_sync_logs"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    source = Column(String, nullable=False)
-    sync_type = Column(String, nullable=False)
-    status = Column(String, nullable=False)
-    records_fetched = Column(Integer, default=0)
-    inserted_count = Column(Integer, default=0)
-    error_message = Column(Text)
-    started_at = Column(DateTime)
-    finished_at = Column(DateTime)
-
-
-class User(Base):
-    __tablename__ = "users"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    username = Column(String, unique=True, nullable=False)
-    email = Column(String, unique=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    name = Column(String)
-    role = Column(String, default="user")              # user / admin
-    plan = Column(String, default="무료")
-    is_active = Column(Boolean, default=True)
-    query_count = Column(Integer, default=0)
-    joined_at = Column(DateTime)
-    last_login_at = Column(DateTime)
-
-
-class QueryHistory(Base):
-    """사용자 조회 이력"""
-    __tablename__ = "query_history"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, nullable=False)
-    announcement_id = Column(String)
-    analysis_type = Column(String)                     # frequency / company / comprehensive
-    parameters = Column(Text)                          # JSON
-    result_summary = Column(Text)                      # JSON
-    queried_at = Column(DateTime, default=datetime.now)
-
-
-class UploadLog(Base):
-    """데이터 업로드 이력"""
-    __tablename__ = "upload_logs"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, nullable=False)
-    filename = Column(String, nullable=False)
-    file_size = Column(Integer)
-    records_count = Column(Integer, default=0)
-    status = Column(String, default="processing")      # processing / success / failed
-    error_message = Column(Text)
-    uploaded_at = Column(DateTime, default=datetime.now)
-
-
-class ModelMetric(Base):
-    """매일 자동 재학습된 회귀 모델 성능 기록 — 정확도 추이 모니터링."""
-    __tablename__ = "model_metrics"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    trained_at = Column(DateTime, default=datetime.now, index=True)
-    category = Column(String, index=True)         # "공사" / "용역" / "all"
-    model_type = Column(String, default="ols")    # "ols" / "ensemble" 등 확장 대비
-    n_samples = Column(Integer)
-    r_squared = Column(Float)
-    residual_std = Column(Float)
-    mae = Column(Float)                            # 자체 학습 데이터 MAE (in-sample)
-    coefficients_json = Column(Text)              # JSON 직렬화 계수 dump
-    period_days = Column(Integer, default=180)
-
-
-class PredictionSettings(Base):
-    """사용자별 사정률 예측 학습 값 (스펙 §1 — 다음 공고 자동 적용)
-
-    Tab1 에서 사용자가 마지막에 확정한 분석 옵션을 user_id 단위로 저장 →
-    다음 공고 진입 시 같은 옵션으로 자동 적용.
-    """
-    __tablename__ = "prediction_settings"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, nullable=False, unique=True)
-    period_months = Column(Integer, default=6)
-    category_filter = Column(String, default="same")
-    bucket_mode = Column(String, default="A")
-    detail_rule = Column(String, default="max_gap")
-    rate_range_start = Column(Float)
-    rate_range_end = Column(Float)
-    confirmed_rate = Column(Float)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+from app.models import (  # noqa: E402
+    Base,
+    BidAnnouncement,
+    BidResult,
+    CompanyBidRecord,
+    DataSyncLog,
+    ModelMetric,
+    PredictionSettings,
+    QueryHistory,
+    UploadLog,
+    User,
+)
 
 
 # ─── 발주기관 계층 매핑 ───────────────────────────────────────────────────
