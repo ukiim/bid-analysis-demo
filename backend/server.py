@@ -3449,81 +3449,13 @@ def get_errors(current_user: User = Depends(require_admin)):
     return {"fail_count": fail_count, "errors": result}
 
 
-# ─── API: 조회 이력 ──────────────────────────────────────────────────────
+# ─── API: 조회 이력 (app/routes/history 로 이전 — F4) ────────────────────
+from app.routes.history import router as _history_router  # noqa: E402
+app.include_router(_history_router)
 
-@app.get("/api/v1/history")
-def list_history(
-    page: int = 1, page_size: int = 20,
-    current_user: User = Depends(require_auth),
-):
-    """현재 사용자의 분석 조회 이력"""
-    db = SessionLocal()
-    try:
-        q = db.query(QueryHistory).filter(QueryHistory.user_id == current_user.id)
-        total = q.count()
-        items = q.order_by(QueryHistory.queried_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
-
-        result = []
-        for h in items:
-            ann = db.query(BidAnnouncement).filter(BidAnnouncement.id == h.announcement_id).first()
-            result.append({
-                "id": h.id,
-                "announcement_id": h.announcement_id,
-                "announcement_title": ann.title if ann else None,
-                "analysis_type": h.analysis_type,
-                "parameters": json.loads(h.parameters) if h.parameters else None,
-                "result_summary": json.loads(h.result_summary) if h.result_summary else None,
-                "queried_at": h.queried_at.strftime("%Y-%m-%d %H:%M") if h.queried_at else None,
-            })
-
-    finally:
-        db.close()
-    return {"items": result, "total": total, "page": page, "page_size": page_size}
-
-
-@app.get("/api/v1/history/{history_id}")
-def get_history(history_id: str, current_user: User = Depends(require_auth)):
-    db = SessionLocal()
-    try:
-        h = db.query(QueryHistory).filter(
-            QueryHistory.id == history_id, QueryHistory.user_id == current_user.id
-        ).first()
-        if not h:
-            db.close()
-            raise HTTPException(status_code=404, detail="조회 이력을 찾을 수 없습니다.")
-        ann = db.query(BidAnnouncement).filter(BidAnnouncement.id == h.announcement_id).first()
-    finally:
-        db.close()
-    return {
-        "id": h.id,
-        "announcement_id": h.announcement_id,
-        "announcement_title": ann.title if ann else None,
-        "analysis_type": h.analysis_type,
-        "parameters": json.loads(h.parameters) if h.parameters else None,
-        "result_summary": json.loads(h.result_summary) if h.result_summary else None,
-        "queried_at": h.queried_at.strftime("%Y-%m-%d %H:%M") if h.queried_at else None,
-    }
-
-
-def save_query_history(user_id: str, announcement_id: str, analysis_type: str,
-                       parameters: dict = None, result_summary: dict = None):
-    """분석 조회 이력 저장 (헬퍼 함수). 예외는 운영에 영향 없도록 로그만."""
-    try:
-        with db_session() as db:
-            db.add(QueryHistory(
-                user_id=user_id,
-                announcement_id=announcement_id,
-                analysis_type=analysis_type,
-                parameters=json.dumps(parameters, ensure_ascii=False) if parameters else None,
-                result_summary=json.dumps(result_summary, ensure_ascii=False) if result_summary else None,
-                queried_at=datetime.now(),
-            ))
-            user = db.query(User).filter(User.id == user_id).first()
-            if user:
-                user.query_count = (user.query_count or 0) + 1
-            db.commit()
-    except Exception as exc:
-        logger.debug("query history 저장 실패 (분석 결과에 영향 없음): %s", exc)
+# save_query_history 는 다른 분석 핸들러에서도 호출되므로
+# app/services/history 에서 재export 하여 backwards-compat 유지.
+from app.services.history import save_query_history  # noqa: E402, F401
 
 
 # ─── API: 데이터 업로드 ──────────────────────────────────────────────────
