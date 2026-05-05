@@ -508,53 +508,13 @@ def rate_limit(spec: str):
     return noop
 
 
-# ─── 분석 결과 TTL 캐시 ───────────────────────────────────────────
-# 간단한 LRU + TTL 메모리 캐시. 운영 시 Redis로 교체 가능.
-import threading
-import time as _time
-
-_CACHE_MAX = int(os.environ.get("ANALYSIS_CACHE_SIZE", "256"))
-_CACHE_TTL = int(os.environ.get("ANALYSIS_CACHE_TTL", "300"))  # 초
-_cache_store: dict = {}
-_cache_lock = threading.Lock()
-
-
-def _cache_get(key: str):
-    with _cache_lock:
-        entry = _cache_store.get(key)
-        if not entry:
-            return None
-        expires_at, value = entry
-        if _time.time() > expires_at:
-            _cache_store.pop(key, None)
-            return None
-        return value
-
-
-def _cache_set(key: str, value):
-    with _cache_lock:
-        # 크기 초과 시 만료된 항목부터 정리
-        if len(_cache_store) >= _CACHE_MAX:
-            now = _time.time()
-            expired = [k for k, (t, _) in _cache_store.items() if now > t]
-            for k in expired:
-                _cache_store.pop(k, None)
-            # 여전히 초과면 가장 오래된 항목 제거
-            if len(_cache_store) >= _CACHE_MAX:
-                oldest = min(_cache_store.items(), key=lambda kv: kv[1][0])[0]
-                _cache_store.pop(oldest, None)
-        _cache_store[key] = (_time.time() + _CACHE_TTL, value)
-
-
-def _cache_key(*parts) -> str:
-    return "|".join(str(p) for p in parts)
-
-
-def invalidate_analysis_cache():
-    """공고/수집 데이터 변경 시 호출"""
-    with _cache_lock:
-        _cache_store.clear()
-    logger.info("analysis cache invalidated")
+# ─── 분석 결과 TTL 캐시 (app/services/cache 에서 정의 — F3 분리) ──────────
+from app.services.cache import (  # noqa: E402, F401
+    _cache_get,
+    _cache_set,
+    _cache_key,
+    invalidate_analysis_cache,
+)
 
 
 # ─── 보안 헤더 미들웨어 ───────────────────────────────────────────
@@ -5329,9 +5289,10 @@ def metrics():
            "누적 분석 조회 수", "counter")
         _m("upload_logs_total", db.query(UploadLog).count(),
            "누적 업로드 건수", "counter")
-        # 캐시/스케줄러 상태
-        with _cache_lock:
-            cache_size = len(_cache_store)
+        # 캐시/스케줄러 상태 (F3: 캐시 lock/store 가 app.services.cache 로 이동)
+        from app.services.cache import _cache_lock as _cl, _cache_store as _cs  # noqa: E402
+        with _cl:
+            cache_size = len(_cs)
         _m("analysis_cache_entries", cache_size, "분석 캐시 엔트리 수")
         _m("scheduler_running", 1 if _scheduler is not None else 0,
            "스케줄러 실행 여부 (1=running)")
