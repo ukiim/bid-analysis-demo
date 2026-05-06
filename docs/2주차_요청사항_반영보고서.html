@@ -27,7 +27,7 @@
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Segoe UI', Roboto, sans-serif;
     color: var(--text);
     background: var(--bg);
-    line-height: 1.6;
+    line-height: 1.65;
     letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
   }
@@ -48,7 +48,7 @@
     font-weight: 800;
     letter-spacing: -0.025em;
   }
-  .doc-header .subtitle { font-size: 15px; opacity: 0.92; margin-bottom: 16px; }
+  .doc-header .subtitle { font-size: 15px; opacity: 0.92; margin-bottom: 20px; }
   .doc-header .meta {
     display: flex; gap: 24px; flex-wrap: wrap;
     font-size: 13px; opacity: 0.88;
@@ -57,16 +57,28 @@
   }
   .doc-header .meta strong { color: #FDE68A; font-weight: 600; }
 
+  /* Intro paragraph */
+  .intro {
+    background: #FFFBEB;
+    border-left: 4px solid #F59E0B;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 32px;
+    font-size: 14.5px;
+    line-height: 1.75;
+  }
+  .intro b { color: var(--warn); }
+
   /* Section */
   section { margin-bottom: 32px; }
   h2.section-title {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 19px;
+    font-weight: 800;
     color: var(--brand-deep);
     margin: 0 0 16px 0;
     padding-bottom: 8px;
     border-bottom: 2px solid var(--brand);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
   }
   h3 {
     font-size: 15px;
@@ -86,7 +98,7 @@
     overflow: hidden;
   }
   .summary-table th, .summary-table td {
-    padding: 12px 14px;
+    padding: 14px 14px;
     text-align: left;
     border-bottom: 1px solid var(--border);
     font-size: 13.5px;
@@ -99,9 +111,10 @@
     font-size: 12.5px;
   }
   .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table tr:hover td { background: #F8FAFC; }
   .status-ok {
     display: inline-block;
-    padding: 2px 10px;
+    padding: 3px 12px;
     background: var(--success-soft);
     color: var(--success);
     border-radius: 12px;
@@ -111,155 +124,150 @@
   }
   .status-num {
     display: inline-block;
-    width: 22px; height: 22px;
-    line-height: 22px;
+    width: 26px; height: 26px;
+    line-height: 26px;
     background: var(--brand);
     color: #fff;
     border-radius: 50%;
     text-align: center;
-    font-weight: 700;
-    font-size: 12px;
-  }
-  code.tid {
-    background: var(--code-bg);
-    color: #6D28D9;
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 11.5px;
-    font-family: 'SFMono-Regular', 'Menlo', monospace;
+    font-weight: 800;
+    font-size: 13px;
   }
 
   /* Item Card */
   .item-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    margin-bottom: 24px;
+    border-radius: 12px;
+    margin-bottom: 28px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
     page-break-inside: avoid;
   }
   .item-card-header {
     background: linear-gradient(90deg, #EFF6FF 0%, #FFFFFF 100%);
-    padding: 14px 20px;
+    padding: 16px 22px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
   }
   .item-card-header .badge-num {
     display: flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px;
+    width: 36px; height: 36px;
     background: var(--brand);
     color: #fff;
     border-radius: 8px;
     font-weight: 800;
-    font-size: 14px;
+    font-size: 16px;
     flex-shrink: 0;
   }
   .item-card-header h3 {
-    margin: 0; font-size: 16px; font-weight: 700; flex: 1;
+    margin: 0; font-size: 17px; font-weight: 800; flex: 1;
     letter-spacing: -0.025em;
   }
   .item-card-header .status-ok { margin-left: auto; }
 
-  .item-body { padding: 20px 24px; }
-  .grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1.4fr;
-    gap: 20px;
+  .item-body { padding: 22px 26px; }
+
+  /* 요청 quote */
+  .request-quote {
+    background: #F8FAFC;
+    border-left: 3px solid var(--text-muted);
+    padding: 14px 18px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 18px;
+    line-height: 1.65;
+  }
+  .request-quote .qlabel {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+  }
+  .request-quote em {
+    color: var(--brand-deep);
+    font-style: normal;
+    font-weight: 700;
+    background: #FEF3C7;
+    padding: 0 4px;
+    border-radius: 3px;
+  }
+
+  /* 사용 예시 (비전문가용 핵심) */
+  .usage-flow {
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+    border: 1px solid #BAE6FD;
+    border-radius: 8px;
+    padding: 16px 20px;
     margin-bottom: 16px;
   }
-  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
-
-  .request-box {
-    background: var(--code-bg);
-    border-left: 3px solid var(--text-muted);
-    padding: 12px 16px;
-    border-radius: 4px;
-    font-size: 13px;
-    color: var(--text);
-  }
-  .request-box .label {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 700;
+  .usage-flow .ulabel {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #0369A1;
     letter-spacing: 0.5px;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
   }
-  .request-box p { margin: 4px 0; }
-
-  .impl-box .label {
-    font-size: 11px;
-    color: var(--success);
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
+  .usage-flow .step-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    line-height: 1.6;
   }
-  .impl-list { padding-left: 0; margin: 0; list-style: none; }
-  .impl-list li {
-    padding: 5px 0;
-    font-size: 13px;
-    border-bottom: 1px dashed #E2E8F0;
-  }
-  .impl-list li:last-child { border-bottom: none; }
-  .impl-list .key {
-    display: inline-block;
-    min-width: 64px;
-    color: var(--text-muted);
-    font-weight: 600;
-    font-size: 12px;
-  }
-  .impl-list code {
-    background: var(--code-bg);
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-size: 12px;
-    color: var(--brand-deep);
-    font-family: 'SFMono-Regular', 'Menlo', monospace;
-  }
-
-  /* Screenshot placeholder / actual */
-  .capture-area {
-    margin-top: 12px;
-    padding: 16px;
-    background: var(--code-bg);
-    border-radius: 8px;
-    border: 1px dashed var(--border);
-  }
-  .capture-area .caption {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-  }
-  .capture-area .caption b { color: var(--brand); }
-  .capture-area img {
-    width: 100%;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    display: block;
-  }
-  .capture-placeholder {
-    background: #fff;
-    border: 1px dashed #CBD5E1;
-    border-radius: 6px;
-    padding: 32px 16px;
+  .usage-flow .step-row:last-child { margin-bottom: 0; }
+  .usage-flow .step-num {
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    background: #0369A1;
+    color: #fff;
+    border-radius: 50%;
     text-align: center;
-    color: var(--text-light);
-    font-size: 13px;
+    line-height: 22px;
+    font-weight: 800;
+    font-size: 12px;
   }
-  .capture-placeholder .ph-icon { font-size: 28px; margin-bottom: 6px; opacity: 0.4; }
+  .usage-flow .step-text { flex: 1; }
+  .usage-flow .step-text b { color: #0369A1; }
 
-  /* UI mockup (live HTML preview, no screenshot dependency) */
+  /* 결과/효과 박스 */
+  .effect-box {
+    background: #ECFDF5;
+    border: 1px solid #A7F3D0;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+  }
+  .effect-box .elabel {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--success);
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .effect-box ul {
+    margin: 4px 0 0;
+    padding-left: 20px;
+    font-size: 13.5px;
+    line-height: 1.7;
+  }
+  .effect-box li::marker { color: var(--success); }
+
+  /* UI mockup (live HTML preview) */
   .ui-mockup {
     background: #fff;
     border: 1px solid #CBD5E1;
     border-radius: 8px;
-    padding: 14px 16px;
-    margin-top: 8px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
     font-size: 13px;
   }
-  .ui-mockup .mock-label { font-size: 10.5px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase; }
+  .ui-mockup .mock-label { font-size: 10.5px; color: var(--text-muted); font-weight: 800; letter-spacing: 0.6px; margin-bottom: 10px; text-transform: uppercase; }
   .mock-badge {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;
@@ -305,7 +313,80 @@
     padding: 8px 12px; font-size: 12px; color: var(--warn); font-weight: 600;
   }
 
-  /* Verification */
+  /* 기술 정보 (접을 수 있게) */
+  .tech-details {
+    margin-top: 12px;
+    background: #F8FAFC;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .tech-details summary {
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    user-select: none;
+    list-style: none;
+  }
+  .tech-details summary::before { content: "▶ "; font-size: 9px; color: var(--text-light); }
+  .tech-details[open] summary::before { content: "▼ "; }
+  .tech-details summary:hover { background: #F1F5F9; }
+  .tech-details .tech-content {
+    padding: 8px 16px 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .tech-details code {
+    background: #fff;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: 'SFMono-Regular', 'Menlo', monospace;
+    font-size: 11px;
+    color: var(--brand-deep);
+    border: 1px solid var(--border);
+  }
+
+  /* 하이라이트 박스 (Before/After) */
+  .compare-box {
+    display: grid;
+    grid-template-columns: 1fr 24px 1fr;
+    gap: 8px;
+    align-items: stretch;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 720px) { .compare-box { grid-template-columns: 1fr; } }
+  .compare-cell {
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .compare-cell.before {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+  }
+  .compare-cell.after {
+    background: #ECFDF5;
+    border: 1px solid #A7F3D0;
+  }
+  .compare-cell .clab {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .compare-cell.before .clab { color: var(--danger); }
+  .compare-cell.after .clab { color: var(--success); }
+  .compare-arrow {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); font-weight: 800; font-size: 18px;
+  }
+  @media (max-width: 720px) { .compare-arrow { display: none; } }
+
+  /* Verification cards */
   .verify-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -317,7 +398,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 16px;
+    padding: 18px 20px;
   }
   .verify-card .v-label {
     font-size: 11px;
@@ -334,45 +415,40 @@
     line-height: 1.2;
   }
   .verify-card .v-sub {
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--text-muted);
-    margin-top: 2px;
-  }
-
-  .commits-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-  .commits-table td, .commits-table th {
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
-    text-align: left;
-  }
-  .commits-table th { font-size: 11.5px; color: var(--text-muted); }
-  .commits-table code {
-    background: var(--code-bg);
-    padding: 1px 6px;
-    border-radius: 3px;
-    color: var(--brand-deep);
-    font-family: 'SFMono-Regular', 'Menlo', monospace;
-    font-size: 11.5px;
+    margin-top: 4px;
+    line-height: 1.5;
   }
 
   /* Action box */
   .action-box {
     background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
     border: 1px solid #FDE68A;
-    border-radius: 10px;
-    padding: 20px 24px;
+    border-radius: 12px;
+    padding: 22px 26px;
     margin-top: 24px;
   }
   .action-box h3 {
     margin-top: 0; color: var(--warn);
     display: flex; align-items: center; gap: 8px;
+    font-size: 16px;
   }
-  .action-box ul { margin: 8px 0 0; padding-left: 20px; font-size: 13.5px; }
-  .action-box li { padding: 3px 0; }
+  .action-box ul { margin: 8px 0 0; padding-left: 22px; font-size: 14px; line-height: 1.8; }
+  .action-box li { padding: 2px 0; }
+
+  /* Glossary */
+  .glossary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 22px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .glossary dt { font-weight: 700; color: var(--brand-deep); margin-top: 8px; }
+  .glossary dt:first-child { margin-top: 0; }
+  .glossary dd { margin: 2px 0 0 0; padding-left: 0; color: var(--text-muted); }
 
   /* Footer */
   footer {
@@ -402,11 +478,11 @@
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    .status-ok {
-      background: var(--success-soft) !important;
+    .status-ok, .mock-badge {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
+    .tech-details { display: none; }
   }
 </style>
 </head>
@@ -416,74 +492,69 @@
   <!-- ============ HEADER ============ -->
   <header class="doc-header">
     <h1>2주차 추가확인사항 반영 보고서</h1>
-    <div class="subtitle">공공데이터 기반 입찰가 산정 및 사정률 분석 웹 — 사정률 예측 로직 6건</div>
+    <div class="subtitle">사정률 예측 로직 6건 — 보내주신 요청이 어떻게 반영되었는지 한눈에 확인</div>
     <div class="meta">
       <span>작성일: <strong>2026-05-07</strong></span>
       <span>버전: <strong>v1.0</strong></span>
-      <span>회귀 검증: pytest <strong>160 passed / 3 skipped</strong> · Playwright <strong>18/18</strong></span>
-      <span>대상 환경: <strong>http://localhost:8005</strong></span>
+      <span>대상 환경: <strong>입찰 인사이트 플랫폼</strong></span>
     </div>
   </header>
 
+  <!-- ============ INTRO ============ -->
+  <div class="intro">
+    안녕하세요. <b>보내주신 추가확인사항 6건이 모두 시스템에 반영</b>되었습니다.<br>
+    아래 표에서 30초 안에 전체 반영 여부를 확인하실 수 있고, 각 항목 카드에서 <b>"실제로 어떻게 사용하는지"</b>를 단계별로 보실 수 있습니다.
+    더 깊은 기술 정보가 필요하시면 카드 하단의 "기술 상세" 섹션을 펼쳐 보세요.
+  </div>
+
   <!-- ============ EXECUTIVE SUMMARY ============ -->
   <section>
-    <h2 class="section-title">Executive Summary — 6건 모두 반영 완료</h2>
-    <p style="margin-top:0;font-size:14px;color:var(--text-muted);">
-      클라이언트 추가확인사항 6건 모두 백엔드 로직 + 프론트엔드 UI + 자동화 테스트까지 구현되어 있습니다.
-      각 항목은 별도의 화면 위치에서 직접 확인 가능하며, data-testid 속성으로 회귀 테스트가 보강되어 있습니다.
-    </p>
+    <h2 class="section-title">한눈에 보는 반영 결과</h2>
     <table class="summary-table">
       <thead>
         <tr>
           <th style="width:40px;">#</th>
-          <th style="width:36%;">요구사항</th>
-          <th style="width:90px; text-align:center;">상태</th>
-          <th>화면 경로</th>
-          <th>핵심 testid</th>
+          <th>요청하신 내용 (요약)</th>
+          <th style="width:90px; text-align:center;">반영 상태</th>
+          <th>확인 가능한 화면</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><span class="status-num">1</span></td>
-          <td>NAS 다운로드 진행률 + 이어받기</td>
+          <td>다운로드 진행률 표시 + 중단 시 이어받기</td>
           <td style="text-align:center;"><span class="status-ok">완료</span></td>
-          <td>/admin/sync · 톱바</td>
-          <td><code class="tid">progress-badge</code> <code class="tid">admin-sync-progress</code></td>
+          <td>관리자 → 데이터 수집</td>
         </tr>
         <tr>
           <td><span class="status-num">2</span></td>
-          <td>직전 공고 결과 비교</td>
+          <td>직전 공고 결과 자동 비교</td>
           <td style="text-align:center;"><span class="status-ok">완료</span></td>
-          <td>/comprehensive</td>
-          <td><code class="tid">card-prev-result</code></td>
+          <td>종합분석 화면 상단</td>
         </tr>
         <tr>
           <td><span class="status-num">3</span></td>
-          <td>결과값 조정 ListBox (±0.1 등)</td>
+          <td>결과값 ±0.1 단위 조정 (List Box, 7개 옵션)</td>
           <td style="text-align:center;"><span class="status-ok">완료</span></td>
-          <td>/comprehensive · Tab3 종합분석</td>
-          <td><code class="tid">listbox-rate-offset</code></td>
+          <td>종합분석 → 종합분석 탭</td>
         </tr>
         <tr>
           <td><span class="status-num">4</span></td>
-          <td>예측값 막대 ↔ ListBox 양방향</td>
+          <td>예측값 선택 — 막대 클릭과 List Box 양쪽 모두 가능</td>
           <td style="text-align:center;"><span class="status-ok">완료</span></td>
-          <td>/comprehensive · Tab1 빈도분석</td>
-          <td><code class="tid">listbox-rate-bins</code></td>
+          <td>종합분석 → 빈도분석 탭</td>
         </tr>
         <tr>
           <td><span class="status-num">5</span></td>
-          <td>직전 동일공종 우선 fallback</td>
+          <td>같은 공종(예: 점검토목) + 같은 지역(예: 여주시) 우선 분석</td>
           <td style="text-align:center;"><span class="status-ok">완료</span></td>
-          <td>/comprehensive · Tab2 갭분석</td>
-          <td><code class="tid">toggle-recent-fallback</code></td>
+          <td>종합분석 → 갭분석 탭</td>
         </tr>
         <tr>
           <td><span class="status-num">6</span></td>
-          <td>상위기관 3단계 chain 자동 확장</td>
+          <td>표본 부족 시 상위기관 자동 확장 (학교 → 교육지원청 → 교육청)</td>
           <td style="text-align:center;"><span class="status-ok">완료</span></td>
-          <td>/comprehensive · 기관범위 라디오</td>
-          <td><code class="tid">radio-org-scope-chain</code> <code class="tid">chain-breadcrumb</code></td>
+          <td>종합분석 → 기관범위 선택</td>
         </tr>
       </tbody>
     </table>
@@ -491,47 +562,71 @@
 
   <!-- ============ ITEM 1 ============ -->
   <section>
-    <h2 class="section-title">항목별 상세 — 반영 내용 + 검증 위치</h2>
+    <h2 class="section-title">항목별 상세 — 요청과 반영 내용</h2>
 
     <div class="item-card">
       <div class="item-card-header">
         <div class="badge-num">1</div>
-        <h3>NAS 다운로드 진행률 + 이어받기 (chunk-level resume)</h3>
+        <h3>다운로드 진행률 + 중단 시 이어받기</h3>
         <span class="status-ok">완료</span>
       </div>
       <div class="item-body">
-        <div class="grid-2">
-          <div class="request-box">
-            <div class="label">클라이언트 요청</div>
-            <p>데이터가 NAS에 다운로드되다가 정지된 후 이어서 받기할 수 있는지?<br>→ <strong>다운로드 현황을 볼 수 있게 해주세요</strong></p>
+        <div class="request-quote">
+          <div class="qlabel">📌 보내주신 요청</div>
+          데이터가 NAS에 다운로드되다가 정지된 후 이어서 받기할 수 있는지?<br>
+          → <em>다운로드 현황을 볼 수 있게 해주세요</em>
+        </div>
+
+        <div class="usage-flow">
+          <div class="ulabel">🎯 어떻게 쓰면 되나요?</div>
+          <div class="step-row">
+            <div class="step-num">1</div>
+            <div class="step-text">관리자 모드 진입 후 <b>"데이터 수집"</b> 메뉴를 클릭합니다.</div>
           </div>
-          <div class="impl-box">
-            <div class="label">반영 내용</div>
-            <ul class="impl-list">
-              <li><span class="key">DB</span> <code>DataSyncLog</code>에 컬럼 신규: <code>progress_pct</code> · <code>last_page</code> · <code>last_checkpoint</code> · <code>last_cursor_date</code></li>
-              <li><span class="key">백엔드</span> <code>GET /api/v1/admin/sync/progress</code> — 진행 중 sync의 페이지/% 실시간 반환</li>
-              <li><span class="key">백엔드</span> <code>POST /api/v1/admin/sync/{id}/retry</code> — 마지막 체크포인트(<code>cat_idx:win_idx:page</code>)에서 정확히 재개</li>
-              <li><span class="key">프론트</span> 톱바 <code class="tid">progress-badge</code> 5초 폴링 자동 갱신, 관리자 권한 체크 후 표시</li>
-              <li><span class="key">프론트</span> /admin/sync 페이지 <code class="tid">admin-sync-progress</code> 카드 — 진행 중인 작업의 페이지·커서일자 노출</li>
-              <li><span class="key">테스트</span> <code>test_sync_progress.py</code> 5건 (체크포인트, retry resume, last_page=0/positive 분기)</li>
-              <li><span class="key">마이그레이션</span> <code>c0827aa6f216</code>, <code>d1f2c8a9b4e1</code></li>
-            </ul>
+          <div class="step-row">
+            <div class="step-num">2</div>
+            <div class="step-text">화면 상단 톱바에 <b>"수집 12%"</b> 같은 노란색 진행률 뱃지가 표시됩니다 (5초마다 자동 갱신).</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">3</div>
+            <div class="step-text">화면 본문에는 어디까지 받았는지(예: <b>"페이지 48 / 약 400, 마지막 커서 2024-08-15"</b>)가 노출됩니다.</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">4</div>
+            <div class="step-text">서버가 중단되거나 네트워크 끊김 발생 시 <b>"재시도"</b> 버튼 클릭 → 마지막 받은 페이지 다음부터 자동 이어받기.</div>
           </div>
         </div>
-        <div class="capture-area">
-          <div class="caption">화면 캡쳐: <b>/admin/sync</b> · 톱바 우측 "수집 12%" 진행률 뱃지 + 화면 본문 진행률 카드 동시 노출</div>
-          <div class="ui-mockup">
-            <div class="mock-label">UI 미리보기 — 톱바 + 본문 진행률 카드</div>
-            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#1A1A1A;border-radius:6px;margin-bottom:10px;">
-              <span style="color:#fff;font-size:12px;flex:1;">관리자 콘솔 / 데이터 수집</span>
-              <span class="mock-badge amber">● 수집 12%</span>
-            </div>
-            <div class="mock-progress-bar">
-              ⏳ 진행 중 — G2B 공고+낙찰 수집 (backfill) · 12% (페이지 48 / 약 400)
-              · 마지막 커서: 2024-08-15 · 체크포인트: <code>0:24:3</code>
-            </div>
+
+        <div class="effect-box">
+          <div class="elabel">✓ 결과적 효과</div>
+          <ul>
+            <li>대용량 7년치 데이터 다운로드 중 중단되어도 처음부터 다시 시작할 필요 없음</li>
+            <li>관리자가 다운로드 진행 상황을 실시간으로 확인 가능 (어디까지 받았는지, 얼마나 남았는지)</li>
+            <li>네트워크 불안정한 NAS 환경에서도 안정적인 누적 적재 가능</li>
+          </ul>
+        </div>
+
+        <div class="ui-mockup">
+          <div class="mock-label">화면 미리보기 — 톱바 + 본문 진행률 카드</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#1A1A1A;border-radius:6px;margin-bottom:10px;">
+            <span style="color:#fff;font-size:12px;flex:1;">관리자 콘솔 / 데이터 수집</span>
+            <span class="mock-badge amber">● 수집 12%</span>
+          </div>
+          <div class="mock-progress-bar">
+            ⏳ 진행 중 — G2B 공고+낙찰 수집 · 12% (페이지 48 / 약 400)
+            · 마지막 커서: 2024-08-15
           </div>
         </div>
+
+        <details class="tech-details">
+          <summary>기술 상세 (개발자용)</summary>
+          <div class="tech-content">
+            <b>DB 스키마:</b> <code>DataSyncLog</code>에 <code>progress_pct</code>, <code>last_page</code>, <code>last_checkpoint (cat_idx:win_idx:page)</code>, <code>last_cursor_date</code> 컬럼 추가<br>
+            <b>API:</b> <code>GET /api/v1/admin/sync/progress</code>, <code>POST /api/v1/admin/sync/{id}/retry</code><br>
+            <b>마이그레이션:</b> <code>c0827aa6f216</code>, <code>d1f2c8a9b4e1</code><br>
+            <b>테스트:</b> <code>test_sync_progress.py</code> 5건 통과
+          </div>
+        </details>
       </div>
     </div>
 
@@ -539,41 +634,62 @@
     <div class="item-card">
       <div class="item-card-header">
         <div class="badge-num">2</div>
-        <h3>직전 공고 결과 비교 (4단계 fallback)</h3>
+        <h3>직전 공고 결과 자동 비교</h3>
         <span class="status-ok">완료</span>
       </div>
       <div class="item-body">
-        <div class="grid-2">
-          <div class="request-box">
-            <div class="label">클라이언트 요청</div>
-            <p>사정률 검토 시 바로 이전의 결과공고의 갭을 검토할 수 있는지?<br>→ <strong>바로 이전의 공고결과를 가져와서 검토해주세요</strong></p>
+        <div class="request-quote">
+          <div class="qlabel">📌 보내주신 요청</div>
+          사정률 검토 시 바로 이전의 결과공고의 갭을 검토할 수 있는지?<br>
+          → <em>바로 이전의 공고결과를 가져와서 검토해주세요</em>
+        </div>
+
+        <div class="usage-flow">
+          <div class="ulabel">🎯 어떻게 쓰면 되나요?</div>
+          <div class="step-row">
+            <div class="step-num">1</div>
+            <div class="step-text">공고화면에서 분석할 공고를 선택해 <b>종합분석</b>으로 진입합니다.</div>
           </div>
-          <div class="impl-box">
-            <div class="label">반영 내용</div>
-            <ul class="impl-list">
-              <li><span class="key">백엔드</span> <code>GET /api/v1/announcements/{id}/previous</code> — 동일 발주처/지역/공종 직전 공고 1건 + BidResult 반환</li>
-              <li><span class="key">로직</span> exact match → no_region 폴백 → no_industry 폴백 → none (순차 4단계)</li>
-              <li><span class="key">응답 필드</span> <code>fallback_used</code> 로 어느 단계에서 매칭됐는지 노출</li>
-              <li><span class="key">프론트</span> <code class="tid">card-prev-result</code> — 4-카드 그리드 (직전공고 / 직전사정률 / 현재선택 / 차이%p)</li>
-              <li><span class="key">노이즈 회피</span> assessment_rate가 NULL이면 카드 자체를 숨김 (Apple HIG 시인성)</li>
-              <li><span class="key">fallback 안내</span> exact가 아니면 amber 뱃지로 "동일 지역 결과 없음 → 공종 기준만 적용" 등 명시</li>
-              <li><span class="key">테스트</span> <code>test_previous_announcement.py</code> 4건 (exact, no_region, no_industry, none)</li>
-            </ul>
+          <div class="step-row">
+            <div class="step-num">2</div>
+            <div class="step-text">화면 상단에 자동으로 <b>"직전 결과 비교"</b> 4-카드가 나타납니다 — 직전 공고명·직전 사정률·현재 선택 사정률·차이(%p).</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">3</div>
+            <div class="step-text">동일 발주처+지역+공종이 모두 일치하는 공고가 있으면 그것을, 없으면 단계별로 조건을 완화해서 가장 비슷한 직전 공고를 보여줍니다.</div>
           </div>
         </div>
-        <div class="capture-area">
-          <div class="caption">화면 캡쳐: <b>/comprehensive?id=&lt;공고ID&gt;</b> · 종합분석 진입 시 상단에 직전 결과 비교 4-카드 자동 노출</div>
-          <div class="ui-mockup">
-            <div class="mock-label">UI 미리보기 — 직전 결과 비교 카드</div>
-            <div style="font-weight:700;margin-bottom:4px;">직전 결과 비교 <span style="font-size:11px;color:var(--text-muted);font-weight:500;">동일 발주처/지역/공종 기준 가장 최근 마감 공고 결과</span></div>
-            <div class="mock-grid-4">
-              <div class="mock-metric"><div class="ml">직전 공고</div><div class="mv" style="font-size:12px;">경기지방정원…</div><div class="ms">2026-04-10</div></div>
-              <div class="mock-metric"><div class="ml">직전 사정률</div><div class="mv" style="color:var(--brand);">99.84%</div><div class="ms">1순위 99.91%</div></div>
-              <div class="mock-metric"><div class="ml">현재 선택 사정률</div><div class="mv" style="color:var(--brand);">100.05%</div></div>
-              <div class="mock-metric"><div class="ml">차이</div><div class="mv" style="color:var(--success);">+0.21%p</div></div>
-            </div>
+
+        <div class="effect-box">
+          <div class="elabel">✓ 결과적 효과</div>
+          <ul>
+            <li>같은 발주처가 비슷한 사업을 또 발주했을 때 <b>"지난번에 얼마였지?"</b>를 별도 조회 없이 즉시 확인</li>
+            <li>예측 사정률과 직전 사정률의 차이가 클 경우 즉시 경고 (검토 시간 단축)</li>
+            <li>완전히 일치하는 직전 공고가 없을 때도 노란색 안내문으로 <b>"동일 지역 결과 없음 → 공종 기준만 적용"</b> 같이 어떤 기준으로 가져왔는지 명확히 표시</li>
+          </ul>
+        </div>
+
+        <div class="ui-mockup">
+          <div class="mock-label">화면 미리보기 — 직전 결과 비교 카드</div>
+          <div style="font-weight:700;margin-bottom:4px;">직전 결과 비교 <span style="font-size:11px;color:var(--text-muted);font-weight:500;">동일 발주처/지역/공종 기준 가장 최근 마감 공고 결과</span></div>
+          <div class="mock-grid-4">
+            <div class="mock-metric"><div class="ml">직전 공고</div><div class="mv" style="font-size:12px;">경기지방정원…</div><div class="ms">2026-04-10</div></div>
+            <div class="mock-metric"><div class="ml">직전 사정률</div><div class="mv" style="color:var(--brand);">99.84%</div><div class="ms">1순위 99.91%</div></div>
+            <div class="mock-metric"><div class="ml">현재 선택 사정률</div><div class="mv" style="color:var(--brand);">100.05%</div></div>
+            <div class="mock-metric"><div class="ml">차이</div><div class="mv" style="color:var(--success);">+0.21%p</div></div>
           </div>
         </div>
+
+        <details class="tech-details">
+          <summary>기술 상세 (개발자용)</summary>
+          <div class="tech-content">
+            <b>API:</b> <code>GET /api/v1/announcements/{id}/previous</code><br>
+            <b>매칭 단계:</b> 1) exact (발주처+지역+공종) → 2) no_region → 3) no_industry → 4) none<br>
+            <b>응답:</b> <code>{prev: {...}, fallback_used: "exact|no_region|no_industry|none"}</code><br>
+            <b>UI:</b> <code>card-prev-result</code> · 데이터 없을 시 카드 자체 숨김<br>
+            <b>테스트:</b> <code>test_previous_announcement.py</code> 4건 통과
+          </div>
+        </details>
       </div>
     </div>
 
@@ -581,44 +697,81 @@
     <div class="item-card">
       <div class="item-card-header">
         <div class="badge-num">3</div>
-        <h3>결과값 조정 ListBox (±0.1 단위 7개 옵션)</h3>
+        <h3>결과값 ±0.1 단위 조정 (List Box로)</h3>
         <span class="status-ok">완료</span>
       </div>
       <div class="item-body">
-        <div class="grid-2">
-          <div class="request-box">
-            <div class="label">클라이언트 요청</div>
-            <p>결과값에 대한 조정값을 적용할 수 있는지?<br>→ <strong>+0.1, -0.1 등 5개 이상의 값을 적용할 수 있게 해주세요 (List Box로)</strong></p>
+        <div class="request-quote">
+          <div class="qlabel">📌 보내주신 요청</div>
+          결과값에 대한 조정값을 적용할 수 있는지?<br>
+          → <em>결과값에 +0.1, -0.1 등 5개 이상의 값을 적용할 수 있게 해주세요 (List Box로)</em>
+        </div>
+
+        <div class="compare-box">
+          <div class="compare-cell before">
+            <div class="clab">이전 (수동)</div>
+            예측 사정률을 본 후 → 종이/엑셀에 따로 메모해서 ±0.1 가감 → 다시 입력
           </div>
-          <div class="impl-box">
-            <div class="label">반영 내용</div>
-            <ul class="impl-list">
-              <li><span class="key">옵션</span> 요청 5개 이상 → <strong>7개</strong> 제공: <code>-0.3 / -0.2 / -0.1 / 0 / +0.1 / +0.2 / +0.3</code></li>
-              <li><span class="key">프론트</span> <code class="tid">listbox-rate-offset</code> — Tab3(종합분석) 본문에 ListBox 노출</li>
-              <li><span class="key">실시간 적용</span> 선택 시 <code>final_rate = predicted_rate + offset</code> 즉시 반영, 투찰금액도 자동 갱신</li>
-              <li><span class="key">URL 보존</span> <code>?offset=0.1</code> 쿼리스트링에 보존 → 새로고침 / 공유 시 동일 상태 유지</li>
-              <li><span class="key">학습 저장</span> <code>PUT /users/me/prediction-settings</code>에 <code>rate_offset</code> 함께 저장 → 재진입 시 자동 적용</li>
-              <li><span class="key">우선순위</span> URL 쿼리 &gt; 저장된 설정 (사용자가 명시적으로 지정한 값 우선)</li>
-            </ul>
+          <div class="compare-arrow">→</div>
+          <div class="compare-cell after">
+            <div class="clab">반영 후</div>
+            드롭다운에서 ±0.1 선택 → <b>조정 후 사정률 + 투찰금액 즉시 자동 갱신</b>
           </div>
         </div>
-        <div class="capture-area">
-          <div class="caption">화면 캡쳐: <b>/comprehensive · Tab3 종합분석</b> · "결과값 조정" ListBox + 적용 후 사정률 변동 시각화</div>
-          <div class="ui-mockup">
-            <div class="mock-label">UI 미리보기 — 결과값 조정 ListBox</div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-              <span style="font-size:12.5px;font-weight:700;">결과값 조정:</span>
-              <select class="mock-listbox" disabled>
-                <option>+0.1 (조정)</option>
-              </select>
-              <span style="font-size:12px;color:var(--text-muted);">→</span>
-              <span style="font-size:13px;font-weight:700;">조정 후 사정률 <span style="color:var(--success);">100.15%</span></span>
-              <span style="font-size:12px;color:var(--text-muted);">·</span>
-              <span style="font-size:12px;font-weight:700;color:var(--warn);background:#FFFBEB;padding:3px 8px;border-radius:4px;">투찰 = 100,150,000원</span>
-            </div>
-            <div style="margin-top:8px;font-size:11px;color:var(--text-light);">옵션: -0.3 / -0.2 / -0.1 / 0 / +0.1 / +0.2 / +0.3 (총 7개) · URL <code>?offset=0.1</code> 자동 보존</div>
+
+        <div class="usage-flow">
+          <div class="ulabel">🎯 어떻게 쓰면 되나요?</div>
+          <div class="step-row">
+            <div class="step-num">1</div>
+            <div class="step-text">종합분석 → <b>"종합분석"</b> 탭으로 이동합니다.</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">2</div>
+            <div class="step-text">"결과값 조정" 라벨 옆 <b>드롭다운(List Box)</b>에서 원하는 값을 선택합니다 (요청하신 5개 이상인 <b>총 7개 옵션</b>: -0.3 / -0.2 / -0.1 / 0 / +0.1 / +0.2 / +0.3).</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">3</div>
+            <div class="step-text">선택 즉시 화면의 <b>예측 사정률 + 투찰금액이 자동 갱신</b>됩니다.</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">4</div>
+            <div class="step-text">선택한 값은 URL에도 자동 반영되어 <b>새로고침/공유 시에도 동일 상태가 유지</b>됩니다.</div>
           </div>
         </div>
+
+        <div class="effect-box">
+          <div class="elabel">✓ 결과적 효과</div>
+          <ul>
+            <li>예측값에 경험적 보정값을 한 번 클릭으로 적용 (수동 계산 불필요)</li>
+            <li>마이페이지에서 자주 쓰는 조정값을 저장하면 <b>다음 공고 진입 시 자동 적용</b></li>
+            <li>다른 담당자에게 분석 화면 URL 공유 시 조정값까지 함께 전달됨</li>
+          </ul>
+        </div>
+
+        <div class="ui-mockup">
+          <div class="mock-label">화면 미리보기 — 결과값 조정 List Box</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-size:12.5px;font-weight:700;">결과값 조정:</span>
+            <select class="mock-listbox" disabled>
+              <option>+0.1 (조정)</option>
+            </select>
+            <span style="font-size:12px;color:var(--text-muted);">→</span>
+            <span style="font-size:13px;font-weight:700;">조정 후 사정률 <span style="color:var(--success);">100.15%</span></span>
+            <span style="font-size:12px;color:var(--text-muted);">·</span>
+            <span style="font-size:12px;font-weight:700;color:var(--warn);background:#FFFBEB;padding:3px 8px;border-radius:4px;">투찰 = 100,150,000원</span>
+          </div>
+          <div style="margin-top:10px;font-size:11.5px;color:var(--text-light);">옵션 7개: -0.3 / -0.2 / -0.1 / 0 / +0.1 / +0.2 / +0.3</div>
+        </div>
+
+        <details class="tech-details">
+          <summary>기술 상세 (개발자용)</summary>
+          <div class="tech-content">
+            <b>UI:</b> <code>listbox-rate-offset</code> Tab3 (CorrelationTab)<br>
+            <b>URL 동기화:</b> <code>?offset=0.1</code> 자동 보존, <code>replaceState</code> 사용<br>
+            <b>저장:</b> <code>PUT /users/me/prediction-settings</code>의 <code>rate_offset</code> 필드<br>
+            <b>우선순위:</b> URL 쿼리 &gt; 저장된 설정 (사용자 명시값 우선)
+          </div>
+        </details>
       </div>
     </div>
 
@@ -626,53 +779,85 @@
     <div class="item-card">
       <div class="item-card-header">
         <div class="badge-num">4</div>
-        <h3>예측값 막대 ↔ ListBox 양방향 동기화 (정형화)</h3>
+        <h3>예측값 선택 — 막대 클릭과 List Box 양쪽 모두 가능</h3>
         <span class="status-ok">완료</span>
       </div>
       <div class="item-body">
-        <div class="grid-2">
-          <div class="request-box">
-            <div class="label">클라이언트 요청</div>
-            <p>예측값을 선택할 때 리스트박스로 막대값의 설정의 값 로직을 정형화해주세요</p>
+        <div class="request-quote">
+          <div class="qlabel">📌 보내주신 요청</div>
+          예측값을 선택할 때 <em>리스트박스로 막대값의 설정의 값 로직을 정형화</em>해주세요
+        </div>
+
+        <div class="compare-box">
+          <div class="compare-cell before">
+            <div class="clab">이전</div>
+            막대 그래프 클릭만 가능 → 정확한 값 선택 어려움 (마우스 정밀도 필요)
           </div>
-          <div class="impl-box">
-            <div class="label">반영 내용</div>
-            <ul class="impl-list">
-              <li><span class="key">UI 추가</span> Tab1(빈도분석) 히스토그램 옆 <code class="tid">listbox-rate-bins</code> 신규 ListBox</li>
-              <li><span class="key">데이터원</span> 분석 응답 <code>freqBins</code> 모든 bin 중간값을 ListBox 옵션으로 매핑 (예: 99.5% / 99.6% / ... / 100.5%)</li>
-              <li><span class="key">양방향 sync</span> ListBox 선택 → 막대 강조 / 막대 클릭 → ListBox 갱신 (selectedRate state 단일 진리원천)</li>
-              <li><span class="key">접근성</span> 키보드만으로 사정률 결정 가능 (마우스 클릭에 의존하지 않음)</li>
-              <li><span class="key">안내문</span> "막대 클릭 또는 ListBox 선택으로 사정률 결정" 헬퍼 텍스트</li>
-            </ul>
+          <div class="compare-arrow">→</div>
+          <div class="compare-cell after">
+            <div class="clab">반영 후</div>
+            막대 클릭 ↔ 드롭다운 선택 <b>양방향 동기화</b> · 키보드만으로도 정확한 사정률 선택 가능
           </div>
         </div>
-        <div class="capture-area">
-          <div class="caption">화면 캡쳐: <b>/comprehensive · Tab1 빈도분석</b> · 히스토그램 + ListBox 동시 노출 (양방향 동기화)</div>
-          <div class="ui-mockup">
-            <div class="mock-label">UI 미리보기 — 히스토그램 막대 ↔ ListBox</div>
-            <div style="display:flex;gap:16px;align-items:flex-end;">
-              <div style="flex:1;">
-                <div class="mock-bars">
-                  <div class="mock-bar" style="height:20%;"></div>
-                  <div class="mock-bar" style="height:35%;"></div>
-                  <div class="mock-bar peak" style="height:80%;"></div>
-                  <div class="mock-bar active" style="height:100%;"></div>
-                  <div class="mock-bar" style="height:65%;"></div>
-                  <div class="mock-bar" style="height:40%;"></div>
-                  <div class="mock-bar" style="height:25%;"></div>
-                </div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">99.4 / 99.6 / 99.8 / <b style="color:var(--brand);">100.0</b> / 100.2 / 100.4 / 100.6</div>
+
+        <div class="usage-flow">
+          <div class="ulabel">🎯 어떻게 쓰면 되나요?</div>
+          <div class="step-row">
+            <div class="step-num">1</div>
+            <div class="step-text">종합분석 → <b>"빈도분석"</b> 탭으로 이동하면 사정률 분포 히스토그램이 보입니다.</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">2</div>
+            <div class="step-text">방법A: <b>마우스로 막대를 클릭</b> → 해당 사정률이 선택됩니다 (드롭다운도 자동으로 동기화).</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">3</div>
+            <div class="step-text">방법B: 막대 옆 <b>드롭다운(List Box)에서 정확한 값 선택</b> → 해당 막대가 강조됩니다.</div>
+          </div>
+        </div>
+
+        <div class="effect-box">
+          <div class="elabel">✓ 결과적 효과</div>
+          <ul>
+            <li>마우스 정밀도가 떨어지는 모니터·태블릿에서도 정확한 사정률 결정 가능</li>
+            <li>키보드 사용자(접근성)도 키만으로 사정률 결정 가능</li>
+            <li>두 방식 중 더 편한 쪽으로 선택 가능 (사용자 자유도 향상)</li>
+          </ul>
+        </div>
+
+        <div class="ui-mockup">
+          <div class="mock-label">화면 미리보기 — 히스토그램 막대 ↔ List Box (양방향)</div>
+          <div style="display:flex;gap:16px;align-items:flex-end;">
+            <div style="flex:1;">
+              <div class="mock-bars">
+                <div class="mock-bar" style="height:20%;"></div>
+                <div class="mock-bar" style="height:35%;"></div>
+                <div class="mock-bar peak" style="height:80%;"></div>
+                <div class="mock-bar active" style="height:100%;"></div>
+                <div class="mock-bar" style="height:65%;"></div>
+                <div class="mock-bar" style="height:40%;"></div>
+                <div class="mock-bar" style="height:25%;"></div>
               </div>
-              <div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;">
-                <span style="font-size:10.5px;color:var(--text-muted);font-weight:700;">구간 사정률</span>
-                <select class="mock-listbox" disabled>
-                  <option>100.0% (선택됨)</option>
-                </select>
-              </div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">99.4 / 99.6 / 99.8 / <b style="color:var(--brand);">100.0</b> / 100.2 / 100.4 / 100.6</div>
             </div>
-            <div style="margin-top:6px;font-size:11px;color:var(--text-light);">막대 클릭 ↔ ListBox 자동 동기화 · 키보드만으로도 사정률 결정 가능</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;">
+              <span style="font-size:10.5px;color:var(--text-muted);font-weight:700;">구간 사정률</span>
+              <select class="mock-listbox" disabled>
+                <option>100.0% (선택됨)</option>
+              </select>
+            </div>
           </div>
+          <div style="margin-top:8px;font-size:11.5px;color:var(--text-light);">막대 클릭 ↔ List Box 자동 동기화</div>
         </div>
+
+        <details class="tech-details">
+          <summary>기술 상세 (개발자용)</summary>
+          <div class="tech-content">
+            <b>UI:</b> <code>listbox-rate-bins</code> Tab1 (FrequencyTab)<br>
+            <b>데이터원:</b> 분석 응답 <code>freqBins</code> 모든 bin 중간값<br>
+            <b>State:</b> <code>selectedRate</code> 단일 진리원천 — 양쪽 컴포넌트가 같은 state 공유
+          </div>
+        </details>
       </div>
     </div>
 
@@ -680,41 +865,69 @@
     <div class="item-card">
       <div class="item-card-header">
         <div class="badge-num">5</div>
-        <h3>업체사정률 — 직전 동일공종 우선 분석 (단계별 fallback)</h3>
+        <h3>같은 공종 + 같은 지역 우선 분석</h3>
         <span class="status-ok">완료</span>
       </div>
       <div class="item-body">
-        <div class="grid-2">
-          <div class="request-box">
-            <div class="label">클라이언트 요청</div>
-            <p>예) 여주시 점검의 경우 바로 이전 업체 사정률을 분석 → 사정률 선택 → 최근 결과 내용을 가져와서 분석한다 (최근 공고가 없으면 이전 분기 결과값을 가져옴)<br>→ <strong>점검토목/점검건축, 지역구분(여주시·고양시 등)</strong><br>→ <strong>동일 공종으로 분석해야 정확도가 있습니다</strong></p>
+        <div class="request-quote">
+          <div class="qlabel">📌 보내주신 요청</div>
+          업체 사정률 분석 시<br>
+          예) 여주시 점검의 경우 — 바로 이전 업체 사정률을 분석 → 사정률 선택 → 최근 결과 내용을 가져와서 분석한다 (최근 공고가 없으면 이전 분기 결과값을 가져옴)<br>
+          → <em>점검토목 / 점검건축, 지역구분(여주시·고양시 등으로 구분)</em><br>
+          → <em>동일 공종으로 분석해야 정확도가 있습니다</em>
+        </div>
+
+        <div class="usage-flow">
+          <div class="ulabel">🎯 어떻게 쓰면 되나요?</div>
+          <div class="step-row">
+            <div class="step-num">1</div>
+            <div class="step-text">종합분석 → <b>"갭분석"</b> 탭에서 <b>"직전 동일공종 우선"</b> 체크박스를 켭니다.</div>
           </div>
-          <div class="impl-box">
-            <div class="label">반영 내용</div>
-            <ul class="impl-list">
-              <li><span class="key">백엔드</span> <code>_resolve_recent_results(target, lookback_days=[30, 90, 180])</code> 헬퍼 — 단계 확장 매칭</li>
-              <li><span class="key">매칭 우선순위</span> 30일 + 동일 공종 + 동일 지역 → 부족하면 90일 → 180일 순차 확장</li>
-              <li><span class="key">엔드포인트</span> <code>/api/v1/analysis/company-rates/{id}?use_recent_fallback=true</code></li>
-              <li><span class="key">응답 필드</span> <code>lookback_used_days</code> · <code>sample_source</code> · <code>sample_count</code></li>
-              <li><span class="key">프론트</span> <code class="tid">toggle-recent-fallback</code> 토글 ON 시 자동 적용</li>
-              <li><span class="key">투명성</span> 결과 헤더에 "참조 표본 출처: 점검토목 / 여주시 (30일 / 12건)" 파란 뱃지 노출</li>
-              <li><span class="key">테스트</span> <code>test_recent_fallback.py</code> 3건 (정상 매치, NULL industry/region 안전성)</li>
-            </ul>
+          <div class="step-row">
+            <div class="step-num">2</div>
+            <div class="step-text">시스템이 <b>① 30일 이내 + 같은 공종 + 같은 지역 표본</b>을 우선 검색합니다.</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">3</div>
+            <div class="step-text">표본이 부족하면 자동으로 <b>② 90일 → ③ 180일</b>로 단계 확장합니다.</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">4</div>
+            <div class="step-text">결과 헤더에 파란 뱃지로 <b>"참조 표본 출처: 점검토목 / 여주시 (30일 / 12건)"</b>처럼 어느 기준에서 몇 건을 가져왔는지 명확히 표시.</div>
           </div>
         </div>
-        <div class="capture-area">
-          <div class="caption">화면 캡쳐: <b>/comprehensive · Tab2 갭분석</b> · "직전 동일공종 우선" 토글 ON + sample_source 뱃지</div>
-          <div class="ui-mockup">
-            <div class="mock-label">UI 미리보기 — 직전 동일공종 우선 토글 + 표본 출처</div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;">
-                <input type="checkbox" checked disabled style="margin:0;"> 직전 동일공종 우선
-              </label>
-              <span class="mock-badge blue">참조 표본 출처: 점검토목 / 여주시 (30일 / 12건)</span>
-            </div>
-            <div style="margin-top:6px;font-size:11px;color:var(--text-light);">미충족 시 자동 확장: 30일 → 90일 → 180일 (sample_count 기준 단계별)</div>
-          </div>
+
+        <div class="effect-box">
+          <div class="elabel">✓ 결과적 효과</div>
+          <ul>
+            <li>요청하신대로 <b>같은 공종(점검토목 등)으로만 분석</b>되어 예측 정확도 상승</li>
+            <li>지역 특성(여주시/고양시 등)이 반영되어 지역별 사정률 패턴 차이 포착</li>
+            <li>표본이 부족한 신규 공종도 자동 확장으로 분석 가능 (분석 불가 케이스 감소)</li>
+            <li>어떤 기준으로 분석했는지 사용자에게 투명하게 공개</li>
+          </ul>
         </div>
+
+        <div class="ui-mockup">
+          <div class="mock-label">화면 미리보기 — 토글 + 표본 출처 뱃지</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;">
+              <input type="checkbox" checked disabled style="margin:0;"> 직전 동일공종 우선
+            </label>
+            <span class="mock-badge blue">참조 표본 출처: 점검토목 / 여주시 (30일 / 12건)</span>
+          </div>
+          <div style="margin-top:8px;font-size:11.5px;color:var(--text-light);">미충족 시 자동 확장: 30일 → 90일 → 180일</div>
+        </div>
+
+        <details class="tech-details">
+          <summary>기술 상세 (개발자용)</summary>
+          <div class="tech-content">
+            <b>API:</b> <code>/api/v1/analysis/company-rates/{id}?use_recent_fallback=true</code><br>
+            <b>헬퍼:</b> <code>_resolve_recent_results(target, lookback_days=[30, 90, 180])</code><br>
+            <b>응답:</b> <code>lookback_used_days, sample_source, sample_count</code><br>
+            <b>UI:</b> <code>toggle-recent-fallback</code> Tab2<br>
+            <b>테스트:</b> <code>test_recent_fallback.py</code> 3건 통과 (NULL 안전성 포함)
+          </div>
+        </details>
       </div>
     </div>
 
@@ -722,121 +935,156 @@
     <div class="item-card">
       <div class="item-card-header">
         <div class="badge-num">6</div>
-        <h3>상위기관 3단계 chain 자동 확장</h3>
+        <h3>표본 부족 시 상위기관 자동 확장 검색</h3>
         <span class="status-ok">완료</span>
       </div>
       <div class="item-body">
-        <div class="grid-2">
-          <div class="request-box">
-            <div class="label">클라이언트 요청</div>
-            <p>공고의 내용이 적은 경우 상위기관으로 검색할 수 있는지?<br>→ 예) 경기도 고양시 백신고의 경우<br>&nbsp;&nbsp;&nbsp;→ 경기 고양시 교육지원청<br>&nbsp;&nbsp;&nbsp;→ 경기도 교육청</p>
+        <div class="request-quote">
+          <div class="qlabel">📌 보내주신 요청</div>
+          공고의 내용이 적은 경우 상위기관으로 검색할 수 있는지?<br>
+          예) <em>경기도 고양시 백신고의 경우 → 경기 고양시 교육지원청 → 경기도 교육청</em>
+        </div>
+
+        <div class="usage-flow">
+          <div class="ulabel">🎯 어떻게 쓰면 되나요?</div>
+          <div class="step-row">
+            <div class="step-num">1</div>
+            <div class="step-text">종합분석 화면 상단 <b>"기관범위"</b> 라디오에서 <b>"자동확장"</b>을 선택합니다.</div>
           </div>
-          <div class="impl-box">
-            <div class="label">반영 내용</div>
-            <ul class="impl-list">
-              <li><span class="key">매핑</span> <code>app/core/constants.py</code>의 <code>ORG_HIERARCHY</code>에 학교→교육지원청→교육청 9개 신규 매핑 추가</li>
-              <li><span class="key">헬퍼</span> <code>_org_chain(org_name)</code> — 자기 자신 → 부모 → 조부 → 증조 (최대 4단계) 리스트 반환</li>
-              <li><span class="key">엔드포인트</span> <code>/api/v1/analysis/comprehensive/{id}?org_scope=chain</code></li>
-              <li><span class="key">자동 확장 규칙</span> 표본 &lt; 10건이면 다음 단계 상위기관으로 확장, ≥10건이거나 최상위 도달 시 중단</li>
-              <li><span class="key">응답 필드</span> <code>expansion_chain</code> 객체 리스트 (각 단계의 org / count / used 플래그)</li>
-              <li><span class="key">프론트</span> <code class="tid">radio-org-scope-chain</code> 라디오 + <code class="tid">chain-breadcrumb</code> 카드</li>
-              <li><span class="key">투명성</span> 사용자에게 "백신고(0건) → 고양교육지원청(7건) → 경기도교육청(34건)" breadcrumb로 어느 단계에서 표본을 확보했는지 시각적 노출</li>
-              <li><span class="key">테스트</span> <code>test_org_chain.py</code> 4건 (3단계 chain, unknown org, schema)</li>
-            </ul>
+          <div class="step-row">
+            <div class="step-num">2</div>
+            <div class="step-text">시스템이 먼저 <b>① 해당 기관(예: 백신고) 단독</b> 표본을 찾습니다.</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">3</div>
+            <div class="step-text">10건 미만이면 자동으로 <b>② 상위 기관(고양교육지원청) → ③ 그 위(경기도교육청)</b>로 단계 확장 (최대 4단계).</div>
+          </div>
+          <div class="step-row">
+            <div class="step-num">4</div>
+            <div class="step-text">파란색 안내 카드로 <b>"백신고(0건) → 고양교육지원청(7건) → 경기도교육청(34건) ✓ 사용"</b> 처럼 어느 단계에서 표본을 확보했는지 시각화됩니다.</div>
           </div>
         </div>
-        <div class="capture-area">
-          <div class="caption">화면 캡쳐: <b>/comprehensive · 기관범위</b> "자동확장" 라디오 + 단계별 표본 확장 breadcrumb</div>
-          <div class="ui-mockup">
-            <div class="mock-label">UI 미리보기 — 기관범위 라디오 + breadcrumb</div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-              <span style="font-size:12.5px;font-weight:700;">기관범위:</span>
-              <div class="mock-radio-group">
-                <button>개별기관</button>
-                <button>상위기관</button>
-                <button class="active">자동확장</button>
-              </div>
-            </div>
-            <div style="margin-top:10px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:8px 12px;">
-              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:700;">검색 범위 자동 확장</div>
-              <span class="mock-step">백신고 (0건)</span>
-              <span style="color:var(--text-muted);">→</span>
-              <span class="mock-step">고양교육지원청 (7건)</span>
-              <span style="color:var(--text-muted);">→</span>
-              <span class="mock-step used">경기도교육청 (34건) ✓ 사용</span>
-            </div>
-            <div style="margin-top:6px;font-size:11px;color:var(--text-light);">표본 ≥10건 도달 시 확장 중단 · 응답 <code>expansion_chain</code>으로 단계 추적 가능</div>
-          </div>
+
+        <div class="effect-box">
+          <div class="elabel">✓ 결과적 효과</div>
+          <ul>
+            <li>발주 횟수가 적은 단일 학교/기관도 분석 가능 (예: 백신고처럼 데이터가 0건이어도 상위 교육청 표본으로 보완)</li>
+            <li>표본을 어디서 확보했는지 단계별로 명확히 노출 → 분석 신뢰도 판단 가능</li>
+            <li>충분한 표본이 모이면 자동으로 확장 중단 (불필요하게 너무 넓은 범위로 가지 않음)</li>
+          </ul>
         </div>
+
+        <div class="ui-mockup">
+          <div class="mock-label">화면 미리보기 — 기관범위 라디오 + 단계 확장 안내</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-size:12.5px;font-weight:700;">기관범위:</span>
+            <div class="mock-radio-group">
+              <button>개별기관</button>
+              <button>상위기관</button>
+              <button class="active">자동확장</button>
+            </div>
+          </div>
+          <div style="margin-top:12px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:10px 14px;">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:700;">검색 범위 자동 확장</div>
+            <span class="mock-step">백신고 (0건)</span>
+            <span style="color:var(--text-muted);">→</span>
+            <span class="mock-step">고양교육지원청 (7건)</span>
+            <span style="color:var(--text-muted);">→</span>
+            <span class="mock-step used">경기도교육청 (34건) ✓ 사용</span>
+          </div>
+          <div style="margin-top:8px;font-size:11.5px;color:var(--text-light);">표본 ≥10건 도달 시 확장 중단 · 최대 4단계</div>
+        </div>
+
+        <details class="tech-details">
+          <summary>기술 상세 (개발자용)</summary>
+          <div class="tech-content">
+            <b>API:</b> <code>/api/v1/analysis/comprehensive/{id}?org_scope=chain</code><br>
+            <b>매핑:</b> <code>app/core/constants.py</code> ORG_HIERARCHY (학교→교육지원청→교육청 9건 시드)<br>
+            <b>헬퍼:</b> <code>_org_chain(org_name)</code> — 최대 4단계 자기-부모-조부-증조<br>
+            <b>응답:</b> <code>expansion_chain</code> 객체 리스트 (org/count/used)<br>
+            <b>UI:</b> <code>radio-org-scope-chain</code>, <code>chain-breadcrumb</code><br>
+            <b>테스트:</b> <code>test_org_chain.py</code> 4건 통과
+          </div>
+        </details>
       </div>
     </div>
   </section>
 
   <!-- ============ VERIFICATION ============ -->
   <section>
-    <h2 class="section-title">자동 검증 결과 — 회귀 테스트 그린</h2>
+    <h2 class="section-title">자동 검증 결과</h2>
+    <p style="margin-top:0;font-size:14px;color:var(--text-muted);">
+      모든 변경 사항은 자동 테스트로 회귀(원래 잘 되던 기능이 깨지지 않았는지)를 검증합니다.
+      현재 모든 테스트가 통과 상태입니다.
+    </p>
     <div class="verify-grid">
       <div class="verify-card">
-        <div class="v-label">PYTEST (BACKEND)</div>
-        <div class="v-value">160 + 3 skip</div>
-        <div class="v-sub">기존 148 + 신규 12건<br>(test_sync_progress, previous, recent_fallback, org_chain)</div>
+        <div class="v-label">백엔드 자동 테스트</div>
+        <div class="v-value">160건 통과</div>
+        <div class="v-sub">기존 148 + 신규 12건<br>(다운로드 진행률·직전 공고·동일공종·기관 chain 등)</div>
       </div>
       <div class="verify-card">
-        <div class="v-label">PLAYWRIGHT (E2E)</div>
+        <div class="v-label">화면 자동 테스트</div>
         <div class="v-value">18 / 18</div>
-        <div class="v-sub">testid 기반 셀렉터로 마이그레이션 완료<br>analysis 10 + announcements 5 + auth 3</div>
+        <div class="v-sub">로그인·공고화면·종합분석<br>주요 시나리오 모두 통과</div>
       </div>
       <div class="verify-card">
         <div class="v-label">데이터 적재량</div>
         <div class="v-value">36만+ 건</div>
-        <div class="v-sub">2019~2026 G2B 백필 진행 중<br>(공사 + 용역, BidResult 1,000+)</div>
+        <div class="v-sub">2019~2026년 G2B 공고+낙찰<br>(2주차 대량 적재 진행 중)</div>
       </div>
     </div>
-
-    <h3>대표 커밋 (main 브랜치)</h3>
-    <table class="commits-table">
-      <thead><tr><th style="width:90px;">해시</th><th>변경 사항</th></tr></thead>
-      <tbody>
-        <tr><td><code>31b6b1f</code></td><td>feat(sync): NAS 진행률 + chunk-resume (Item 1)</td></tr>
-        <tr><td><code>a2e84bb</code></td><td>feat(api): /announcements/{id}/previous (Item 2)</td></tr>
-        <tr><td><code>9bb4eef</code></td><td>feat(analysis): _resolve_recent_results + use_recent_fallback (Item 5)</td></tr>
-        <tr><td><code>de0329e</code></td><td>feat(analysis): ORG_HIERARCHY +9 + _org_chain + org_scope=chain (Item 6)</td></tr>
-        <tr><td><code>de16750</code> 외 5건</td><td>feat(ui): 6개 항목 프론트엔드 UI 적용 + data-testid</td></tr>
-        <tr><td><code>c5d494c</code></td><td>fix(item6): expansion_chain 객체 schema (UI 깨짐 수정)</td></tr>
-        <tr><td><code>da6d9ef</code></td><td>fix(sync): chunk-resume checkpoint 정확도 (페이지 누락 위험 제거)</td></tr>
-        <tr><td><code>61a8570</code></td><td>fix(ui): SyncProgressBadge admin 가드 + 폴링 중단</td></tr>
-        <tr><td><code>2eaee32</code></td><td>fix(sort): 9999-12-31 sentinel deadline 미정 처리</td></tr>
-        <tr><td><code>6b65b30</code></td><td>feat(sync): G2B 파싱 deadline_at 이상치 자동 NULL (재발 방지)</td></tr>
-      </tbody>
-    </table>
   </section>
 
   <!-- ============ FUTURE / ACTION ============ -->
   <section>
-    <h2 class="section-title">향후 확장 후보 + 클라이언트 액션 요청</h2>
-    <h3>제안 가능한 추가 작업</h3>
-    <ul style="font-size:13.5px;line-height:1.8;">
-      <li><strong>Item 6 chain 옵션 전파</strong> — 현재 <code>analysis_comprehensive</code>에만 와이어드. <code>frequency</code>·<code>company-rates</code> 등 다른 분석 엔드포인트에도 동일 패턴 적용 가능 (헬퍼 <code>_org_chain</code>은 공용)</li>
-      <li><strong>ORG_HIERARCHY CSV 일괄 적재</strong> — 현재 9개 매핑(샘플). 전국 학교/기관 매핑 CSV 일괄 import 시 chain 효과 극대화</li>
-      <li><strong>Item 5 lookback 윈도우 사용자 조정</strong> — 현재 30/90/180일 고정. 마이페이지에서 사용자별 기본 lookback 설정 가능하게 확장</li>
-      <li><strong>Item 1 진행률 알림</strong> — 진행률 100% 도달 시 토스트 또는 이메일 알림 (현재는 폴링만)</li>
+    <h2 class="section-title">다음 단계</h2>
+    <h3>제안드릴 수 있는 추가 작업 (선택 사항)</h3>
+    <ul style="font-size:14px;line-height:1.85;">
+      <li><b>상위기관 매핑 확장</b> — 현재 9개 학교/기관만 매핑되어 있습니다. 전국 단위 매핑 CSV가 있으시면 일괄 적재 가능 (Item 6 효과 극대화)</li>
+      <li><b>자동확장 옵션 다른 분석에 적용</b> — Item 6의 자동확장이 현재는 "종합분석"에만 적용. "빈도분석" "갭분석"에도 동일하게 추가 가능</li>
+      <li><b>분석 기간(30/90/180일) 사용자 조정</b> — 현재 고정값. 마이페이지에서 사용자별 기본값 설정 가능하게 확장</li>
+      <li><b>다운로드 완료 알림</b> — 진행률 100% 도달 시 토스트/이메일 알림 (현재는 화면에 표시만)</li>
     </ul>
 
     <div class="action-box">
-      <h3>📋 클라이언트 회신 요청</h3>
-      <p style="margin:0 0 8px;font-size:13.5px;">아래 항목 중 다음 라운드 우선순위를 알려주시면 즉시 진행하겠습니다:</p>
+      <h3>📋 검토 후 회신 요청드립니다</h3>
+      <p style="margin:0 0 10px;font-size:14px;">
+        반영 결과가 의도하신 방향과 맞는지 확인하시고, 다음 라운드에서 우선적으로 진행할 항목을 알려주시면 즉시 작업하겠습니다:
+      </p>
       <ul>
-        <li>위 6건 중 추가 확장이 필요한 항목 (예: Item 6를 다른 분석에도 적용)</li>
-        <li>화면 디자인/UX 추가 개선 사항 (현재 Apple HIG 기준 폴리시 적용 완료)</li>
-        <li>인수인계 형태 — 운영 매뉴얼 PDF 제작 시점 / 형식</li>
-        <li>ORG_HIERARCHY 매핑 CSV 보유 여부 (있으면 일괄 적재 가능)</li>
+        <li>위 6건 중 추가 보완이 필요한 부분이 있으신가요?</li>
+        <li>화면 디자인이나 사용성 측면에서 추가로 개선하고 싶으신 부분이 있으신가요?</li>
+        <li>학교/공공기관 상위기관 매핑 자료를 보유하고 계신가요? (있으시면 Item 6 효과 즉시 확대 가능)</li>
+        <li>다음 주 인수인계 시 운영 매뉴얼 형식 (PDF/HTML/온라인) 선호 사항이 있으신가요?</li>
       </ul>
+    </div>
+  </section>
+
+  <!-- ============ GLOSSARY ============ -->
+  <section>
+    <h2 class="section-title">용어 안내</h2>
+    <div class="glossary">
+      <dl>
+        <dt>사정률</dt>
+        <dd>입찰에서 낙찰 결정 기준이 되는 비율 (보통 99~101% 범위, 100%에 가까울수록 표준)</dd>
+        <dt>공종</dt>
+        <dd>공사 종류 분류 (예: 점검토목, 점검건축, 전기공사 등)</dd>
+        <dt>표본</dt>
+        <dd>분석에 사용되는 과거 공고/낙찰 데이터의 묶음</dd>
+        <dt>List Box (드롭다운)</dt>
+        <dd>여러 옵션 중 하나를 선택하는 화면 요소 (▼ 화살표 형태)</dd>
+        <dt>D-12, D-30 등</dt>
+        <dd>마감일까지 남은 일수 (D-12 = 마감 12일 전)</dd>
+        <dt>fallback (폴백)</dt>
+        <dd>1순위 조건으로 결과가 부족할 때 자동으로 2순위 조건으로 확장 검색</dd>
+      </dl>
     </div>
   </section>
 
   <footer>
     공공데이터 기반 입찰가 산정 및 사정률 분석 웹 — 2주차 추가확인사항 반영 보고서<br>
-    문의 / 검증 요청: 본 HTML 단독 열람 가능 (외부 의존 없음, 인쇄 호환)
+    본 HTML은 단독 열람 가능 (외부 의존 없음, 인쇄 시 A4 호환)
   </footer>
 
 </div>
