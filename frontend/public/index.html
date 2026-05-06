@@ -2013,7 +2013,7 @@ function ComprehensivePage({ announcement }) {
               <div className="card-header">
                 <div>
                   <div className="card-title">사정률 발생빈도 히스토그램</div>
-                  <div className="card-sub"><Icon name="bulb" size={12} /> 막대를 클릭하여 사정률을 선택하세요 {peakRate != null && `| 피크 구간: ${peakRate}%`}</div>
+                  <div className="card-sub">막대를 클릭하여 사정률을 선택하세요 {peakRate != null && `| 피크 구간: ${peakRate}%`}</div>
                 </div>
               </div>
               {freqLoading ? <div className="loading">분석 데이터 로딩 중...</div> : freqBins.length > 0 ? (
@@ -2224,7 +2224,7 @@ function ComprehensivePage({ announcement }) {
                 <div>
                   <div className="card-title">구간 분석 (스펙 §1) — 모드별 1순위 예측</div>
                   <div className="card-sub">
-                    <Icon name="bulb" size={12} /> 빈도최대 / 공백 / 차이최대 3가지 알고리즘 + 세부값 추출 룰 적용
+                    빈도최대 / 공백 / 차이최대 3가지 알고리즘 + 세부값 추출 룰 적용
                   </div>
                 </div>
                 <div className="gap-6">
@@ -2648,7 +2648,7 @@ function ComprehensivePage({ announcement }) {
                     <div>
                       <div className="card-title">상관관계 분석 — 종합 1순위</div>
                       <div className="card-sub">
-                        <Icon name="bulb" size={12} /> 3가지 방법 합치도 기반 최종 1순위
+                        3가지 방법 합치도 기반 최종 1순위
                       </div>
                     </div>
                     <div className="gap-6">
@@ -2882,7 +2882,7 @@ function ComprehensivePage({ announcement }) {
                     <div>
                       <div className="card-title">정확도 고도화 — 회귀·추세·백테스트</div>
                       <div className="card-sub">
-                        <Icon name="bulb" size={12} /> 다중 회귀 / 월·분기·연 추이 / 과거 공고 기반 알고리즘 정확도 측정
+                        다중 회귀 / 월·분기·연 추이 / 과거 공고 기반 알고리즘 정확도 측정
                       </div>
                     </div>
                     <div className="gap-6">
@@ -3056,7 +3056,7 @@ function ComprehensivePage({ announcement }) {
                     <div>
                       <div className="card-title">자동 군집 분석 (K-means)</div>
                       <div className="card-sub">
-                        <Icon name="bulb" size={12} /> 기초금액·카테고리·지역으로 자동 그룹 + 그룹별 평균 사정률
+                        기초금액·카테고리·지역으로 자동 그룹 + 그룹별 평균 사정률
                       </div>
                     </div>
                     <button className="btn btn-secondary btn-sm" 
@@ -3110,7 +3110,7 @@ function ComprehensivePage({ announcement }) {
                       <div>
                         <div className="card-title">유사 공고 추천 (K-NN)</div>
                         <div className="card-sub">
-                          <Icon name="bulb" size={12} /> 기초금액·지역·업종 기반 가장 비슷한 과거 공고 5건
+                          기초금액·지역·업종 기반 가장 비슷한 과거 공고 5건
                         </div>
                       </div>
                       {similarData.avg_similar_rate != null && (
