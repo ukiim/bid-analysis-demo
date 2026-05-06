@@ -9,6 +9,7 @@ import math
 from datetime import datetime
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import case
 
 from app.core.database import SessionLocal
 from app.core.deps import require_auth
@@ -66,7 +67,20 @@ def list_announcements(
             )
 
         total = q.count()
-        items = q.order_by(BidAnnouncement.announced_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
+        # 정렬: 마감일 기준 잔여일이 많은 공고 → 상단, 마감/만료 → 하단
+        # 1순위: 활성(0) → 만료(1) → null(2)
+        # 2순위(활성): deadline_at DESC (잔여일 많은 순)
+        # 2순위(만료): deadline_at DESC (최근 만료 → 오래 전 만료)
+        _now = datetime.now()
+        _sort_priority = case(
+            (BidAnnouncement.deadline_at.is_(None), 2),
+            (BidAnnouncement.deadline_at < _now, 1),
+            else_=0,
+        )
+        items = (
+            q.order_by(_sort_priority.asc(), BidAnnouncement.deadline_at.desc())
+             .offset((page - 1) * page_size).limit(page_size).all()
+        )
 
         # N+1 해소 — BidResult 를 batch IN 절로 한 번에 조회
         ann_ids = [a.id for a in items]
