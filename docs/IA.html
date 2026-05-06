@@ -32,6 +32,7 @@
   .sitemap-card-header.h-red { background: #FEF2F2; color: #991B1B; border-bottom: 2px solid #FECACA; }
   .sitemap-card-header.h-green { background: #F0FDF4; color: #065F46; border-bottom: 2px solid #BBF7D0; }
   .sitemap-card-header.h-purple { background: #FAF5FF; color: #6B21A8; border-bottom: 2px solid #E9D5FF; }
+  .sitemap-card-header.h-cyan { background: #ECFEFF; color: #155E75; border-bottom: 2px solid #A5F3FC; }
   .sitemap-card-body { padding: 12px 16px; }
   .sitemap-item { padding: 6px 0; font-size: 13px; color: #475569; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #F8FAFC; }
   .sitemap-item:last-child { border-bottom: none; }
@@ -58,9 +59,9 @@
     <h1>Information Architecture (IA)</h1>
     <div class="subtitle">조달 입찰 사정률 예측 플랫폼 - 상세 화면 구조</div>
     <div class="doc-meta">
-      <span>프로젝트: 공공데이터 기반 입찰가 산정 및 사정률 분석 웹</span>
-      <span>버전: v2.0</span>
-      <span>작성일: 2026-04-11</span>
+      <span>프로젝트: 공공데이터 기반 입찰가 산정 및 사정률 분석 웹 (NAS 기반)</span>
+      <span>버전: v3.0</span>
+      <span>최종 보고일: 2026-04-13</span>
     </div>
   </div>
 
@@ -76,16 +77,15 @@
         <div class="sitemap-card-body">
           <div class="sitemap-item"><span class="si-icon">📄</span> 로그인 폼</div>
           <div class="sitemap-depth">
-            <div class="sitemap-item"><span class="si-icon">·</span> 아이디 입력</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 이메일 입력</div>
             <div class="sitemap-item"><span class="si-icon">·</span> 비밀번호 입력</div>
             <div class="sitemap-item"><span class="si-icon">·</span> 로그인 버튼</div>
           </div>
           <div class="sitemap-item"><span class="si-icon">📄</span> 회원가입 폼</div>
           <div class="sitemap-depth">
-            <div class="sitemap-item"><span class="si-icon">·</span> 이름 / 아이디 / 비밀번호</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 이메일(아이디) / 비밀번호</div>
             <div class="sitemap-item"><span class="si-icon">·</span> 가입 버튼</div>
           </div>
-          <div class="sitemap-item"><span class="si-icon">🔑</span> 데모 계정 (admin / demo1234)</div>
         </div>
       </div>
 
@@ -120,7 +120,6 @@
           <div class="sitemap-item"><span class="si-icon">👁️</span> 프리뷰 패널 (행 클릭)</div>
           <div class="sitemap-depth">
             <div class="sitemap-item"><span class="si-icon">·</span> 공고 상세정보</div>
-            <div class="sitemap-item"><span class="si-icon">·</span> 간편 투찰률 계산기</div>
             <div class="sitemap-item"><span class="si-icon">·</span> 공고 바로가기 (G2B/D2B)</div>
             <div class="sitemap-item"><span class="si-icon">·</span> 상세 분석 버튼</div>
           </div>
@@ -205,7 +204,6 @@
           <div class="sitemap-item"><span class="si-icon">🔀</span> 결합 예측 후보 테이블</div>
           <div class="sitemap-depth">
             <div class="sitemap-item"><span class="si-icon">·</span> 빈도+갭 결합 점수</div>
-            <div class="sitemap-item"><span class="si-icon">·</span> 출처 (빈도/갭/빈도+갭)</div>
             <div class="sitemap-item"><span class="si-icon">·</span> 신뢰도 (높음/보통/낮음)</div>
             <div class="sitemap-item"><span class="si-icon">·</span> 확정 버튼</div>
           </div>
@@ -226,6 +224,48 @@
         </div>
       </div>
 
+      <!-- 마이페이지 -->
+      <div class="sitemap-card">
+        <div class="sitemap-card-header h-green">👤 마이페이지</div>
+        <div class="sitemap-card-body">
+          <div class="sitemap-item"><span class="si-icon">👤</span> 프로필 정보</div>
+          <div class="sitemap-depth">
+            <div class="sitemap-item"><span class="si-icon">·</span> 이메일 / 가입일</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 비밀번호 변경</div>
+          </div>
+          <div class="sitemap-item"><span class="si-icon">📋</span> 분석 이력</div>
+          <div class="sitemap-depth">
+            <div class="sitemap-item"><span class="si-icon">·</span> 분석 일시 / 공고명 / 결과</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 선택사정률 / 확정사정률</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 이력 클릭 시 재분석 이동</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 데이터 업로드 — 신규 -->
+      <div class="sitemap-card">
+        <div class="sitemap-card-header h-amber">📤 데이터 업로드</div>
+        <div class="sitemap-card-body">
+          <div class="sitemap-item"><span class="si-icon">📂</span> 파일 업로드 영역</div>
+          <div class="sitemap-depth">
+            <div class="sitemap-item"><span class="si-icon">·</span> 드래그 앤 드롭 / 파일 선택</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 지원 형식: Excel(.xlsx), CSV</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 템플릿 다운로드 링크</div>
+          </div>
+          <div class="sitemap-item"><span class="si-icon">✅</span> 업로드 검증 결과</div>
+          <div class="sitemap-depth">
+            <div class="sitemap-item"><span class="si-icon">·</span> 유효 건수 / 오류 건수</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 중복 데이터 감지</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 오류 행 상세 표시</div>
+          </div>
+          <div class="sitemap-item"><span class="si-icon">📋</span> 업로드 이력</div>
+          <div class="sitemap-depth">
+            <div class="sitemap-item"><span class="si-icon">·</span> 업로드 일시 / 파일명 / 건수</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 업로드자 / 처리 상태</div>
+          </div>
+        </div>
+      </div>
+
       <!-- 관리자 -->
       <div class="sitemap-card">
         <div class="sitemap-card-header h-purple">⚙️ 관리자</div>
@@ -238,12 +278,24 @@
           <div class="sitemap-item"><span class="si-icon">👥</span> 사용자 관리</div>
           <div class="sitemap-depth">
             <div class="sitemap-item"><span class="si-icon">·</span> 사용자 목록 테이블</div>
-            <div class="sitemap-item"><span class="si-icon">·</span> 역할 변경 / 상태 관리</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 상태 관리 (활성/비활성)</div>
           </div>
-          <div class="sitemap-item"><span class="si-icon">🔄</span> 데이터 수집 (G2B/D2B)</div>
+          <div class="sitemap-item"><span class="si-icon">🔄</span> 데이터 수집 관리</div>
           <div class="sitemap-depth">
             <div class="sitemap-item"><span class="si-icon">·</span> 수동 동기화 트리거</div>
             <div class="sitemap-item"><span class="si-icon">·</span> 마지막 동기화 시간</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 수집 히스토리 테이블</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 실패 건 재시도 버튼</div>
+          </div>
+          <div class="sitemap-item"><span class="si-icon">⏰</span> 자동 수집 스케줄 설정</div>
+          <div class="sitemap-depth">
+            <div class="sitemap-item"><span class="si-icon">·</span> 수집 주기 (매시/매일/매주)</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 다음 수집 예정 시간</div>
+          </div>
+          <div class="sitemap-item"><span class="si-icon">🚨</span> 오류 모니터링</div>
+          <div class="sitemap-depth">
+            <div class="sitemap-item"><span class="si-icon">·</span> 수집 실패 건수 / 최근 오류 목록</div>
+            <div class="sitemap-item"><span class="si-icon">·</span> 상세 로그는 Portainer 연동</div>
           </div>
           <div class="sitemap-item"><span class="si-icon">💾</span> NAS 저장소 상태</div>
         </div>

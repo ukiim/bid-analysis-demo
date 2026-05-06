@@ -1,56 +1,47 @@
 version: "3.9"
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: bid-postgres
-    environment:
-      POSTGRES_DB: bid_analysis
-      POSTGRES_USER: biduser
-      POSTGRES_PASSWORD: bidpass123
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U biduser -d bid_analysis"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: bid-backend
+    restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql+asyncpg://biduser:bidpass123@postgres:5432/bid_analysis
-      DATA_GO_KR_API_KEY: ${DATA_GO_KR_API_KEY:-}
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      # 필수 — 프로덕션 배포 시 .env로 주입
+      APP_ENV: ${APP_ENV:-development}
+      SECRET_KEY: ${SECRET_KEY:-bid-insight-secret-key-change-in-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+
+      # 공공데이터 API
+      G2B_API_KEY: ${G2B_API_KEY:-}
+      D2B_API_KEY: ${D2B_API_KEY:-}
+
+      # 자동 수집 스케줄
+      SYNC_INTERVAL: ${SYNC_INTERVAL:-daily}
+      SYNC_TIME: ${SYNC_TIME:-02:00}
+      SYNC_ENABLED: ${SYNC_ENABLED:-true}
+
+      # NAS 저장 경로
+      NAS_MOUNT_PATH: /app/data
+
+      # 로깅
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FILE: /app/data/server.log
+
+      # uvicorn 워커
+      WORKERS: ${WORKERS:-2}
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
-    depends_on:
-      postgres:
-        condition: service_healthy
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      # NAS 마운트: 호스트 ./data → 컨테이너 /app/data (DB + 로그)
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/api/v1/meta/regions"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: bid-frontend
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    depends_on:
-      - backend
-    command: npm run dev
-
-volumes:
-  pgdata:
+  # 프론트엔드는 단일파일 React SPA가 backend FastAPI에서 직접 서빙되므로 별도 서비스 불필요.
+  # 별도 호스팅이 필요한 경우 nginx 서비스를 추가하여 index.html을 static 서빙하도록 구성.

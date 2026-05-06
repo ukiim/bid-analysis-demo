@@ -1,0 +1,112 @@
+# 운영(Production) Docker Compose — NAS 배포용
+#
+# 사용법:
+#   1) cp .env.example .env  →  필수값 채우기 (SECRET_KEY, G2B_API_KEY, CORS_ORIGINS 등)
+#   2) docker compose -f docker-compose.prod.yml up -d --build
+#   3) docker exec bid-backend python3 scripts/init_admin.py --email admin@example.com --auto-password
+#
+# 주의:
+#   - APP_ENV=production 이면 SECRET_KEY가 기본값 또는 32자 미만이거나
+#     CORS_ORIGINS=* 인 경우 시작이 차단됩니다.
+#   - 데이터/로그/백업은 호스트 ./data ./backups ./logs 디렉토리에 저장됩니다.
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bid-backend
+    restart: unless-stopped
+    environment:
+      # === 필수 (.env에서 주입) ===
+      APP_ENV: production
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY 환경변수 필수}
+      CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS 환경변수 필수}
+
+      # === 공공데이터 ===
+      G2B_API_KEY: ${G2B_API_KEY:-}
+      D2B_API_KEY: ${D2B_API_KEY:-}
+      ENABLE_D2B_SYNC: ${ENABLE_D2B_SYNC:-false}
+
+      # === 자동 수집 ===
+      SYNC_INTERVAL: ${SYNC_INTERVAL:-daily}
+      SYNC_TIME: ${SYNC_TIME:-02:00}
+      SYNC_ENABLED: ${SYNC_ENABLED:-true}
+      SYNC_ROWS_PER_PAGE: ${SYNC_ROWS_PER_PAGE:-100}
+      SYNC_MAX_PAGES_ANN: ${SYNC_MAX_PAGES_ANN:-5}
+      SYNC_MAX_PAGES_RES: ${SYNC_MAX_PAGES_RES:-5}
+      SYNC_WINDOW_DAYS: ${SYNC_WINDOW_DAYS:-7}
+      SYNC_TOTAL_DAYS_ANN: ${SYNC_TOTAL_DAYS_ANN:-60}
+      SYNC_TOTAL_DAYS_RES: ${SYNC_TOTAL_DAYS_RES:-14}
+
+      # === NAS 저장 경로 ===
+      NAS_MOUNT_PATH: /app/data
+
+      # === 로깅 (RotatingFileHandler) ===
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FILE: /app/data/server.log
+      LOG_MAX_BYTES: ${LOG_MAX_BYTES:-10485760}
+      LOG_BACKUP_COUNT: ${LOG_BACKUP_COUNT:-7}
+
+      # === 분석 캐시 ===
+      ANALYSIS_CACHE_SIZE: ${ANALYSIS_CACHE_SIZE:-256}
+      ANALYSIS_CACHE_TTL: ${ANALYSIS_CACHE_TTL:-300}
+
+      # === uvicorn ===
+      WORKERS: ${WORKERS:-2}
+    ports:
+      # 기본: 0.0.0.0:8000 → DSM 역방향 프록시(443/HTTPS)에서 접근
+      # Cloudflare Tunnel 사용 시: "127.0.0.1:8000:8000" 로 변경하여 외부 직접 노출 차단
+      - "${BACKEND_BIND:-0.0.0.0}:8000:8000"
+    volumes:
+      # 호스트 ./data ↔ 컨테이너 /app/data (DB + 로그)
+      - ./data:/app/data
+      # 백업 (선택)
+      - ./backups:/app/backups
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # === Cloudflare Tunnel (옵션 B — Synology DDNS 대신 사용 시) ===
+  # 활성화 절차:
+  #   1) .env 에 BACKEND_BIND=127.0.0.1 추가 (외부 직접 노출 차단)
+  #   2) .env 에 CLOUDFLARE_TUNNEL_TOKEN=... 설정
+  #   3) 아래 cloudflared 블록 주석 해제
+  #   4) docker compose -f docker-compose.prod.yml up -d
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: bid-cloudflared
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+  #   depends_on:
+  #     backend:
+  #       condition: service_healthy
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "5m"
+  #       max-file: "2"
+
+  # === 일일 백업 (선택) ===
+  # 또는 NAS 호스트의 cron/작업 스케줄러로 backup_db.py를 직접 호출하는 방식 권장
+  # backup:
+  #   image: python:3.11-slim
+  #   container_name: bid-backup
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./backend:/app
+  #     - ./data:/app/data
+  #     - ./backups:/app/backups
+  #   command: >
+  #     sh -c "while true; do
+  #       sleep 86400;
+  #       python3 /app/scripts/backup_db.py --output /app/backups --retain 30 --verify;
+  #     done"

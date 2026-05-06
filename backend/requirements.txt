@@ -13,6 +13,10 @@ psycopg2-binary==2.9.10
 pandas==2.2.3
 numpy==1.26.4
 statsmodels==0.14.4
+openpyxl==3.1.5  # 분석 결과 엑셀 export (스펙 §3.8/3.9)
+
+# 부하 테스트 (선택, 운영 의존성 아님)
+# pip install locust  로 별도 설치 후 backend/loadtest/locustfile.py 실행
 
 # API Client
 httpx==0.28.1

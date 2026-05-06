@@ -114,9 +114,9 @@
     <div class="subtitle">조달 입찰 사정률 예측 플랫폼 - 기능 상세 명세</div>
     <div class="doc-meta">
       <span>프로젝트: 공공데이터 기반 입찰가 산정 및 사정률 분석 웹</span>
-      <span>버전: v2.0</span>
-      <span>작성일: 2026-04-11</span>
-      <span>총 기능: 28개 API, 7개 분석 모듈</span>
+      <span>버전: v3.0 (NAS 기반)</span>
+      <span>작성일: 2026-04-13</span>
+      <span>총 기능: 28개 API, 7개 분석 모듈, 6개 인프라 컴포넌트</span>
     </div>
   </div>
 
@@ -131,7 +131,7 @@
       <div class="summary-label">분석 모듈</div>
     </div>
     <div class="summary-item">
-      <div class="summary-num">3</div>
+      <div class="summary-num">10</div>
       <div class="summary-label">화면 (페이지)</div>
     </div>
     <div class="summary-item">
@@ -160,6 +160,7 @@
       <li><a href="#s10"><span class="toc-num">10</span> 갭 차기연도 검증</a></li>
       <li><a href="#s11"><span class="toc-num">11</span> 관리자 기능</a></li>
       <li><a href="#s12"><span class="toc-num">12</span> 데이터 모델</a></li>
+      <li><a href="#s13"><span class="toc-num">13</span> 인프라 및 배포 (NAS)</a></li>
     </ul>
   </div>
 
@@ -172,7 +173,7 @@
       <span class="section-num">1</span>
       <span class="section-title">인증 및 사용자 관리</span>
     </div>
-    <div class="section-desc">JWT 기반 인증 시스템. 데모 계정: admin / demo1234</div>
+    <div class="section-desc">JWT 기반 이메일 인증 시스템</div>
 
     <div class="feature-card">
       <div class="feature-header">
@@ -183,9 +184,9 @@
       <div class="feature-body">
         <table class="spec-table">
           <tr><th>화면</th><td>로그인 페이지 하단 "회원가입" 링크</td></tr>
-          <tr><th>입력 필드</th><td><code>username</code> 아이디, <code>email</code> 이메일, <code>password</code> 비밀번호, <code>name</code> 이름</td></tr>
+          <tr><th>입력 필드</th><td><code>email</code> 이메일(아이디), <code>password</code> 비밀번호</td></tr>
           <tr><th>처리 로직</th><td>이메일 중복 체크 &rarr; bcrypt 해싱 &rarr; User 레코드 생성 &rarr; JWT 발급</td></tr>
-          <tr><th>기본값</th><td>plan: "무료", is_admin: false</td></tr>
+          <tr><th>기본값</th><td>is_admin: false</td></tr>
         </table>
         <div class="api-block">
           <span class="api-method api-post">POST</span> <span class="api-path">/api/v1/auth/register</span>
@@ -202,7 +203,7 @@
       <div class="feature-body">
         <table class="spec-table">
           <tr><th>화면</th><td>로그인 페이지 (메인 진입점)</td></tr>
-          <tr><th>입력 필드</th><td><code>username</code> 아이디/이메일, <code>password</code> 비밀번호</td></tr>
+          <tr><th>입력 필드</th><td><code>email</code> 이메일, <code>password</code> 비밀번호</td></tr>
           <tr><th>처리 로직</th><td>bcrypt 비밀번호 검증 &rarr; JWT 토큰 생성 (24시간 유효) &rarr; localStorage 저장</td></tr>
           <tr><th>에러 처리</th><td>401: "아이디 또는 비밀번호가 올바르지 않습니다"</td></tr>
         </table>
@@ -711,8 +712,8 @@
       <div class="feature-body">
         <table class="spec-table">
           <tr><th>접근 권한</th><td><span class="tag tag-red">관리자 전용</span> (is_admin = true)</td></tr>
-          <tr><th>KPI 카드</th><td>전체 사용자, 프리미엄 구독, 수집 공고 총계, 낙찰결과 총계, NAS 상태</td></tr>
-          <tr><th>사용자 관리</th><td>사용자 목록 (검색 가능), 이름, 이메일, 플랜, 조회수, 가입일</td></tr>
+          <tr><th>KPI 카드</th><td>전체 사용자, 수집 공고 총계, 낙찰결과 총계, 평균 사정률, NAS 저장소 상태</td></tr>
+          <tr><th>사용자 관리</th><td>사용자 목록 (검색 가능), 이메일, 조회수, 가입일, 상태(활성/비활성)</td></tr>
           <tr><th>데이터 수집</th><td>"수동 수집" 버튼 클릭 &rarr; G2B/D2B API 호출 &rarr; 결과 토스트 알림</td></tr>
           <tr><th>NAS 모니터링</th><td>마운트 경로, 총 용량, 사용량, 사용률, DB 용량</td></tr>
         </table>
@@ -823,9 +824,7 @@
           <tbody>
             <tr><td><code>id</code></td><td>UUID (PK)</td><td>고유 식별자</td></tr>
             <tr><td><code>email</code></td><td>String (Unique)</td><td>이메일</td></tr>
-            <tr><td><code>name</code></td><td>String</td><td>이름</td></tr>
             <tr><td><code>hashed_password</code></td><td>String</td><td>bcrypt 해싱 비밀번호</td></tr>
-            <tr><td><code>plan</code></td><td>String</td><td>플랜 (무료/스탠다드/프리미엄)</td></tr>
             <tr><td><code>is_admin</code></td><td>Boolean</td><td>관리자 여부</td></tr>
             <tr><td><code>query_count</code></td><td>Integer</td><td>분석 조회 수</td></tr>
           </tbody>
@@ -834,9 +833,164 @@
     </div>
   </div>
 
+  <hr class="divider">
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- 13. 인프라 및 배포 (NAS) -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <span class="section-anchor" id="s13"></span>
+    <div class="section-header">
+      <span class="section-num">13</span>
+      <span class="section-title">인프라 및 배포 (NAS 기반)</span>
+    </div>
+    <div class="section-desc">Synology/QNAP NAS 서버에 Docker Compose 기반으로 전체 서비스를 배포합니다.</div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <span class="feature-id">INFRA-01</span>
+        <span class="feature-name">서비스 아키텍처</span>
+        <span class="feature-priority pri-high">필수</span>
+      </div>
+      <div class="feature-body">
+        <table class="spec-table">
+          <tr><th>배포 환경</th><td>NAS 서버 (Synology DS920+ / QNAP 등, RAM 4~8GB)</td></tr>
+          <tr><th>컨테이너 관리</th><td>Docker Compose (단일 docker-compose.yml)</td></tr>
+          <tr><th>모니터링</th><td>Portainer (Docker 관리 웹 UI)</td></tr>
+        </table>
+        <table class="param-table" style="margin-top: 12px;">
+          <thead><tr><th>컨테이너</th><th>이미지</th><th>포트</th><th>역할</th></tr></thead>
+          <tbody>
+            <tr><td><code>nginx</code></td><td>nginx:alpine</td><td>80, 443</td><td>리버스 프록시, 정적파일 서빙, SSL 종단</td></tr>
+            <tr><td><code>fastapi</code></td><td>python:3.12-slim (커스텀)</td><td>8000</td><td>백엔드 API 서버 (Uvicorn)</td></tr>
+            <tr><td><code>postgresql</code></td><td>postgres:16-alpine</td><td>5432</td><td>메인 데이터베이스</td></tr>
+            <tr><td><code>redis</code></td><td>redis:7-alpine</td><td>6379</td><td>캐시 (API 응답, 세션)</td></tr>
+            <tr><td><code>portainer</code></td><td>portainer/portainer-ce</td><td>9443</td><td>Docker 관리 대시보드</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <span class="feature-id">INFRA-02</span>
+        <span class="feature-name">NAS 리소스 최적화</span>
+        <span class="feature-priority pri-high">필수</span>
+      </div>
+      <div class="feature-body">
+        <table class="spec-table">
+          <tr><th>Uvicorn</th><td>워커 수: 2~4개 (NAS RAM에 따라 조정). <code>--workers 2 --loop uvloop</code></td></tr>
+          <tr><th>PostgreSQL 튜닝</th><td>
+            <code>shared_buffers</code>: 512MB (RAM의 ~10%)<br>
+            <code>max_connections</code>: 30<br>
+            <code>work_mem</code>: 4MB<br>
+            <code>effective_cache_size</code>: 1GB
+          </td></tr>
+          <tr><th>Redis 메모리</th><td><code>maxmemory</code>: 256MB, <code>maxmemory-policy</code>: allkeys-lru</td></tr>
+          <tr><th>Docker 제한</th><td>각 컨테이너에 <code>mem_limit</code> 설정으로 OOM 방지</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <span class="feature-id">INFRA-03</span>
+        <span class="feature-name">스케줄러 (APScheduler)</span>
+        <span class="feature-priority pri-high">필수</span>
+      </div>
+      <div class="feature-body">
+        <table class="spec-table">
+          <tr><th>방식</th><td>APScheduler (in-process) — Celery+별도 워커 대신 FastAPI 프로세스 내 스케줄링</td></tr>
+          <tr><th>선택 이유</th><td>NAS 환경에서 별도 Celery Worker 컨테이너의 메모리 부담 제거</td></tr>
+          <tr><th>주요 작업</th><td>
+            <span class="tag tag-blue">공고 수집</span> G2B/D2B API 크롤링 (매일 06:00, 18:00)<br>
+            <span class="tag tag-amber">낙찰결과 수집</span> 개찰 완료건 결과 수집 (매일 09:00)<br>
+            <span class="tag tag-green">DB 정리</span> 오래된 로그/임시 데이터 삭제 (매주 일요일 03:00)<br>
+            <span class="tag tag-purple">통계 갱신</span> 사정률 통계 캐시 재계산 (매일 05:00)
+          </td></tr>
+          <tr><th>설정 저장</th><td>관리자 페이지에서 수집 주기 변경 &rarr; DB에 스케줄 설정 저장 &rarr; APScheduler 런타임 반영</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <span class="feature-id">INFRA-04</span>
+        <span class="feature-name">외부 접근 및 SSL</span>
+        <span class="feature-priority pri-mid">보통</span>
+      </div>
+      <div class="feature-body">
+        <table class="spec-table">
+          <tr><th>외부 접근</th><td>Cloudflare Tunnel — 포트포워딩 없이 외부에서 NAS 서비스 접근</td></tr>
+          <tr><th>장점</th><td>
+            공유기/방화벽 설정 불필요<br>
+            NAS의 실제 IP 노출 차단 (DDoS 방어)<br>
+            Cloudflare CDN 자동 적용 (정적 파일 캐싱)
+          </td></tr>
+          <tr><th>SSL 인증서</th><td>Cloudflare 자동 발급 (외부) + Let's Encrypt (내부 Nginx)</td></tr>
+          <tr><th>도메인</th><td>커스텀 도메인 연결 (예: bid.example.com)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <span class="feature-id">INFRA-05</span>
+        <span class="feature-name">파일 저장소</span>
+        <span class="feature-priority pri-mid">보통</span>
+      </div>
+      <div class="feature-body">
+        <table class="spec-table">
+          <tr><th>방식</th><td>NAS 로컬 볼륨 (Docker Volume Mount) — S3/MinIO 불필요</td></tr>
+          <tr><th>마운트 경로</th><td>
+            <code>/volume1/docker/bid-platform/data/</code> — DB 데이터<br>
+            <code>/volume1/docker/bid-platform/uploads/</code> — 업로드 파일<br>
+            <code>/volume1/docker/bid-platform/backups/</code> — DB 백업<br>
+            <code>/volume1/docker/bid-platform/logs/</code> — 애플리케이션 로그
+          </td></tr>
+          <tr><th>백업</th><td>
+            NAS 자체 스냅샷 기능 활용 (Btrfs/ZFS)<br>
+            PostgreSQL pg_dump 일일 자동 백업 (APScheduler)<br>
+            NAS RAID 1/SHR로 디스크 이중화
+          </td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <span class="feature-id">INFRA-06</span>
+        <span class="feature-name">배포 및 운영</span>
+        <span class="feature-priority pri-mid">보통</span>
+      </div>
+      <div class="feature-body">
+        <table class="spec-table">
+          <tr><th>배포 방식</th><td>
+            <code>docker-compose up -d --build</code> (NAS 터미널 또는 Portainer)<br>
+            무중단 배포: <code>docker-compose up -d --no-deps --build fastapi</code>
+          </td></tr>
+          <tr><th>로그 관리</th><td>
+            Docker 로그 드라이버: json-file (max-size: 10m, max-file: 3)<br>
+            애플리케이션 로그: 파일 기반 (loguru) &rarr; NAS 볼륨 저장
+          </td></tr>
+          <tr><th>모니터링</th><td>
+            Portainer: 컨테이너 상태, 리소스 사용량, 로그 뷰어<br>
+            관리자 페이지: API 요청 로그, 오류 모니터링, NAS 저장소 상태<br>
+            NAS 자체 알림: 디스크 용량, 온도, RAID 상태
+          </td></tr>
+          <tr><th>장애 복구</th><td>
+            Docker restart policy: <code>unless-stopped</code><br>
+            PostgreSQL 자동 복구: WAL 기반<br>
+            NAS 재부팅 시 Docker 서비스 자동 시작
+          </td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <div style="text-align:center; padding: 32px 0; color: #94A3B8; font-size: 12px; border-top: 1px solid #E2E8F0; margin-top: 40px;">
-    조달 입찰 사정률 예측 플랫폼 - 기능명세서 v2.0 &middot; 2026-04-11
+    조달 입찰 사정률 예측 플랫폼 - 기능명세서 v3.0 &middot; 2026-04-13
   </div>
 
 </div>
