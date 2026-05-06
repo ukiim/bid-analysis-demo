@@ -87,6 +87,34 @@ def test_resolve_recent_results_30d_match():
         db.close()
 
 
+def test_resolve_recent_results_null_industry_and_region():
+    """target.industry_code/region 이 None 이어도 SQL 에 NULL 필터를 추가하지 않고
+    동일 category 표본만으로 동작해야 함 (KeyError/필터 폭주 방지)."""
+    db = SessionLocal()
+    suffix = uuid.uuid4().hex[:6]
+    target = BidAnnouncement(
+        source="TEST", bid_number=f"NULL-T-{suffix}",
+        category="용역", title="대상 (industry/region 모두 None)",
+        ordering_org_name="여주시", region=None, industry_code=None,
+        base_amount=1_000_000, announced_at=datetime.now(),
+    )
+    db.add(target)
+    db.commit()
+    target_id = target.id
+    try:
+        rv = _resolve_recent_results(db, target)
+        # 예외 없이 dict 반환
+        assert "results" in rv
+        assert "lookback_used_days" in rv
+        # sample_source 가 "전체/전국" 표기로 폴백됐는지 확인
+        assert "전체" in rv["sample_source"]
+        assert "전국" in rv["sample_source"]
+    finally:
+        db.query(BidAnnouncement).filter(BidAnnouncement.id == target_id).delete()
+        db.commit()
+        db.close()
+
+
 def test_company_rates_with_use_recent_fallback(client, auth_token):
     """엔드포인트가 use_recent_fallback=true 일 때 lookback_used_days 를 응답에 포함"""
     db = SessionLocal()
