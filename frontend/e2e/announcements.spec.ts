@@ -32,13 +32,13 @@ test.describe('공고 목록 + UI fix 검증', () => {
     await expect(page.getByText(/공고 목록/)).toBeVisible();
   });
 
-  test('U5 fix — 행 클릭 시 quick-preview 패널 열리고 KPI 카드 가려지지 않음', async ({ page }) => {
+  test('U5 fix — 행 클릭 시 quick-preview 패널 열리고 scrim 표시 + KPI 카드 가려지지 않음', async ({ page }) => {
     const firstRow = page.locator('table tbody tr').first();
     await firstRow.click();
     // 우측 패널 열림
     await expect(page.locator('.quick-preview.open')).toBeVisible();
-    // body 클래스 has-preview 부착
-    await expect(page.locator('body')).toHaveClass(/has-preview/);
+    // scrim 표시 (배경 클릭으로 닫힘 가능)
+    await expect(page.locator('.quick-preview-scrim.open')).toBeVisible();
     // 평균 사정률 카드 (5번째 KPI) 여전히 보여야 함
     await expect(page.getByText('평균 사정률').first()).toBeInViewport();
   });
