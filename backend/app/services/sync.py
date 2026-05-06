@@ -132,9 +132,11 @@ def _normalize_item(source: str, item: dict) -> "dict | None":
     if "취소" in _t:  # 취소는 단순 contains 유지 (오인 매칭 거의 없음)
         return None
     _excludes = ("[유찰", "(유찰", "유찰공고", "[폐기", "(폐기공고",
-                 "폐기공고", "무효공고", "[연기공고", "(연기공고", "입찰취소",
-                 "사전공고", "사전규격", "발주계획")  # 정식 입찰 전 정보성 공고
+                 "폐기공고", "무효공고", "[연기공고", "(연기공고", "입찰취소")
     if any(p in _t for p in _excludes):
+        return None
+    # 단가계약(다년 일괄) 차단 — "각 수요기관" 발주처는 분석 대상 아님
+    if str(org).strip() == "각 수요기관":
         return None
 
     # 기초금액: presmptPrce / basicAmt / budgetAmt / asignBdgtAmt 순으로 폴백

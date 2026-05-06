@@ -35,9 +35,10 @@ def list_announcements(
         q = q.filter(BidAnnouncement.category.in_(["공사", "용역"]))
         q = q.filter(~BidAnnouncement.title.contains("취소"))
         for _p in ("[유찰", "(유찰", "유찰공고", "[폐기", "(폐기공고",
-                   "폐기공고", "무효공고", "[연기공고", "(연기공고", "입찰취소",
-                   "사전공고", "사전규격", "발주계획"):
+                   "폐기공고", "무효공고", "[연기공고", "(연기공고", "입찰취소"):
             q = q.filter(~BidAnnouncement.title.contains(_p))
+        # 단가계약(다년 일괄) 차단 — "각 수요기관" 발주처는 분석 대상 아님
+        q = q.filter(BidAnnouncement.ordering_org_name != "각 수요기관")
 
         if category and category != "all":
             cats = [c.strip() for c in category.split(",")]
