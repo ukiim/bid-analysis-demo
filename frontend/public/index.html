@@ -1299,6 +1299,8 @@ function ComprehensivePage({ announcement }) {
   const [orgScope, setOrgScope] = useState('specific');
   const [gapRangeStart, setGapRangeStart] = useState('');
   const [gapRangeEnd, setGapRangeEnd] = useState('');
+  // Item 5: 직전 동일공종 우선 fallback 토글
+  const [useRecentFallback, setUseRecentFallback] = useState(false);
 
   // Tab 1 data — freqData/freqLoading 은 useFetch 로 자동 관리
   const [showFirstOnly, setShowFirstOnly] = useState(false);
@@ -1500,6 +1502,7 @@ function ComprehensivePage({ announcement }) {
     if (baseAmountMin) p.append('base_amount_min', baseAmountMin);
     if (baseAmountMax) p.append('base_amount_max', baseAmountMax);
     if (industryFilter) p.append('industry_filter', industryFilter);
+    if (useRecentFallback) p.append('use_recent_fallback', 'true');
     return `/analysis/company-rates/${announcement.id}?${p}`;
   })();
   const { data: companyData, loading: companyLoading } =
@@ -2321,6 +2324,21 @@ function ComprehensivePage({ announcement }) {
               <LoadingState message="업체 사정률 분석 중..." />
             ) : (
               <>
+                {/* Item 5: 직전 동일공종 우선 fallback 토글 + 표본 출처 뱃지 */}
+                <div className="filter-bar mb-12" style={{gap:'12px',flexWrap:'wrap'}}>
+                  <label style={{display:'inline-flex',alignItems:'center',gap:'6px',fontSize:'13px',cursor:'pointer'}}>
+                    <input type="checkbox" data-testid="toggle-recent-fallback"
+                      checked={useRecentFallback}
+                      onChange={e => setUseRecentFallback(e.target.checked)} />
+                    <span style={{fontWeight:'600'}}>직전 동일공종 우선</span>
+                  </label>
+                  {useRecentFallback && companyData && (companyData.sample_source || companyData.sample_count != null) && (
+                    <span className="badge badge-blue" style={{fontSize:'11px'}}
+                      title={`lookback ${companyData.lookback_used_days || '-'}일`}>
+                      참조 표본 출처: {companyData.sample_source || '-'} ({companyData.sample_count || 0}건)
+                    </span>
+                  )}
+                </div>
                 {/* Phase 4-4: Range adjustment */}
                 <div className="filter-bar mb-12" >
                   <span className="label-bold-sm">분석 범위:</span>
