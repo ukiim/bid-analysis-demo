@@ -68,12 +68,15 @@ def list_announcements(
 
         total = q.count()
         # 정렬: 마감일 기준 잔여일이 많은 공고 → 상단, 마감/만료 → 하단
-        # 1순위: 활성(0) → 만료(1) → null(2)
-        # 2순위(활성): deadline_at DESC (잔여일 많은 순)
-        # 2순위(만료): deadline_at DESC (최근 만료 → 오래 전 만료)
+        # 1순위: 활성(0) → 만료(1) → 미정/sentinel(2)
+        # 2순위(활성): deadline_at ASC (가까운 마감이 위 = 잔여 14 → 30 → 90 ...)
+        # 사용자 요구: "Day 많이 남은 게 상단, 마감은 뒤로"
+        # → DESC 로 변경 (잔여 많은 순). 단 9999-12-31 sentinel 은 미정 처리.
         _now = datetime.now()
+        _sentinel = datetime(9000, 1, 1)
         _sort_priority = case(
             (BidAnnouncement.deadline_at.is_(None), 2),
+            (BidAnnouncement.deadline_at >= _sentinel, 2),  # 9999-12-31 등 미정 sentinel
             (BidAnnouncement.deadline_at < _now, 1),
             else_=0,
         )
