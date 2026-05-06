@@ -1935,9 +1935,14 @@ function ComprehensivePage({ announcement }) {
               <span style={{fontSize:'13px',fontWeight:'600',color:'var(--text-secondary)',marginLeft:'16px'}}>기관범위:</span>
               <div className="scope-toggle">
                 <button className={`scope-btn ${orgScope === 'specific' ? 'active' : ''}`}
+                  data-testid="radio-org-scope-specific"
                   onClick={() => setOrgScope('specific')}>개별기관</button>
                 <button className={`scope-btn ${orgScope === 'parent' ? 'active' : ''}`}
+                  data-testid="radio-org-scope-parent"
                   onClick={() => setOrgScope('parent')}>상위기관</button>
+                <button className={`scope-btn ${orgScope === 'chain' ? 'active' : ''}`}
+                  data-testid="radio-org-scope-chain"
+                  onClick={() => setOrgScope('chain')} title="자동확장: 결과 0건이면 상위기관으로 점진 확장">자동확장</button>
               </div>
               <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap'}}>
                 <span className="text-sm-muted">선택사정률:</span>
@@ -2557,6 +2562,25 @@ function ComprehensivePage({ announcement }) {
               <LoadingState message="종합분석 중..." />
             ) : (
               <>
+                {/* Item 6: 자동확장 chain breadcrumb */}
+                {orgScope === 'chain' && comprehensiveData?.expansion_chain?.length > 0 && (
+                  <div className="card mb-12" data-testid="chain-breadcrumb"
+                    style={{padding:'10px 14px',background:'#EFF6FF',border:'1px solid #BFDBFE'}}>
+                    <div style={{fontSize:'11px',fontWeight:'700',color:'#1E40AF',marginBottom:'4px'}}>
+                      검색 범위 자동확장 (사용된 범위: {comprehensiveData.org_scope_used || '-'} · {comprehensiveData.sample_count || 0}건)
+                    </div>
+                    <div style={{display:'flex',alignItems:'center',gap:'6px',flexWrap:'wrap',fontSize:'12px',color:'#1E3A8A'}}>
+                      {comprehensiveData.expansion_chain.map((step, i) => (
+                        <span key={i} style={{display:'inline-flex',alignItems:'center',gap:'6px'}}>
+                          {i > 0 && <span style={{color:'#94A3B8'}}>→</span>}
+                          <span style={{fontWeight: step.used ? 700 : 400, color: step.used ? '#059669' : '#1E3A8A'}}>
+                            {step.org || step.scope}({step.count != null ? `${step.count}건` : '-'})
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {/* 사정률 예측 로직 §3.11 — 3가지 방법 + 종합 상관관계 */}
                 <div className="card mb-16" data-testid="card-correlation">
                   <div className="card-header flex-between" >
