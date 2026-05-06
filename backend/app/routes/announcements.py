@@ -31,8 +31,9 @@ def list_announcements(
     try:
         q = db.query(BidAnnouncement)
 
-        # 용역/공사만
+        # 용역/공사만, 취소 공고 제외
         q = q.filter(BidAnnouncement.category.in_(["공사", "용역"]))
+        q = q.filter(~BidAnnouncement.title.contains("취소"))
 
         if category and category != "all":
             cats = [c.strip() for c in category.split(",")]

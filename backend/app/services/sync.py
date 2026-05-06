@@ -125,6 +125,8 @@ def _normalize_item(source: str, item: dict) -> "dict | None":
     org = pick("dminsttNm", "ordInsttNm", "ordering_org_name", "orgNm")
     if not bid_number or not title:
         return None
+    if "취소" in str(title):
+        return None
 
     # 기초금액: presmptPrce / basicAmt / budgetAmt / asignBdgtAmt 순으로 폴백
     base_raw = pick("presmptPrce", "basicAmt", "bssamt", "asignBdgtAmt", "budgetAmt", "base_amount")
