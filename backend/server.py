@@ -1098,6 +1098,85 @@ def get_announcement(announcement_id: str):
     }
 
 
+@app.get("/api/v1/announcements/{announcement_id}/previous")
+def get_previous_announcement(announcement_id: str,
+                               current_user: User = Depends(require_auth)):
+    """직전 공고 + 결과 비교 (Item 2).
+
+    동일 category + industry_code + region 기준으로 announced_at 가 가장 가까운
+    직전 공고 1건을 찾는다. 매칭이 없으면 단계적으로 조건을 완화:
+      exact → no_region → no_industry → none
+    """
+    db = SessionLocal()
+    try:
+        ann = db.query(BidAnnouncement).filter(BidAnnouncement.id == announcement_id).first()
+        if not ann:
+            return {"error": "공고를 찾을 수 없습니다."}
+        if not ann.announced_at:
+            return {"error": "공고일자가 없어 직전 공고를 검색할 수 없습니다."}
+
+        base_q = db.query(BidAnnouncement).filter(
+            BidAnnouncement.category == ann.category,
+            BidAnnouncement.announced_at < ann.announced_at,
+            BidAnnouncement.id != ann.id,
+        )
+
+        prev = None
+        fallback_used = "none"
+        # 1) 완전 일치
+        cand = base_q.filter(
+            BidAnnouncement.industry_code == ann.industry_code,
+            BidAnnouncement.region == ann.region,
+        ).order_by(BidAnnouncement.announced_at.desc()).first()
+        if cand:
+            prev = cand
+            fallback_used = "exact"
+        else:
+            # 2) region 제외
+            cand = base_q.filter(
+                BidAnnouncement.industry_code == ann.industry_code,
+            ).order_by(BidAnnouncement.announced_at.desc()).first()
+            if cand:
+                prev = cand
+                fallback_used = "no_region"
+            else:
+                # 3) industry 도 제외 (category 만)
+                cand = base_q.order_by(BidAnnouncement.announced_at.desc()).first()
+                if cand:
+                    prev = cand
+                    fallback_used = "no_industry"
+
+        if not prev:
+            return {"prev": None, "fallback_used": "none"}
+
+        res = db.query(BidResult).filter(BidResult.announcement_id == prev.id).first()
+        result_payload = None
+        if res:
+            result_payload = {
+                "winning_amount": res.winning_amount,
+                "assessment_rate": round(res.assessment_rate, 4) if res.assessment_rate else None,
+                "first_place_rate": round(res.first_place_rate, 4) if res.first_place_rate else None,
+                "first_place_amount": res.first_place_amount,
+                "winning_company": res.winning_company,
+            }
+        return {
+            "prev": {
+                "id": prev.id,
+                "title": prev.title,
+                "announced_at": prev.announced_at.strftime("%Y-%m-%d") if prev.announced_at else None,
+                "base_amount": prev.base_amount,
+                "category": prev.category,
+                "industry_code": prev.industry_code,
+                "region": prev.region,
+                "ordering_org_name": prev.ordering_org_name,
+                "result": result_payload,
+            },
+            "fallback_used": fallback_used,
+        }
+    finally:
+        db.close()
+
+
 # ─── 사정률 예측 로직 (스펙 §1) — 3가지 구간 알고리즘 ─────────────────────
 
 def _remove_outliers_iqr(values: list, multiplier: float = 1.5) -> list:
