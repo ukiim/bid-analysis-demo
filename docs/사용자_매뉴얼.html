@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>입찰 인사이트 사용자 매뉴얼 — 비드스타</title>
+<style>
+  :root {
+    --brand: #0066CC;
+    --brand-deep: #1E3A5F;
+    --brand-soft: #E0F2FE;
+    --success: #059669;
+    --success-soft: #D1FAE5;
+    --warn: #B45309;
+    --warn-soft: #FEF3C7;
+    --danger: #DC2626;
+    --text: #0F172A;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --border: #E2E8F0;
+    --code-bg: #F1F5F9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Segoe UI', Roboto, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.7;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+  }
+  .layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1280px; margin: 0 auto; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  /* Sidebar TOC */
+  aside.toc {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    font-size: 13px;
+  }
+  @media (max-width: 900px) { aside.toc { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--border); } }
+  .toc h3 {
+    font-size: 11.5px; color: var(--text-muted);
+    font-weight: 700; letter-spacing: 0.5px;
+    margin: 16px 8px 6px; text-transform: uppercase;
+  }
+  .toc h3:first-child { margin-top: 0; }
+  .toc a {
+    display: block;
+    padding: 5px 8px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .toc a:hover { background: var(--brand-soft); color: var(--brand); }
+  .toc .toc-brand {
+    font-size: 16px; font-weight: 800; color: var(--brand-deep);
+    padding: 4px 8px 12px; border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+
+  /* Main content */
+  main { padding: 40px 56px; max-width: 920px; }
+  @media (max-width: 900px) { main { padding: 28px 20px; } }
+
+  h1 {
+    font-size: 28px; font-weight: 800;
+    margin: 0 0 8px; letter-spacing: -0.025em;
+    color: var(--brand-deep);
+  }
+  h2 {
+    font-size: 22px; font-weight: 800;
+    margin: 56px 0 12px; letter-spacing: -0.025em;
+    padding-bottom: 8px; border-bottom: 2px solid var(--brand);
+    scroll-margin-top: 16px;
+  }
+  h3 {
+    font-size: 17px; font-weight: 700;
+    margin: 32px 0 10px; letter-spacing: -0.02em;
+    scroll-margin-top: 16px;
+  }
+  h4 {
+    font-size: 14.5px; font-weight: 700;
+    margin: 18px 0 6px; color: var(--text);
+  }
+  p { margin: 8px 0; font-size: 14px; }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px; border-radius: 3px;
+    font-family: 'SFMono-Regular', 'Menlo', monospace;
+    font-size: 12.5px; color: var(--brand-deep);
+  }
+  ul, ol { padding-left: 22px; font-size: 14px; }
+  ul li, ol li { padding: 2px 0; }
+
+  /* Header banner */
+  .doc-header {
+    background: linear-gradient(135deg, var(--brand-deep) 0%, var(--brand) 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+  }
+  .doc-header h1 { color: #fff; margin: 0 0 6px; }
+  .doc-header .desc { font-size: 14px; opacity: 0.92; }
+  .doc-header .meta {
+    margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.18);
+    font-size: 12.5px; opacity: 0.88;
+  }
+
+  /* Intro / box styles */
+  .intro {
+    background: var(--brand-soft);
+    border-left: 3px solid var(--brand);
+    padding: 14px 18px; border-radius: 4px;
+    font-size: 14px; margin-bottom: 16px;
+  }
+  .info-box {
+    background: var(--warn-soft);
+    border-left: 3px solid #F59E0B;
+    padding: 14px 18px; border-radius: 4px;
+    font-size: 13.5px; margin: 16px 0;
+  }
+  .info-box .il { font-size: 11px; font-weight: 800; color: var(--warn); letter-spacing: 0.5px; margin-bottom: 4px; }
+
+  .step-list {
+    counter-reset: step;
+    list-style: none; padding-left: 0;
+  }
+  .step-list > li {
+    counter-increment: step;
+    padding: 10px 0 10px 36px;
+    position: relative;
+    border-bottom: 1px dashed var(--border);
+  }
+  .step-list > li:last-child { border-bottom: none; }
+  .step-list > li::before {
+    content: counter(step);
+    position: absolute; left: 0; top: 12px;
+    width: 24px; height: 24px;
+    background: var(--brand); color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+  }
+
+  /* Table */
+  table.spec {
+    width: 100%; border-collapse: collapse;
+    background: var(--surface); border-radius: 6px;
+    border: 1px solid var(--border); overflow: hidden;
+    font-size: 13px; margin: 12px 0;
+  }
+  table.spec th {
+    background: var(--code-bg);
+    text-align: left; padding: 10px 12px;
+    font-size: 11.5px; font-weight: 700; color: var(--text);
+    letter-spacing: 0.4px;
+  }
+  table.spec td {
+    padding: 9px 12px; border-top: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  /* UI Mockup */
+  .mockup {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 14px 0;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .mockup-bar {
+    background: #F8FAFC;
+    border-bottom: 1px solid var(--border);
+    padding: 6px 12px; font-size: 11.5px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .mockup-bar::before {
+    content: ''; width: 8px; height: 8px;
+    background: #FCA5A5; border-radius: 50%;
+    box-shadow: 14px 0 0 #FCD34D, 28px 0 0 #6EE7B7;
+    margin-right: 18px;
+  }
+  .mockup-body { padding: 14px 16px; }
+
+  /* KPI mockup */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 720px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+  .kpi-tile {
+    background: #F8FAFC; border-radius: 6px; padding: 10px 12px;
+  }
+  .kpi-tile .kl { font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px; }
+  .kpi-tile .kv { font-size: 17px; font-weight: 800; color: var(--brand-deep); letter-spacing: -0.02em; }
+
+  /* Tabs mockup */
+  .tab-row {
+    display: flex; gap: 0;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .tab-row .tab {
+    padding: 8px 16px; font-size: 13px; font-weight: 700;
+    color: var(--text-muted); border-bottom: 2px solid transparent;
+    margin-bottom: -2px; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .tab-row .tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+  .tab-row .tab .num {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800;
+    background: #E2E8F0; color: #94A3B8;
+  }
+  .tab-row .tab.active .num { background: var(--brand); color: #fff; }
+  .tab-row .tab.done .num { background: var(--success); color: #fff; }
+
+  /* Histogram bars */
+  .hist {
+    display: flex; align-items: flex-end; gap: 2px; height: 80px;
+    padding: 4px 0; border-bottom: 1px solid var(--border);
+  }
+  .hist .bar { flex: 1; background: #93C5FD; border-radius: 2px 2px 0 0; }
+  .hist .bar.peak { background: #FCD34D; }
+  .hist .bar.active { background: var(--brand); }
+  .hist-axis {
+    font-size: 9px; color: var(--text-muted);
+    margin-top: 4px; display: flex; justify-content: space-between;
+  }
+
+  /* Filter bar mockup */
+  .filter-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: #F8FAFC; padding: 8px 12px; border-radius: 6px;
+    flex-wrap: wrap; font-size: 12px;
+  }
+  .filter-bar .label { font-weight: 700; color: var(--text); }
+  .filter-bar .pill {
+    padding: 3px 10px; border-radius: 6px;
+    background: #fff; border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .filter-bar .pill.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .filter-bar .listbox {
+    padding: 3px 24px 3px 8px; border: 1px solid var(--border); border-radius: 4px;
+    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6'><polygon points='0,0 8,0 4,6' fill='%2364748B'/></svg>") right 8px center no-repeat;
+  }
+
+  /* Side-by-side compare */
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0;
+  }
+  @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+  .compare > div {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 14px; font-size: 13px;
+  }
+  .compare > div h4 { margin-top: 0; font-size: 12px; color: var(--brand); }
+
+  /* Mini badge */
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 11px; font-weight: 700;
+  }
+  .badge.ok { background: var(--success-soft); color: var(--success); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.blue { background: #DBEAFE; color: #1E40AF; }
+
+  /* Footer */
+  footer {
+    margin-top: 64px; padding: 20px 0;
+    border-top: 1px solid var(--border);
+    text-align: center; font-size: 12px; color: var(--text-light);
+  }
+
+  @media print {
+    aside.toc { display: none; }
+    .layout { grid-template-columns: 1fr; }
+    main { padding: 16px; }
+    h2, h3 { page-break-after: avoid; }
+    .mockup, table.spec, .compare { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ========== TOC ========== -->
+  <aside class="toc">
+    <div class="toc-brand">📖 사용자 매뉴얼</div>
+    <h3>시작</h3>
+    <a href="#overview">서비스 개요</a>
+    <a href="#login">접속·로그인</a>
+    <a href="#layout">화면 구성</a>
+
+    <h3>핵심 기능</h3>
+    <a href="#announcements">1. 공고화면</a>
+    <a href="#analysis">2. 종합분석 (3가지 방법)</a>
+    <a href="#analysis-tab1">&nbsp;&nbsp;· 빈도분석 (Tab1)</a>
+    <a href="#analysis-tab2">&nbsp;&nbsp;· 갭분석 (Tab2)</a>
+    <a href="#analysis-tab3">&nbsp;&nbsp;· 종합분석 (Tab3)</a>
+    <a href="#prev-result">3. 직전 결과 비교</a>
+    <a href="#mypage">4. 마이페이지</a>
+    <a href="#upload">5. 데이터 업로드</a>
+
+    <h3>관리자</h3>
+    <a href="#admin">관리자 콘솔</a>
+    <a href="#admin-sync">데이터 수집 + 진행률</a>
+
+    <h3>요구사항 매핑</h3>
+    <a href="#req-01">사전요청사항 (PDF 1)</a>
+    <a href="#req-03">예측로직 (PDF 3)</a>
+    <a href="#req-04">추가확인사항 (PDF 4)</a>
+
+    <h3>부록</h3>
+    <a href="#glossary">용어집</a>
+    <a href="#faq">FAQ</a>
+  </aside>
+
+  <!-- ========== MAIN ========== -->
+  <main>
+
+    <header class="doc-header">
+      <h1>입찰 인사이트 사용자 매뉴얼</h1>
+      <div class="desc">
+        공공데이터(나라장터·국방조달) 기반 사정률 예측 + 입찰가 산정 웹 시스템<br>
+        클라이언트 사전요청사항 · 예측 로직 · 추가확인사항 3종 PDF 통합 안내서
+      </div>
+      <div class="meta">
+        v1.0 · 2026-05-07 · 자체완결 단일 HTML (외부 의존 없음)
+      </div>
+    </header>
+
+    <!-- ============ 서비스 개요 ============ -->
+    <h2 id="overview">서비스 개요</h2>
+    <div class="intro">
+      <b>"공고일 현재 이전 데이터를 학습 → 사정률 1순위 예측 → 입찰가 산출"</b>까지의 전체 워크플로를 단일 화면에서 처리합니다.
+      나라장터(G2B) + 국방조달(D2B) 공공데이터를 자동 수집하여 <b>2019~2026년 약 138만 건</b>의 실데이터로 분석합니다.
+    </div>
+
+    <h3>핵심 흐름 (4단계)</h3>
+    <ol class="step-list">
+      <li><b>공고 선택</b> — 공고화면에서 분석할 공고를 클릭 (또는 검색)</li>
+      <li><b>빈도분석</b> — Tab1에서 사정률 발생빈도 히스토그램 + 1순위 예측 후보 확인</li>
+      <li><b>갭분석</b> — Tab2에서 업체 투찰가격 빈공간(갭) 확인 + 확정사정률 결정</li>
+      <li><b>종합분석</b> — Tab3에서 3가지 방법 상관관계 + 종합 1순위 + 투찰리스트 엑셀 다운로드</li>
+    </ol>
+
+    <h3>3가지 분석 방법 (PDF 3 챕터 11번)</h3>
+    <table class="spec">
+      <thead><tr><th style="width:30%;">방법</th><th>설명</th><th style="width:120px;">탭</th></tr></thead>
+      <tbody>
+        <tr><td>① 사정률 발생빈도 분석</td><td>과거 N개월 사정률 히스토그램 → 빈도최대/공백/차이최대 모드별 1순위 도출</td><td>Tab1</td></tr>
+        <tr><td>② 업체사정률 갭분석</td><td>투찰업체들 사이 가격 빈공간(갭)이 큰 위치를 1순위 후보로 도출</td><td>Tab2</td></tr>
+        <tr><td>③ ①+② 결합 + 상관관계</td><td>1·2 결과를 합치도(Agreement)로 종합하여 최종 1순위 + 신뢰구간 산출</td><td>Tab3</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============ 접속 ============ -->
+    <h2 id="login">접속·로그인</h2>
+
+    <h3>접속 방법</h3>
+    <ol>
+      <li><b>안내 페이지</b>: <code>https://ukiim.github.io/bid-analysis-demo/</code></li>
+      <li>"데모 접속하기" 버튼 클릭 → 라이브 데모 URL로 이동</li>
+      <li>이메일/비밀번호 입력 → 로그인</li>
+    </ol>
+
+    <div class="info-box">
+      <div class="il">⚠ 데모 계정 (read-only)</div>
+      <code>client@demo.com</code> / <code>demo2026!</code><br>
+      관리자 메뉴 자동 차단 (열람만 가능)
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-bar">로그인 화면</div>
+      <div class="mockup-body" style="text-align:center; padding: 30px 16px;">
+        <div style="font-size:24px; font-weight:800; color:var(--brand); margin-bottom:6px;">비드스타</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">조달 입찰 사정률 분석 플랫폼</div>
+        <div style="max-width:280px; margin:0 auto; text-align:left;">
+          <div style="font-size:11px; font-weight:700; margin-bottom:4px;">이메일</div>
+          <div style="border:1px solid var(--border); border-radius:6px; padding:8px 12px; font-size:12px; color:var(--text-light); margin-bottom:12px;">client@demo.com</div>
+          <div style="font-size:11px; font-weight:700; margin-bottom:4px;">비밀번호</div>
+          <div style="border:1px solid var(--border); border-radius:6px; padding:8px 12px; font-size:12px; color:var(--text-light); margin-bottom:14px;">••••••••</div>
+          <div style="background:var(--brand); color:#fff; padding:10px; border-radius:6px; text-align:center; font-weight:700; font-size:13px;">로그인</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 화면 구성 ============ -->
+    <h2 id="layout">화면 구성</h2>
+    <p>
+      좌측 사이드바 · 상단 톱바 · 본문 영역 3개 구역으로 구성. 사이드바 메뉴를 클릭하여 페이지 이동.
+    </p>
+
+    <div class="mockup">
+      <div class="mockup-bar">전체 레이아웃</div>
+      <div class="mockup-body" style="display:grid; grid-template-columns:140px 1fr; gap:12px; min-height:200px;">
+        <div style="background:#F8FAFC; padding:12px 8px; border-radius:6px; font-size:11px;">
+          <div style="font-weight:800; color:var(--brand-deep); margin-bottom:8px;">비드스타</div>
+          <div style="color:var(--text-muted); font-size:10px; margin-bottom:4px; font-weight:700;">서비스</div>
+          <div style="background:var(--brand); color:#fff; padding:5px 8px; border-radius:4px; margin-bottom:3px;">📋 공고화면</div>
+          <div style="padding:5px 8px; color:var(--text-muted);">📊 종합분석</div>
+          <div style="padding:5px 8px; color:var(--text-muted);">👤 마이페이지</div>
+          <div style="padding:5px 8px; color:var(--text-muted);">📤 데이터 업로드</div>
+          <div style="color:var(--text-muted); font-size:10px; margin:8px 0 4px; font-weight:700;">관리</div>
+          <div style="padding:5px 8px; color:var(--text-muted); opacity:0.5;">⚙ 관리자 (권한 없음)</div>
+        </div>
+        <div>
+          <div style="background:#F8FAFC; padding:6px 12px; border-radius:6px; margin-bottom:8px; font-size:11px; display:flex; justify-content:space-between;">
+            <span style="font-weight:700;">공고화면</span>
+            <span><span class="badge ok">● 연결됨</span></span>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-tile"><div class="kl">전체공고</div><div class="kv">1,388,494</div></div>
+            <div class="kpi-tile"><div class="kl">공사</div><div class="kv">708,232</div></div>
+            <div class="kpi-tile"><div class="kl">용역</div><div class="kv">680,262</div></div>
+            <div class="kpi-tile"><div class="kl">평균 사정률</div><div class="kv">99.92%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 1. 공고화면 ============ -->
+    <h2 id="announcements">1. 공고화면</h2>
+    <p>전체 입찰 공고를 검색·필터링·정렬할 수 있는 메인 화면. 행 클릭 시 우측 미리보기 패널이 슬라이드.</p>
+
+    <h3>주요 기능</h3>
+    <table class="spec">
+      <thead><tr><th style="width:30%;">기능</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td>KPI 카드 (4개)</td><td>전체공고 / 공사 / 용역 / 평균 사정률 — 실시간 집계</td></tr>
+        <tr><td>검색</td><td>공고명 · 발주기관 키워드 검색 (한글 IME 호환)</td></tr>
+        <tr><td>고급 필터</td><td>유형 · 지역 · 상태 · 업종코드 · 기간 · 국방여부</td></tr>
+        <tr><td>정렬 (자동)</td><td>마감 잔여일 많은 순 → 마감 순 → 미정 순 (3-tier)</td></tr>
+        <tr><td>D-Day 배지</td><td>D-12 / D-3 / 마감 등 시각적 잔여일 표시</td></tr>
+        <tr><td>미리보기 패널</td><td>행 클릭 → 우측 슬라이드 패널 (발주처·기초금액·간편 투찰계산)</td></tr>
+        <tr><td>공고 바로가기</td><td>외부 G2B 페이지로 새 탭 이동</td></tr>
+        <tr><td>종합 분석 열기</td><td>해당 공고 ID로 종합분석 화면 진입 (URL <code>?id=...</code>)</td></tr>
+        <tr><td>CSV 다운로드</td><td>현재 필터 결과 CSV 내보내기</td></tr>
+      </tbody>
+    </table>
+
+    <h3>화면 미리보기</h3>
+    <div class="mockup">
+      <div class="mockup-bar">/ announcements</div>
+      <div class="mockup-body">
+        <div class="kpi-row" style="margin-bottom:10px;">
+          <div class="kpi-tile"><div class="kl">전체공고</div><div class="kv">1,388,494</div></div>
+          <div class="kpi-tile"><div class="kl">공사</div><div class="kv">708,232</div></div>
+          <div class="kpi-tile"><div class="kl">용역</div><div class="kv">680,262</div></div>
+          <div class="kpi-tile"><div class="kl">평균 사정률</div><div class="kv">99.92%</div></div>
+        </div>
+        <div class="filter-bar">
+          <input style="flex:1; min-width:120px; border:1px solid var(--border); border-radius:4px; padding:5px 10px; font-size:12px;" placeholder="공고명, 발주기관 검색..." disabled>
+          <span class="listbox">전체 유형</span>
+          <span class="listbox">전체 상태</span>
+          <span class="pill">고급 필터 ▼</span>
+          <span class="pill" style="background:var(--brand); color:#fff;">검색</span>
+        </div>
+        <table class="spec" style="margin-top:10px;">
+          <thead><tr><th>공고번호</th><th>공고명</th><th>발주기관</th><th>마감일</th><th>상태</th></tr></thead>
+          <tbody>
+            <tr><td><code>R26BK01489580</code></td><td>다중 이온플라즈마 집속이온빔</td><td>한국과학기술원</td><td>2026-05-18 <span class="badge blue">D-12</span></td><td><span class="badge ok">진행중</span></td></tr>
+            <tr><td><code>R26BK01464531</code></td><td>스피닝 단조기</td><td>한국자동차연구원</td><td>2026-05-20 <span class="badge blue">D-14</span></td><td><span class="badge ok">진행중</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3>사용 흐름</h3>
+    <ol class="step-list">
+      <li>공고화면 진입 → KPI 카드로 전체 데이터 규모 확인</li>
+      <li>검색창에 키워드 입력 또는 "고급 필터"로 조건 좁히기</li>
+      <li>관심 공고 행을 클릭 → 우측 미리보기 패널에서 상세 정보 확인</li>
+      <li>"종합 분석 열기" 버튼 클릭 → 사정률 분석 화면으로 진입</li>
+    </ol>
+
+    <!-- ============ 2. 종합분석 ============ -->
+    <h2 id="analysis">2. 종합분석 (3가지 방법)</h2>
+    <p>
+      선택한 공고에 대해 <b>빈도분석 → 갭분석 → 종합분석</b> 3단계로 사정률 1순위를 예측합니다.
+      Step Guide와 Tab Bar에 단계별 진행 상태가 ① ② ③ 번호와 ✓ 체크로 시각화됩니다.
+    </p>
+
+    <div class="mockup">
+      <div class="mockup-bar">/ comprehensive?id=...</div>
+      <div class="mockup-body">
+        <div style="background:linear-gradient(135deg, var(--brand-deep), var(--brand)); color:#fff; padding:14px 18px; border-radius:8px; margin-bottom:12px;">
+          <div style="font-weight:800; font-size:15px;">2026년 역촌노인복지관 복지관 방수 및 누수공사</div>
+          <div style="font-size:11px; opacity:0.85; margin-top:4px;">발주기관: 서울특별시 은평구청 · 유형: 공사</div>
+        </div>
+        <div class="tab-row">
+          <span class="tab active"><span class="num">1</span> 빈도분석</span>
+          <span class="tab"><span class="num">2</span> 갭분석</span>
+          <span class="tab"><span class="num">3</span> 종합분석</span>
+        </div>
+        <div class="filter-bar" style="margin-bottom:8px;">
+          <span class="label">기간:</span>
+          <span class="pill">1개월</span> <span class="pill">3개월</span> <span class="pill">6개월</span>
+          <span class="pill active">12개월</span> <span class="pill">24개월</span>
+          <span style="margin-left:14px;" class="label">기관범위:</span>
+          <span class="pill active">개별기관</span> <span class="pill">상위기관</span> <span class="pill">자동확장</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Tab1 ============ -->
+    <h3 id="analysis-tab1">2-1. 빈도분석 탭 (Tab1)</h3>
+    <p>
+      과거 N개월 동일 공종/지역 표본의 사정률을 히스토그램으로 시각화하고, <b>3가지 모드(A/B/C)</b>로 1순위 후보를 도출합니다.
+    </p>
+
+    <h4>3가지 모드 (PDF 3 챕터 1)</h4>
+    <table class="spec">
+      <thead><tr><th>모드</th><th>로직</th><th>적용 시점</th></tr></thead>
+      <tbody>
+        <tr><td><b>A · 빈도최대</b></td><td>막대가 가장 큰 값(빈도 1위) → 100% 기준 ±방향으로 순서 지정</td><td>과거 패턴이 일관될 때</td></tr>
+        <tr><td><b>B · 공백</b></td><td>막대가 없는 값(0건 구간) → 100% 기준 ±방향</td><td>의도적 회피 구간 존재 시</td></tr>
+        <tr><td><b>C · 차이최대</b></td><td>인접 막대 빈도 차이가 가장 큰 위치 → 100% 기준 ±방향</td><td>전환점 식별 시</td></tr>
+      </tbody>
+    </table>
+
+    <h4>세부값 룰 (Detail Rule)</h4>
+    <ul>
+      <li><b>처음값 직후</b> — 가장 처음 막대 바로 뒤에서 설정</li>
+      <li><b>마지막값 직후</b> — 가장 마지막 막대 바로 뒤에서 설정</li>
+      <li><b>간격 최대</b> — 인접 구간 사이 간격이 가장 큰 위치 (기본값)</li>
+    </ul>
+
+    <h4>예측값 선택 — 막대 ↔ ListBox 양방향 (PDF 4 ④)</h4>
+    <p>
+      히스토그램 막대를 마우스로 클릭하거나, 옆 <b>ListBox</b>에서 정확한 값(99.5/99.6/.../100.5)을 선택할 수 있습니다.
+      두 방식은 자동 동기화되어 키보드만으로도 사정률 결정이 가능합니다.
+    </p>
+
+    <div class="mockup">
+      <div class="mockup-bar">Tab1 · 사정률 발생빈도 히스토그램</div>
+      <div class="mockup-body">
+        <div class="hist">
+          <div class="bar" style="height:15%"></div>
+          <div class="bar" style="height:25%"></div>
+          <div class="bar" style="height:40%"></div>
+          <div class="bar" style="height:60%"></div>
+          <div class="bar peak" style="height:90%"></div>
+          <div class="bar active" style="height:100%"></div>
+          <div class="bar" style="height:75%"></div>
+          <div class="bar" style="height:50%"></div>
+          <div class="bar" style="height:30%"></div>
+          <div class="bar" style="height:18%"></div>
+        </div>
+        <div class="hist-axis"><span>99.0</span><span>99.4</span><span>99.6</span><span>99.8</span><span style="color:var(--brand); font-weight:800;">100.0</span><span>100.2</span><span>100.4</span><span>100.6</span><span>101.0</span></div>
+        <div style="margin-top:10px; display:flex; align-items:center; gap:12px; font-size:12px;">
+          <span><b>모드:</b></span>
+          <span class="pill active">A 빈도최대</span>
+          <span class="pill">B 공백</span>
+          <span class="pill">C 차이최대</span>
+          <span style="margin-left:auto; color:var(--text-muted);">구간 사정률:</span>
+          <span class="listbox">100.0% ▼</span>
+        </div>
+        <div style="margin-top:10px; padding:10px; background:#F8FAFC; border-radius:4px; font-size:12px;">
+          <b>1순위 예측 후보 (상위 5)</b>: 100.0% · 99.95% · 100.05% · 100.10% · 99.90% · ...<span style="color:var(--text-muted);">(총 15개 노출)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Tab2 ============ -->
+    <h3 id="analysis-tab2">2-2. 갭분석 탭 (Tab2)</h3>
+    <p>
+      Tab1에서 선택된 사정률 주변에서 <b>업체 투찰가격 사이의 빈공간(갭)이 큰 위치</b>를 찾아냅니다.
+      KBID 검색 기능으로 발주처·예가변동폭·기초금액·업종·기간을 세밀하게 필터링.
+    </p>
+
+    <h4>KBID 5종 검색 (PDF 3 챕터 2)</h4>
+    <table class="spec">
+      <thead><tr><th>입력 필드</th><th>예시</th><th>의미</th></tr></thead>
+      <tbody>
+        <tr><td>발주처 검색</td><td>"서울시"</td><td>특정 발주처 키워드 매칭</td></tr>
+        <tr><td>예가변동폭</td><td>100±2 (98~102)</td><td>분석 대상 사정률 범위</td></tr>
+        <tr><td>기초금액 (최소)</td><td>100,000,000</td><td>최소 기초금액 (원)</td></tr>
+        <tr><td>기초금액 (최대)</td><td>1,000,000,000</td><td>최대 기초금액 (원)</td></tr>
+        <tr><td>업종 코드</td><td>4421</td><td>업종 분류 코드 부분 일치</td></tr>
+      </tbody>
+    </table>
+
+    <h4>직전 동일공종 우선 (PDF 4 ⑤)</h4>
+    <p>
+      "직전 동일공종 우선" 토글을 켜면 시스템이 단계적으로 표본을 확장 검색합니다:
+    </p>
+    <ol class="step-list">
+      <li><b>30일</b> + 동일 공종 + 동일 지역 표본 우선 검색</li>
+      <li>표본 부족 시 → <b>90일</b>로 확장</li>
+      <li>여전히 부족 시 → <b>180일</b>로 확장</li>
+      <li>결과에 <span class="badge blue">참조 표본 출처: 점검토목 / 여주시 (30일 / 12건)</span> 뱃지로 어느 기준에서 가져왔는지 명시</li>
+    </ol>
+
+    <div class="mockup">
+      <div class="mockup-bar">Tab2 · 업체사정률 갭분석</div>
+      <div class="mockup-body">
+        <div class="filter-bar" style="margin-bottom:10px;">
+          <input style="border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:12px; width:120px;" placeholder="예: 서울시" disabled>
+          <input style="border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:12px; width:90px;" placeholder="100±2" disabled>
+          <input style="border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:12px; width:130px;" placeholder="예: 100000000" disabled>
+          <input style="border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:12px; width:130px;" placeholder="예: 1000000000" disabled>
+          <input style="border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:12px; width:80px;" placeholder="예: 4421" disabled>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:12px;">
+          <label><input type="checkbox" checked disabled> 직전 동일공종 우선</label>
+          <span class="badge blue">참조 표본 출처: 공사 / 서울 (30일 / 18건)</span>
+        </div>
+        <div style="font-size:12px; padding:10px; background:#F8FAFC; border-radius:4px;">
+          <b>가장 큰 갭 (Top 3)</b>:
+          <ol style="margin:4px 0 0 18px;">
+            <li>99.94% ↔ 100.02% (갭 0.08%) → 중간점 <b style="color:var(--brand);">99.98%</b></li>
+            <li>100.05% ↔ 100.11% (갭 0.06%) → 중간점 100.08%</li>
+            <li>99.85% ↔ 99.90% (갭 0.05%) → 중간점 99.875%</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Tab3 ============ -->
+    <h3 id="analysis-tab3">2-3. 종합분석 탭 (Tab3)</h3>
+    <p>
+      ① 빈도분석 + ② 갭분석 + ③ 결합 결과를 합쳐 <b>합치도(Agreement) 기반 종합 1순위</b>를 산출합니다.
+      신뢰구간 + 표본 통계 + 베이지안 발주처 보정까지 한눈에.
+    </p>
+
+    <h4>3가지 방법 결합 (PDF 3 챕터 3 - 11번)</h4>
+    <table class="spec">
+      <thead><tr><th>방법</th><th>1순위 예측</th><th>점수</th></tr></thead>
+      <tbody>
+        <tr><td>① 사정률 발생빈도 분석</td><td><b>100.05%</b></td><td>0.92</td></tr>
+        <tr><td>② 업체사정률 갭 분석</td><td><b>99.98%</b></td><td>0.85</td></tr>
+        <tr><td>③ 빈도 + 갭 결합 분석</td><td><b>100.02%</b></td><td>0.88</td></tr>
+      </tbody>
+    </table>
+
+    <h4>합치도 (Agreement)</h4>
+    <p>3가지 방법 중 몇 개가 동일 1순위 도출했는지 비율. 100% = 3가지 모두 일치.</p>
+
+    <div class="mockup">
+      <div class="mockup-bar">Tab3 · 종합 1순위 + 신뢰구간</div>
+      <div class="mockup-body">
+        <div style="text-align:center; padding:20px; background:linear-gradient(135deg, #ECFDF5, #D1FAE5); border-radius:8px;">
+          <div style="font-size:11px; color:var(--success); font-weight:800; letter-spacing:0.6px;">종합 1순위 예측 사정률</div>
+          <div style="font-size:36px; font-weight:800; color:var(--success); margin:8px 0;">100.02%</div>
+          <div style="font-size:11px; color:var(--text-muted);">95% 신뢰구간: 99.93% ~ 100.11% · 합치도 67% (2/3 방법 일치) · 표본 152건</div>
+        </div>
+        <div style="margin-top:10px; padding:10px; background:#F8FAFC; border-radius:4px; font-size:11.5px;">
+          <b>예측 신뢰도</b>: 80점 · 높음<br>
+          <span style="font-size:11px; color:var(--text-muted);">발주처 보정: 99.88% (표본 18건, 가중 30% 전체평균)</span>
+        </div>
+      </div>
+    </div>
+
+    <h4>결과값 조정 ListBox (PDF 4 ③)</h4>
+    <p>
+      예측 결과에 ±0.1 단위로 보정값을 적용할 수 있습니다 (총 7개 옵션). URL 쿼리에 자동 보존되어 새로고침/공유 시에도 유지됩니다.
+    </p>
+    <div class="filter-bar">
+      <span class="label">결과값 조정:</span>
+      <span class="listbox">+0.1 ▼</span>
+      <span style="color:var(--text-muted);">→</span>
+      <b>조정 후 사정률 100.12%</b>
+      <span class="badge warn">투찰 = 100,120,000원</span>
+    </div>
+    <p style="font-size:12px; color:var(--text-muted);">옵션: -0.3 / -0.2 / -0.1 / 0 / +0.1 / +0.2 / +0.3</p>
+
+    <h4>상위기관 자동확장 chain (PDF 4 ⑥, PDF 1 5번)</h4>
+    <p>
+      해당 기관의 표본이 부족할 때 (10건 미만) <b>학교 → 교육지원청 → 교육청</b> 같이 상위기관으로 자동 확장.
+      어느 단계에서 표본을 확보했는지 breadcrumb로 시각화.
+    </p>
+    <div class="mockup">
+      <div class="mockup-bar">자동확장 결과</div>
+      <div class="mockup-body" style="background:#EFF6FF;">
+        <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:700;">검색 범위 자동 확장</div>
+        <span style="display:inline-block; padding:4px 10px; background:#EFF6FF; border:1px dashed #BFDBFE; border-radius:4px; font-size:11.5px;">백신고 (0건)</span>
+        <span style="color:var(--text-muted); margin:0 6px;">→</span>
+        <span style="display:inline-block; padding:4px 10px; background:#EFF6FF; border:1px dashed #BFDBFE; border-radius:4px; font-size:11.5px;">고양교육지원청 (7건)</span>
+        <span style="color:var(--text-muted); margin:0 6px;">→</span>
+        <span style="display:inline-block; padding:4px 10px; background:var(--success-soft); color:var(--success); border-radius:4px; font-size:11.5px; font-weight:800;">경기도교육청 (34건) ✓ 사용</span>
+      </div>
+    </div>
+
+    <h4>엑셀 다운로드 (PDF 3 챕터 3 - 8/9번)</h4>
+    <ul>
+      <li><b>상관관계 엑셀</b> — 3가지 방법 + 합치도 + 신뢰구간 전체 결과</li>
+      <li><b>투찰리스트 엑셀</b> — 1순위 예측값 기반 투찰금액 자동 계산표 (조정값 반영)</li>
+    </ul>
+
+    <!-- ============ 직전 결과 비교 ============ -->
+    <h2 id="prev-result">3. 직전 결과 비교 (PDF 4 ②)</h2>
+    <p>
+      종합분석 진입 시 자동으로 <b>같은 발주처/지역/공종의 직전 공고 결과</b>를 가져와 4-카드 그리드로 비교합니다.
+    </p>
+
+    <table class="spec">
+      <thead><tr><th>매칭 단계</th><th>조건</th><th>표시</th></tr></thead>
+      <tbody>
+        <tr><td>1순위 (exact)</td><td>발주처 + 지역 + 공종 모두 일치</td><td>(안내 없음)</td></tr>
+        <tr><td>2순위 (no_region)</td><td>발주처 + 공종만 일치 (지역 무시)</td><td><span class="badge warn">동일 지역 결과 없음 → 공종 기준만</span></td></tr>
+        <tr><td>3순위 (no_industry)</td><td>발주처 + 지역만 일치 (공종 무시)</td><td><span class="badge warn">동일 공종 결과 없음 → 지역 기준만</span></td></tr>
+        <tr><td>실패 (none)</td><td>모두 매칭 실패</td><td>카드 자체 숨김</td></tr>
+      </tbody>
+    </table>
+
+    <div class="mockup">
+      <div class="mockup-bar">직전 결과 비교 카드</div>
+      <div class="mockup-body">
+        <div style="font-weight:800; margin-bottom:8px; font-size:13px;">직전 결과 비교</div>
+        <div class="kpi-row">
+          <div class="kpi-tile"><div class="kl">직전 공고</div><div class="kv" style="font-size:12px;">2026년 복지관…</div><div style="font-size:9px; color:var(--text-light);">2026-04-10</div></div>
+          <div class="kpi-tile"><div class="kl">직전 사정률</div><div class="kv" style="color:var(--brand);">99.84%</div><div style="font-size:9px; color:var(--text-light);">1순위 99.91%</div></div>
+          <div class="kpi-tile"><div class="kl">현재 선택 사정률</div><div class="kv" style="color:var(--brand);">100.05%</div></div>
+          <div class="kpi-tile"><div class="kl">차이</div><div class="kv" style="color:var(--success);">+0.21%p</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 마이페이지 ============ -->
+    <h2 id="mypage">4. 마이페이지</h2>
+    <p>4개 카드 구성: 프로필 / 비밀번호 변경 / 예측 설정 (자동 적용) / 분석 조회 이력.</p>
+
+    <h3>학습 저장 (자동 적용)</h3>
+    <p>
+      종합분석 화면에서 마지막에 사용한 옵션(기간·모드·세부값 룰·조정값)을 <b>"학습 저장" 버튼</b>으로 저장하면,
+      다음 공고 진입 시 동일 옵션이 자동 적용됩니다 (PDF 3 챕터 1 - 7번).
+    </p>
+
+    <table class="spec">
+      <thead><tr><th>저장 항목</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td>period_months</td><td>기간 (1/3/6/12/24)</td></tr>
+        <tr><td>bucket_mode</td><td>모드 (A 빈도최대 / B 공백 / C 차이최대)</td></tr>
+        <tr><td>detail_rule</td><td>세부값 룰 (처음값직후 / 마지막값직후 / 간격최대)</td></tr>
+        <tr><td>rate_offset</td><td>결과값 조정값 (-0.3 ~ +0.3)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>분석 조회 이력</h3>
+    <p>최근 분석한 공고 목록 + 분석 종류(빈도/갭/종합) + 일자. 클릭 시 해당 분석 화면으로 재진입.</p>
+
+    <!-- ============ 데이터 업로드 ============ -->
+    <h2 id="upload">5. 데이터 업로드</h2>
+    <p>과거 입찰 데이터(CSV/Excel)를 업로드하면 분석 표본에 즉시 반영됩니다.</p>
+
+    <h3>필수 컬럼 (헤더 일치 필수)</h3>
+    <div class="filter-bar">
+      <span class="pill">공고번호</span>
+      <span class="pill">공고명</span>
+      <span class="pill">발주기관</span>
+      <span class="pill">기초금액</span>
+      <span class="pill">사정률</span>
+      <span class="pill">낙찰금액</span>
+      <span class="pill">개찰일</span>
+    </div>
+    <p style="font-size:12px; color:var(--text-muted);">
+      · 사정률은 % 단위 (예: 99.45)<br>
+      · 금액은 원 단위 (예: 1,000,000,000)<br>
+      · 개찰일 형식: YYYY-MM-DD
+    </p>
+
+    <h3>업로드 절차</h3>
+    <ol class="step-list">
+      <li>"샘플 CSV 다운로드" 버튼으로 템플릿 받기</li>
+      <li>엑셀에서 데이터 입력 후 저장</li>
+      <li>"파일 드래그 또는 클릭" 영역에 파일 드롭</li>
+      <li>업로드 결과 토스트 + 하단 이력 테이블에 기록</li>
+    </ol>
+
+    <!-- ============ 관리자 ============ -->
+    <h2 id="admin">관리자 콘솔</h2>
+    <p>관리자 권한(role=admin) 사용자에게만 노출. 좌측 사이드바에 별도 빨간 테마 적용.</p>
+
+    <h3>4개 서브 페이지</h3>
+    <table class="spec">
+      <thead><tr><th>메뉴</th><th>기능</th></tr></thead>
+      <tbody>
+        <tr><td>사용자 관리</td><td>사용자 목록 · 활성/비활성 토글 · 권한 변경</td></tr>
+        <tr><td>데이터 수집</td><td>수동 sync · 진행률 · 수집 이력 · 추이 차트</td></tr>
+        <tr><td>스토리지·스케줄</td><td>NAS 상태 · 자동 수집 스케줄 (시간/일/주)</td></tr>
+        <tr><td>오류 모니터링</td><td>실패한 sync · 이상 공고 · 모델 재학습 상태</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============ 데이터 수집 진행률 ============ -->
+    <h2 id="admin-sync">데이터 수집 + 진행률 (PDF 4 ①)</h2>
+    <p>
+      대용량 7년치 데이터 다운로드가 중단되어도 <b>마지막 페이지부터 자동 이어받기</b>.
+      관리자 화면 톱바에 실시간 진행률(예: <code>수집 12%</code>)이 5초마다 자동 갱신됩니다.
+    </p>
+
+    <h3>진행 상태 표시</h3>
+    <ul>
+      <li><b>톱바 뱃지</b>: 진행 중일 때만 노란색 뱃지 노출 (관리자 전용)</li>
+      <li><b>진행 카드</b>: 데이터 수집 페이지 본문에 페이지/% + 마지막 커서일자</li>
+      <li><b>체크포인트</b>: <code>cat_idx:win_idx:page</code> 좌표로 정확한 재개 보장</li>
+    </ul>
+
+    <div class="mockup">
+      <div class="mockup-bar">관리자 → 데이터 수집</div>
+      <div class="mockup-body" style="background:#1A1A1A; color:#fff;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-size:13px; font-weight:800;">데이터 수집 관리</span>
+          <span class="badge warn">● 수집 12%</span>
+        </div>
+        <div style="background:var(--warn-soft); color:var(--warn); padding:10px 14px; border-radius:6px; font-size:12px; font-weight:600;">
+          ⏳ 진행 중 — G2B 공고+낙찰 수집 (backfill) · 12% (페이지 48 / 약 400)
+          · 마지막 커서: 2024-08-15 · 체크포인트: <code style="background:#fff; color:var(--warn);">0:24:3</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PDF 매핑 ============ -->
+    <h2 id="req-01">사전요청사항 (PDF 1) — 반영 매트릭스</h2>
+    <table class="spec">
+      <thead><tr><th style="width:38%;">PDF 1 요구사항</th><th>반영 위치</th></tr></thead>
+      <tbody>
+        <tr><td>(1) 나라장터 API 데이터 활용 입찰가 산출</td><td>전체 시스템 (G2B/D2B 자동 수집 + 분석)</td></tr>
+        <tr><td>(2) G2B/D2B · 공사+용역 · 2019~2026 · NAS 자동 저장</td><td>관리자 → 데이터 수집 (현재 138만 건 적재)</td></tr>
+        <tr><td>(3) 1번 빈도분석 · 2번 종합분석 · 3번 갭분석 · 4번 결합 · 5번 KBID 모든 기능</td><td>종합분석 Tab1/Tab2/Tab3</td></tr>
+        <tr><td>(4) 예측가능 값 10개 이상 리스트 선택</td><td>1순위 예측 후보 ListBox (상위 15개)</td></tr>
+        <tr><td>(4) 공고일 이전 데이터 분석 + 결과 검증</td><td>cutoff 자동 적용 + 백테스트 화면</td></tr>
+        <tr><td>(4) 2019~2025년 데이터로 연도별 검증</td><td>Walk-forward 백테스트</td></tr>
+        <tr><td>(5) 빈공간 큰 지점 점수별 적용</td><td>Tab2 갭분석 (gap_size 점수화)</td></tr>
+        <tr><td>(5) 1/3/6/12/24개월 기간 분석</td><td>기간 ListBox (전 탭 공통)</td></tr>
+        <tr><td>(5) 발주처 / 공고 / 공종 / 지역 / 일자 구분</td><td>모든 분석 + 카테고리 필터 5종</td></tr>
+        <tr><td>(5) 발주처 상위범위 확장 (학교→교육지원청→교육청)</td><td>자동확장 라디오 + chain breadcrumb (PDF 4 ⑥)</td></tr>
+        <tr><td>(5) 검색창에서 사용자 지정 공종만 표시</td><td>업종 코드 필터 (Tab2 KBID 검색)</td></tr>
+        <tr><td>(8) 밀어내기식 검토 (1일/5일/1/3/6/12개월)</td><td>기간 ListBox (12개월 단위로 정형화)</td></tr>
+        <tr><td>(8) API 연동 + 스펙 변경 시 자동 업데이트</td><td>관리자 자동 sync + 수동 갱신 버튼</td></tr>
+        <tr><td>(8) 사정률 발생빈도, 평균분석, 종합분석, 업체사정률, 추첨예가</td><td>Tab1/Tab2/Tab3 + 빈도분석 카드 통계 (평균/표준편차)</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="req-03">예측 로직 (PDF 3) — 27개 사양 매핑</h2>
+    <p>각 챕터별 상세 매트릭스는 <b>2주차_요청사항_반영보고서.html</b>의 동일 섹션 참조 (전수 27/27 반영 완료).</p>
+
+    <table class="spec">
+      <thead><tr><th>챕터</th><th>핵심 항목</th><th>반영 위치</th></tr></thead>
+      <tbody>
+        <tr><td>1. 사정률 발생빈도와 구간 분석 (10건)</td><td>모드 A/B/C · 세부값 룰 3종 · 학습 저장 · 5단계 기간 · 5종 카테고리</td><td>Tab1 빈도분석</td></tr>
+        <tr><td>2. 업체사정률 분석 (6건)</td><td>KBID 포맷 · 5종 검색 · 발생빈도 연동 · 양쪽 화면 값 종류 구별</td><td>Tab2 갭분석</td></tr>
+        <tr><td>3. 종합분석 (11건)</td><td>자동 연동 · 1순위 추출 · 밀어내기 · 3가지 방법 + 합치도 · 엑셀/투찰리스트 · 10년 보존</td><td>Tab3 종합분석</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="req-04">추가확인사항 (PDF 4) — 6건</h2>
+    <table class="spec">
+      <thead><tr><th>#</th><th>요구사항</th><th>반영 위치</th></tr></thead>
+      <tbody>
+        <tr><td>①</td><td>NAS 다운로드 진행률 + 이어받기</td><td>관리자 → 데이터 수집 (이 매뉴얼 §관리자)</td></tr>
+        <tr><td>②</td><td>직전 공고 결과 비교</td><td>종합분석 상단 4-카드 (이 매뉴얼 §3)</td></tr>
+        <tr><td>③</td><td>결과값 ±0.1 ListBox (5개 이상)</td><td>Tab3 종합분석 (총 7개 옵션)</td></tr>
+        <tr><td>④</td><td>예측값 막대 ↔ ListBox 양방향</td><td>Tab1 빈도분석 (이 매뉴얼 §2-1)</td></tr>
+        <tr><td>⑤</td><td>직전 동일공종 우선 fallback</td><td>Tab2 갭분석 토글 (이 매뉴얼 §2-2)</td></tr>
+        <tr><td>⑥</td><td>상위기관 3단계 chain</td><td>Tab3 자동확장 라디오 (이 매뉴얼 §2-3)</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============ 용어집 ============ -->
+    <h2 id="glossary">용어집</h2>
+    <table class="spec">
+      <thead><tr><th style="width:30%;">용어</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td>사정률</td><td>입찰 낙찰 결정 기준 비율 (보통 99~101% 범위, 100%에 가까울수록 표준)</td></tr>
+        <tr><td>공종</td><td>공사 종류 분류 (예: 점검토목, 점검건축, 전기공사 등)</td></tr>
+        <tr><td>표본</td><td>분석에 사용되는 과거 공고/낙찰 데이터의 묶음</td></tr>
+        <tr><td>발주처</td><td>입찰 공고를 낸 기관 (예: 서울특별시 은평구청, 한국과학기술원 등)</td></tr>
+        <tr><td>List Box (드롭다운)</td><td>여러 옵션 중 하나를 선택하는 화면 요소 (▼ 화살표)</td></tr>
+        <tr><td>D-12, D-30 등</td><td>마감일까지 남은 일수 (D-12 = 마감 12일 전)</td></tr>
+        <tr><td>fallback (폴백)</td><td>1순위 조건 결과 부족 시 자동 2순위 조건 확장</td></tr>
+        <tr><td>합치도 (Agreement)</td><td>3가지 분석 방법이 동일 1순위 도출한 비율 (100% = 모두 일치)</td></tr>
+        <tr><td>예가변동폭</td><td>분석 대상 사정률 범위 (예: 100±2 = 98~102%)</td></tr>
+        <tr><td>밀어내기</td><td>공고일 기준으로 과거 N일치 데이터를 슬라이딩 윈도우 형태로 학습</td></tr>
+        <tr><td>chain (자동확장)</td><td>표본 부족 시 학교→교육지원청→교육청 식 상위기관으로 자동 확장</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============ FAQ ============ -->
+    <h2 id="faq">FAQ — 자주 묻는 질문</h2>
+
+    <h3>분석 결과가 비어 있어요</h3>
+    <p>
+      해당 발주처/지역/공종의 표본이 부족할 수 있습니다. <b>"기관범위 → 자동확장"</b>으로 변경하거나
+      카테고리 필터를 "전체"로 넓혀보세요. Tab2의 "직전 동일공종 우선" 토글도 도움이 됩니다.
+    </p>
+
+    <h3>첫 분석 호출이 5초 이상 걸려요</h3>
+    <p>
+      분석 캐시 미적중 시 첫 호출은 3~5초 소요됩니다. 두 번째 호출부터는 50ms 이내로 빠릅니다 (24시간 캐시 유지).
+    </p>
+
+    <h3>학습 저장 후 다음 공고에 자동 적용되지 않아요</h3>
+    <p>
+      마이페이지 → 예측 설정에서 저장된 옵션이 표시되는지 확인하세요. 다른 사용자가 동시 사용 중이면 본인 계정에만 저장됩니다.
+    </p>
+
+    <h3>관리자 메뉴가 안 보여요</h3>
+    <p>
+      현재 데모 계정(client@demo.com)은 read-only 권한입니다. 관리자 메뉴는 <code>role=admin</code> 사용자에게만 노출됩니다.
+    </p>
+
+    <h3>엑셀 다운로드 파일이 깨져요</h3>
+    <p>
+      엑셀 2010 이상에서 정상 열림. 파일 형식은 <code>.xlsx</code>입니다. 한글 폰트 문제 시 시스템 한글 폰트(맑은 고딕 등)가 설치되어 있는지 확인하세요.
+    </p>
+
+    <h3>데모 URL이 접속이 안 돼요</h3>
+    <p>
+      Cloudflare Tunnel 임시 URL은 서버 재시작 시 변경될 수 있습니다.
+      안내 페이지 (<code>https://ukiim.github.io/bid-analysis-demo/</code>)에서 최신 URL을 확인하세요.
+    </p>
+
+    <h3>특정 공고가 누락된 것 같아요 (취소·유찰 등)</h3>
+    <p>
+      취소·유찰·폐기·무효 공고는 분석 정확도를 위해 자동 차단됩니다.
+      차단 패턴: 취소 / 유찰공고 / 폐기공고 / 무효공고 / 입찰취소 / "각 수요기관" 단가계약.
+    </p>
+
+    <footer>
+      입찰 인사이트 사용자 매뉴얼 v1.0 · 자체완결 단일 HTML<br>
+      문의/회신: 본 페이지 첨부 또는 안내 페이지 회신
+    </footer>
+
+  </main>
+</div>
+</body>
+</html>
