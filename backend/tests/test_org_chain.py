@@ -88,8 +88,12 @@ def test_comprehensive_chain_scope_returns_meta(client, auth_token):
         assert "expansion_chain" in body
         assert "org_scope_used" in body
         assert "sample_count" in body
-        # 첫 entry 는 자기 자신("백신고(N)")
-        assert body["expansion_chain"][0].startswith("백신고(")
+        # 첫 entry 는 자기 자신 ({org:"백신고", count:N, used:bool})
+        first = body["expansion_chain"][0]
+        assert isinstance(first, dict)
+        assert first["org"] == "백신고"
+        assert "count" in first and isinstance(first["count"], int)
+        assert "used" in first and isinstance(first["used"], bool)
     finally:
         db = SessionLocal()
         db.query(BidAnnouncement).filter(BidAnnouncement.id == ann_id).delete()

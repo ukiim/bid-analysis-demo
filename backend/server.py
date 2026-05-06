@@ -2418,6 +2418,7 @@ def analysis_comprehensive(
             chain = _org_chain(ann.ordering_org_name)
             # 가장 긴 기간(period_months) 기준으로 expansion org 결정
             cutoff_full = ref_date - timedelta(days=period_months * 30)
+            chain_counts: list[tuple[str, int]] = []
             for org in chain:
                 cnt = db.query(BidResult).join(
                     BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
@@ -2428,12 +2429,17 @@ def analysis_comprehensive(
                     BidResult.first_place_rate.isnot(None),
                     BidResult.opened_at >= cutoff_full,
                 ).count()
-                chain_expansion_log.append(f"{org}({cnt})")
+                chain_counts.append((org, int(cnt)))
                 if chain_used_org is None and cnt >= 10:
                     chain_used_org = org
             # 끝까지 10건 미달이면 마지막(최상위) 기관 사용
             if chain_used_org is None:
                 chain_used_org = chain[-1] if chain else ann.ordering_org_name
+            # 프론트엔드 breadcrumb 용 객체 리스트 ({org, count, used})
+            chain_expansion_log = [
+                {"org": org, "count": int(count), "used": (org == chain_used_org)}
+                for org, count in chain_counts
+            ]
 
         for pm in periods:
             if pm > period_months:
@@ -2542,11 +2548,8 @@ def analysis_comprehensive(
         # 사용된 org 의 표본 수 (가장 긴 기간 기준)
         used_count = 0
         for entry in chain_expansion_log:
-            if chain_used_org and entry.startswith(f"{chain_used_org}("):
-                try:
-                    used_count = int(entry.split("(")[-1].rstrip(")"))
-                except ValueError:
-                    used_count = 0
+            if chain_used_org and entry.get("org") == chain_used_org:
+                used_count = int(entry.get("count") or 0)
                 break
         result["org_scope_used"] = chain_used_org
         result["sample_count"] = used_count
