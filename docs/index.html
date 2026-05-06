@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>입찰 인사이트 — 클라이언트 데모 안내</title>
+<!-- 데모 URL 갱신 시 아래 한 줄만 수정 -->
+<meta name="demo-url" content="https://bald-ion-dock-highways.trycloudflare.com">
+<style>
+  :root {
+    --brand: #0066CC;
+    --brand-deep: #1E3A5F;
+    --brand-soft: #E0F2FE;
+    --success: #059669;
+    --warn: #B45309;
+    --warn-soft: #FEF3C7;
+    --text: #0F172A;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --border: #E2E8F0;
+    --code-bg: #F1F5F9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Segoe UI', sans-serif;
+    color: var(--text);
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+    min-height: 100vh;
+    line-height: 1.65;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+    padding: 40px 44px 32px;
+    max-width: 560px;
+    width: 100%;
+  }
+  @media (max-width: 600px) {
+    .card { padding: 28px 24px 24px; border-radius: 12px; }
+  }
+
+  .brand-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .logo {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--brand-deep) 0%, var(--brand) 100%);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 18px;
+    letter-spacing: -1px;
+  }
+  .brand-text {
+    font-size: 18px; font-weight: 800; color: var(--brand-deep);
+    letter-spacing: -0.025em;
+  }
+
+  h1 {
+    margin: 0 0 8px;
+    font-size: 24px; font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--text);
+  }
+  .subtitle {
+    margin: 0 0 28px;
+    font-size: 14px; color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .cta-button {
+    display: block;
+    width: 100%;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, var(--brand-deep) 0%, var(--brand) 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px; font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+  }
+  .cta-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0, 102, 204, 0.25);
+  }
+  .cta-arrow { display: inline-block; margin-left: 6px; transition: transform 0.2s; }
+  .cta-button:hover .cta-arrow { transform: translateX(3px); }
+
+  .info-grid {
+    background: var(--brand-soft);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+  }
+  .info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(0, 102, 204, 0.2);
+    font-size: 14px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .label {
+    color: var(--brand-deep);
+    font-weight: 700;
+    font-size: 12.5px;
+    letter-spacing: 0.5px;
+  }
+  .info-row .value {
+    font-family: 'SFMono-Regular', 'Menlo', monospace;
+    color: var(--text);
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  .info-row .value.copy {
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.7);
+    transition: background 0.15s;
+  }
+  .info-row .value.copy:hover { background: #fff; }
+  .info-row .value.copy::after {
+    content: " ⧉";
+    font-family: sans-serif;
+    color: var(--text-light);
+    font-size: 11px;
+  }
+
+  .notice {
+    background: var(--warn-soft);
+    border-left: 3px solid #F59E0B;
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .notice .ntitle {
+    font-size: 11.5px;
+    color: var(--warn);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .notice ul {
+    margin: 4px 0 0;
+    padding-left: 18px;
+    line-height: 1.7;
+  }
+  .notice li { padding: 1px 0; }
+
+  footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 11.5px;
+    color: var(--text-light);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .badge-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: #ECFDF5; color: var(--success);
+  }
+  .badge-status.warning {
+    background: var(--warn-soft); color: var(--warn);
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 32px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #0F172A; color: #fff;
+    padding: 10px 20px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    opacity: 0; transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="brand-row">
+    <div class="logo">B</div>
+    <div class="brand-text">비드스타 — 입찰 인사이트</div>
+  </div>
+
+  <h1>클라이언트 데모 안내</h1>
+  <p class="subtitle">
+    아래 버튼으로 라이브 데모에 접속하실 수 있습니다.<br>
+    G2B 2019~2026년 실 데이터가 적재된 풀 기능 시스템입니다.
+  </p>
+
+  <a id="demo-link" href="#" class="cta-button" target="_blank" rel="noopener">
+    데모 접속하기 <span class="cta-arrow">→</span>
+  </a>
+
+  <div class="info-grid">
+    <div class="info-row">
+      <span class="label">접속 URL</span>
+      <span class="value copy" data-copy="url" id="url-text">로딩 중...</span>
+    </div>
+    <div class="info-row">
+      <span class="label">계정 (이메일)</span>
+      <span class="value copy" data-copy="email" id="email-text">client@demo.com</span>
+    </div>
+    <div class="info-row">
+      <span class="label">비밀번호</span>
+      <span class="value copy" data-copy="password" id="pw-text">demo2026!</span>
+    </div>
+    <div class="info-row">
+      <span class="label">서버 상태</span>
+      <span class="value" id="status-badge"><span class="badge-status">확인 중...</span></span>
+    </div>
+  </div>
+
+  <div class="notice">
+    <div class="ntitle">📌 사용 시 알아두실 점</div>
+    <ul>
+      <li>G2B 2019~2026년 약 138만 건 실 데이터 적재 완료</li>
+      <li>관리자 메뉴는 권한 차단 (열람만 가능)</li>
+      <li>첫 분석 호출은 캐시 미적중 시 3~5초 소요</li>
+      <li>데모는 임시 공개 환경으로, 데이터 변경 작업은 차단됩니다</li>
+    </ul>
+  </div>
+
+  <footer>
+    공공데이터 기반 입찰가 산정 및 사정률 분석 웹<br>
+    피드백/문의: 본 페이지 회신
+  </footer>
+
+</div>
+
+<div id="toast" class="toast">복사됨</div>
+
+<script>
+  // 데모 URL은 <meta name="demo-url"> 에서 로드 (URL 갱신 시 한 줄만 수정)
+  const demoUrl = document.querySelector('meta[name="demo-url"]').content;
+  const link = document.getElementById('demo-link');
+  link.href = demoUrl;
+  document.getElementById('url-text').textContent = demoUrl.replace(/^https?:\/\//, '');
+
+  // 클립보드 복사
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1400);
+  }
+  document.querySelectorAll('[data-copy]').forEach(el => {
+    el.addEventListener('click', () => {
+      const kind = el.dataset.copy;
+      const text = (kind === 'url') ? demoUrl : el.textContent.trim();
+      navigator.clipboard.writeText(text).then(() => showToast('복사됨'));
+    });
+  });
+
+  // 서버 상태 체크 (CORS 허용 시)
+  fetch(demoUrl + '/healthz', { mode: 'cors' })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(d => {
+      const ok = d && d.status === 'ok';
+      document.getElementById('status-badge').innerHTML =
+        ok ? '<span class="badge-status">● 정상</span>'
+           : '<span class="badge-status warning">⚠ 응답 이상</span>';
+    })
+    .catch(() => {
+      document.getElementById('status-badge').innerHTML =
+        '<span class="badge-status warning">⚠ 확인 불가 (CORS 또는 오프라인)</span>';
+    });
+</script>
+</body>
+</html>
