@@ -2045,6 +2045,22 @@ function ComprehensivePage({ announcement }) {
                   </div>
                 </>
               ) : <div className="loading">빈도 데이터 없음</div>}
+              {/* Item 4: 예측값 ListBox 정형화 (막대-리스트 양방향 sync) */}
+              {freqBins.length > 0 && (
+                <div style={{marginTop:'12px',display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap'}}>
+                  <span className="text-sm-muted" style={{fontWeight:'600'}}>구간 사정률:</span>
+                  <select data-testid="listbox-rate-bins"
+                    value={selectedRate || ''}
+                    onChange={e => setSelectedRate(e.target.value)}
+                    className="filter-select" style={{minWidth:'120px'}}>
+                    <option value="">선택…</option>
+                    {freqBins.map((b, i) => (
+                      <option key={i} value={String(b.rate)}>{b.rate}% ({b.count}건)</option>
+                    ))}
+                  </select>
+                  <span className="text-xs-muted">막대 클릭 또는 ListBox 선택으로 사정률 결정</span>
+                </div>
+              )}
             </div>
 
             {/* 1순위 예측 후보 리스트 (10개 이상) */}
