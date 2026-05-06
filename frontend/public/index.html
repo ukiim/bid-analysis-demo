@@ -2827,7 +2827,7 @@ function ComprehensivePage({ announcement }) {
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'16px',flexWrap:'wrap'}}>
                         <div style={{flex:1,minWidth:'240px'}}>
                           <div className="label-on-pred">
-                            <Icon name="target" size={12} /> 앙상블 종합 예측 (방법별 표본 가중)
+                            앙상블 종합 예측 (방법별 표본 가중)
                           </div>
                           <div style={{fontSize:'34px',fontWeight:'800',lineHeight:1}}>
                             {correlationData.ensemble.final_rate_corrected != null
@@ -2882,7 +2882,7 @@ function ComprehensivePage({ announcement }) {
                         {correlationData.bayesian_shrinkage?.shrunk_rate != null && (
                           <div style={{fontSize:'11px',opacity:0.85,
                             background:'rgba(255,255,255,0.18)',padding:'3px 8px',borderRadius:'4px'}}>
-                            <Icon name="target" size={11} /> 발주처 보정: {correlationData.bayesian_shrinkage.shrunk_rate}%
+                            발주처 보정: {correlationData.bayesian_shrinkage.shrunk_rate}%
                             {' '}(표본 {correlationData.bayesian_shrinkage.n_local}건,
                             가중 {Math.round(correlationData.bayesian_shrinkage.shrinkage_factor * 100)}% 전체평균)
                           </div>
@@ -2892,8 +2892,9 @@ function ComprehensivePage({ announcement }) {
                           <div style={{fontSize:'11px',fontWeight:'700',
                             background: correlationData.anomaly.severity === 'high' ? '#7F1D1D' : '#92400E',
                             padding:'3px 10px',borderRadius:'4px'}}>
-                            ⚠️ 이상치 ({correlationData.anomaly.severity === 'high' ? '주의' : '관심'} —
-                            z={correlationData.anomaly.z_score})
+                            ⚠️ {correlationData.anomaly.severity === 'high'
+                              ? '이 공고의 기초금액이 유사 공고 대비 크게 벗어나 있습니다 (주의)'
+                              : '이 공고의 기초금액이 유사 공고 평균과 다소 차이가 있습니다 (참고)'}
                           </div>
                         )}
                       </div>
