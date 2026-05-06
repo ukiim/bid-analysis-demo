@@ -4648,16 +4648,32 @@ const PAGES = [
 
 // ── NAS/외부수집 진행률 뱃지 (top-bar) ──────────────────────────────────────
 function SyncProgressBadge() {
+  const { user } = useAuth();
   const [prog, setProg] = useState(null);
+  // Bug C: 관리자만 폴링 (비관리자는 403 5초 스팸 방지)
+  const isAdmin = !!(user && user.role === 'admin');
   useEffect(() => {
+    if (!isAdmin) return;  // 비관리자: 폴링 자체 비활성화
     let alive = true;
+    let id = null;
     const tick = () => apiGet('/admin/sync/progress')
-      .then(d => { if (alive) setProg(d && d.in_progress ? d : null); })
-      .catch(() => { if (alive) setProg(null); });
+      .then(d => {
+        if (!alive) return;
+        const active = d && d.in_progress ? d : null;
+        setProg(active);
+        // 진행 중이 아니면 polling 중단 — 5초마다 ping 하지 않음
+        if (!active && id) { clearInterval(id); id = null; }
+      })
+      .catch(() => {
+        if (!alive) return;
+        setProg(null);
+        if (id) { clearInterval(id); id = null; }
+      });
     tick();
-    const id = setInterval(tick, 5000);
-    return () => { alive = false; clearInterval(id); };
-  }, []);
+    id = setInterval(tick, 5000);
+    return () => { alive = false; if (id) clearInterval(id); };
+  }, [isAdmin]);
+  if (!isAdmin) return null;
   if (!prog) return null;
   const pct = Math.round(prog.progress_pct || 0);
   return (
