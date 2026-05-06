@@ -1179,6 +1179,47 @@ def get_previous_announcement(announcement_id: str,
 
 # ─── 사정률 예측 로직 (스펙 §1) — 3가지 구간 알고리즘 ─────────────────────
 
+def _resolve_recent_results(db, target: BidAnnouncement,
+                              lookback_days: list = None) -> dict:
+    """동일 공종 + 동일 지역 우선 fallback (Item 5).
+
+    target_industry + target_region + announced_at 가 N일 내인 BidResult 표본을
+    단계적으로 확장하여 최소 10건 이상이 될 때까지 lookback 일수를 늘린다.
+    Returns: {results: list[(BidResult, BidAnnouncement)], lookback_used_days, sample_source}
+    """
+    lookbacks = lookback_days or [30, 90, 180]
+    ref_date = target.announced_at or datetime.now()
+    last_results: list = []
+    last_lookback = lookbacks[-1]
+    for ld in lookbacks:
+        cutoff = ref_date - timedelta(days=ld)
+        q = db.query(BidResult, BidAnnouncement).join(
+            BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
+        ).filter(
+            BidAnnouncement.category == target.category,
+            BidResult.opened_at.isnot(None),
+            BidResult.opened_at >= cutoff,
+        )
+        if target.industry_code:
+            q = q.filter(BidAnnouncement.industry_code == target.industry_code)
+        if target.region:
+            q = q.filter(BidAnnouncement.region == target.region)
+        rows = q.all()
+        last_results = rows
+        last_lookback = ld
+        if len(rows) >= 10:
+            break
+    sample_source = (
+        f"기간:{last_lookback}일/공종:{target.industry_code or '전체'}/"
+        f"지역:{target.region or '전국'}"
+    )
+    return {
+        "results": last_results,
+        "lookback_used_days": last_lookback,
+        "sample_source": sample_source,
+    }
+
+
 def _remove_outliers_iqr(values: list, multiplier: float = 1.5) -> list:
     """IQR 기반 이상치 제거 — 사정률 분포 안정화.
 
@@ -2098,6 +2139,7 @@ def analysis_company_rates(
     base_amount_min: int = Query(0, ge=0, description="기초금액 하한"),
     base_amount_max: int = Query(0, ge=0, description="기초금액 상한 (0 이면 무시)"),
     industry_filter: str = Query("", description="업종 코드 부분 일치"),
+    use_recent_fallback: bool = Query(False, description="Item 5 — 직전 동일공종 우선 fallback 사용"),
     current_user: User = Depends(require_auth),
 ):
     """선택 구간 내 업체 투찰률 분포 + 최대 갭 분석 + 검색 5종 (스펙 §2)
@@ -2268,6 +2310,15 @@ def analysis_company_rates(
                     "cases": matches[:5],
                 })
 
+        # Item 5 — 직전 동일공종 우선 fallback (옵션)
+        recent_fallback_payload = None
+        if use_recent_fallback:
+            rf = _resolve_recent_results(db, ann)
+            recent_fallback_payload = {
+                "lookback_used_days": rf["lookback_used_days"],
+                "sample_source": rf["sample_source"],
+                "sample_count": len(rf["results"]),
+            }
     finally:
         db.close()
     result = {
@@ -2280,6 +2331,8 @@ def analysis_company_rates(
         "first_place_predictions": first_place_list,
         "next_year_validation": next_year_validation,
     }
+    if recent_fallback_payload is not None:
+        result.update(recent_fallback_payload)
     _cache_set(cache_key, result)
     if current_user:
         save_query_history(
