@@ -125,7 +125,15 @@ def _normalize_item(source: str, item: dict) -> "dict | None":
     org = pick("dminsttNm", "ordInsttNm", "ordering_org_name", "orgNm")
     if not bid_number or not title:
         return None
-    if "취소" in str(title):
+    # 취소·유찰·폐기·무효 공고 차단 (정밀 패턴)
+    # 단순 "유찰"/"폐기"/"무효" contains 는 "폐기물처리"/"업무효율화" 등 오인 매칭 발생 →
+    # 명확한 마커 패턴(괄호/대괄호 포함)만 차단
+    _t = str(title)
+    if "취소" in _t:  # 취소는 단순 contains 유지 (오인 매칭 거의 없음)
+        return None
+    _excludes = ("[유찰", "(유찰", "유찰공고", "[폐기", "(폐기공고",
+                 "폐기공고", "무효공고", "[연기공고", "(연기공고", "입찰취소")
+    if any(p in _t for p in _excludes):
         return None
 
     # 기초금액: presmptPrce / basicAmt / budgetAmt / asignBdgtAmt 순으로 폴백

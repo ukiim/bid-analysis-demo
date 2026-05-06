@@ -31,9 +31,12 @@ def list_announcements(
     try:
         q = db.query(BidAnnouncement)
 
-        # 용역/공사만, 취소 공고 제외
+        # 용역/공사만, 취소·유찰·폐기·무효 공고 제외 (정밀 패턴)
         q = q.filter(BidAnnouncement.category.in_(["공사", "용역"]))
         q = q.filter(~BidAnnouncement.title.contains("취소"))
+        for _p in ("[유찰", "(유찰", "유찰공고", "[폐기", "(폐기공고",
+                   "폐기공고", "무효공고", "[연기공고", "(연기공고", "입찰취소"):
+            q = q.filter(~BidAnnouncement.title.contains(_p))
 
         if category and category != "all":
             cats = [c.strip() for c in category.split(",")]
