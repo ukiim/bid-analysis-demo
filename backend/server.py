@@ -5957,10 +5957,10 @@ if __name__ == "__main__":
             from seed import seed_database  # lazy import (운영 시 임포트도 안 함)
             seed_database()
         except Exception as e:
-            print(f"⚠️ 시드 데이터 생성 중 오류 (무시하고 계속): {e}")
+            logger.warning("시드 데이터 생성 중 오류 (무시하고 계속): %s", e)
     else:
         logger.info("SKIP_SEED=true — 시드 데이터 생성 건너뜀")
     port = int(os.environ.get("PORT", 8000))
-    print(f"\n🚀 서버 시작: http://0.0.0.0:{port}")
-    print(f"   API 문서: http://localhost:{port}/docs\n")
+    logger.info("서버 시작: http://0.0.0.0:%s", port)
+    logger.info("API 문서: http://localhost:%s/docs", port)
     uvicorn.run(app, host="0.0.0.0", port=port)
