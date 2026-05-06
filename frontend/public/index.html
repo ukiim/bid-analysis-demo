@@ -556,6 +556,7 @@
     animation: skeletonShimmer 1.5s infinite;
   }
   @keyframes skeletonShimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   .skeleton-row { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #F1F5F9; }
   .skeleton-cell { height: 14px; border-radius: 4px; }
 
@@ -3717,6 +3718,16 @@ function AdminUsersSection() {
       .finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
+  // 진행률 5초 폴링 (in_progress 상태일 때만 표시)
+  useEffect(() => {
+    let alive = true;
+    const tick = () => apiGet('/admin/sync/progress')
+      .then(d => { if (alive) setProgress(d && d.in_progress ? d : null); })
+      .catch(() => { if (alive) setProgress(null); });
+    tick();
+    const id = setInterval(tick, 5000);
+    return () => { alive = false; clearInterval(id); };
+  }, []);
   const handleToggle = (id) => {
     setToggling(id);
     apiSend('PUT', `/admin/users/${id}/status`)
@@ -3776,6 +3787,7 @@ function AdminSyncSection() {
   const [pipelines, setPipelines] = useState([]);
   const [history, setHistory] = useState([]);
   const [syncing, setSyncing] = useState(false);
+  const [progress, setProgress] = useState(null);
   const addToast = useToast();
   const load = () => {
     apiGet(`/admin/dashboard`).then(d => setPipelines(d.pipelines || []));
@@ -3815,6 +3827,24 @@ function AdminSyncSection() {
             </div>
           </div>
         ))}
+        {progress && (
+          <div data-testid="admin-sync-progress" style={{marginTop:'12px',padding:'12px',
+            border:'1px solid var(--border)',borderRadius:'8px',background:'#FFFBEB'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'6px'}}>
+              <div style={{fontSize:'12px',fontWeight:'700',color:'#92400E'}}>
+                수집 진행 중 — {progress.source || '-'} · {progress.sync_type || '-'}
+              </div>
+              <div style={{fontSize:'12px',fontWeight:'700',color:'#92400E'}}>{Math.round(progress.progress_pct || 0)}%</div>
+            </div>
+            <div style={{width:'100%',height:'8px',background:'#FDE68A',borderRadius:'4px',overflow:'hidden'}}>
+              <div style={{width:`${Math.min(100, Math.round(progress.progress_pct || 0))}%`,
+                height:'100%',background:'#F59E0B',transition:'width 0.4s ease'}}></div>
+            </div>
+            <div style={{fontSize:'11px',color:'#92400E',marginTop:'6px'}}>
+              페이지 {progress.last_page || '-'} · 커서일자 {progress.last_cursor_date || '-'}
+            </div>
+          </div>
+        )}
       </div>
       {/* 수집 추이 차트 — 최근 30회 */}
       {history.length > 0 && (
@@ -4423,6 +4453,7 @@ function AdminApp({ path, navigate, user, logout, authFetch }) {
             </span>
           </div>
           <div className="topbar-right">
+            <SyncProgressBadge />
             <button className="btn btn-outline" onClick={() => navigate('/')}>
               <Icon name="externalLink" size={13} style={{transform:'rotate(180deg)'}} /> 서비스로
             </button>
@@ -4444,6 +4475,31 @@ const PAGES = [
   { id: 'upload',        label: '데이터 업로드', icon: 'upload',   section: '서비스', path: '/upload' },
   { id: 'admin',         label: '관리자',       icon: 'settings', section: '관리',   path: '/admin', adminOnly: true },
 ];
+
+// ── NAS/외부수집 진행률 뱃지 (top-bar) ──────────────────────────────────────
+function SyncProgressBadge() {
+  const [prog, setProg] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    const tick = () => apiGet('/admin/sync/progress')
+      .then(d => { if (alive) setProg(d && d.in_progress ? d : null); })
+      .catch(() => { if (alive) setProg(null); });
+    tick();
+    const id = setInterval(tick, 5000);
+    return () => { alive = false; clearInterval(id); };
+  }, []);
+  if (!prog) return null;
+  const pct = Math.round(prog.progress_pct || 0);
+  return (
+    <span data-testid="progress-badge" className="badge badge-amber"
+      title={`수집 중 — ${prog.source || ''} ${prog.sync_type || ''} · 페이지 ${prog.last_page || '-'}`}
+      style={{display:'inline-flex',alignItems:'center',gap:'6px',fontSize:'11px',padding:'4px 8px'}}>
+      <span style={{width:'8px',height:'8px',borderRadius:'50%',background:'#F59E0B',
+        animation:'pulse 1.4s infinite'}}></span>
+      수집 {pct}%
+    </span>
+  );
+}
 
 function App() {
   const { user, loading: authLoading, logout, authFetch } = useAuth();
@@ -4595,6 +4651,7 @@ function App() {
             <div className="topbar-title">{current?.label}</div>
           </div>
           <div className="topbar-right">
+            <SyncProgressBadge />
             <span className="badge badge-green" style={{fontSize:'10px'}}>● 연결됨</span>
             {user.role === 'admin' && (
               <button className="btn btn-primary btn-sm" disabled={syncingTopbar} onClick={handleTopbarSync}>
