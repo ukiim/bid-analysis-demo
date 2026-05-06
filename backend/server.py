@@ -245,6 +245,12 @@ ORG_HIERARCHY = {
     "부산광역시 해운대구": "부산광역시", "부산광역시 사하구": "부산광역시",
     "대전광역시 유성구": "대전광역시", "인천광역시 남동구": "인천광역시",
     "고양시교육청": "경기도교육청", "수원시교육청": "경기도교육청",
+    # Item 6 — 학교 → 교육지원청 → 교육청 3단계 chain (샘플 5~10건)
+    "백신고": "고양교육지원청", "고양고": "고양교육지원청", "능곡고": "고양교육지원청",
+    "수원고": "수원교육지원청", "수원여고": "수원교육지원청",
+    "분당고": "성남교육지원청", "성남고": "성남교육지원청",
+    "고양교육지원청": "경기도교육청", "수원교육지원청": "경기도교육청",
+    "성남교육지원청": "경기도교육청",
     "국토교통부": "중앙부처", "환경부": "중앙부처", "교육부": "중앙부처",
     "행정안전부": "중앙부처", "국방부": "중앙부처",
     "한국도로공사": "공기업", "한국수자원공사": "공기업", "한국토지주택공사": "공기업",
@@ -253,6 +259,26 @@ ORG_HIERARCHY = {
     "경기도": "경기도", "서울특별시": "서울특별시", "부산광역시": "부산광역시",
     "대전광역시": "대전광역시", "인천광역시": "인천광역시", "세종특별자치시": "세종특별자치시",
 }
+
+def _org_chain(org_name: str) -> list:
+    """Item 6 — 발주기관에서 출발해 ORG_HIERARCHY 를 따라 상위로 4단계까지 walk-up.
+
+    반환: [org_name, parent, grandparent, ...] (중복/순환 제거, 최대 4 레벨).
+    """
+    if not org_name:
+        return []
+    chain = [org_name]
+    seen = {org_name}
+    current = org_name
+    for _ in range(3):  # 최대 3 단계 더 (총 4)
+        parent = ORG_HIERARCHY.get(current)
+        if not parent or parent in seen or parent == current:
+            break
+        chain.append(parent)
+        seen.add(parent)
+        current = parent
+    return chain
+
 
 # ─── 메타 상수 (API 응답용) ────────────────────────────────────────────────
 
@@ -2385,6 +2411,30 @@ def analysis_comprehensive(
         periods = [1, 3, 6, 12, 24]
         period_results = {}
 
+        # Item 6 — chain 모드: 표본 부족 시 상위 기관까지 단계적으로 확장
+        chain_used_org = None
+        chain_expansion_log: list = []
+        if org_scope == "chain":
+            chain = _org_chain(ann.ordering_org_name)
+            # 가장 긴 기간(period_months) 기준으로 expansion org 결정
+            cutoff_full = ref_date - timedelta(days=period_months * 30)
+            for org in chain:
+                cnt = db.query(BidResult).join(
+                    BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
+                ).filter(
+                    BidAnnouncement.category == ann.category,
+                    BidAnnouncement.ordering_org_name == org,
+                    BidResult.assessment_rate.isnot(None),
+                    BidResult.first_place_rate.isnot(None),
+                    BidResult.opened_at >= cutoff_full,
+                ).count()
+                chain_expansion_log.append(f"{org}({cnt})")
+                if chain_used_org is None and cnt >= 10:
+                    chain_used_org = org
+            # 끝까지 10건 미달이면 마지막(최상위) 기관 사용
+            if chain_used_org is None:
+                chain_used_org = chain[-1] if chain else ann.ordering_org_name
+
         for pm in periods:
             if pm > period_months:
                 continue
@@ -2401,6 +2451,8 @@ def analysis_comprehensive(
 
             if org_scope == "parent" and ann.parent_org_name:
                 q = q.filter(BidAnnouncement.parent_org_name == ann.parent_org_name)
+            elif org_scope == "chain" and chain_used_org:
+                q = q.filter(BidAnnouncement.ordering_org_name == chain_used_org)
             elif org_scope == "specific":
                 q = q.filter(BidAnnouncement.ordering_org_name == ann.ordering_org_name)
 
@@ -2485,6 +2537,20 @@ def analysis_comprehensive(
         "period_results": period_results,
         "parent_analysis": parent_analysis,
     }
+    # Item 6 — chain 모드 메타 정보
+    if org_scope == "chain":
+        # 사용된 org 의 표본 수 (가장 긴 기간 기준)
+        used_count = 0
+        for entry in chain_expansion_log:
+            if chain_used_org and entry.startswith(f"{chain_used_org}("):
+                try:
+                    used_count = int(entry.split("(")[-1].rstrip(")"))
+                except ValueError:
+                    used_count = 0
+                break
+        result["org_scope_used"] = chain_used_org
+        result["sample_count"] = used_count
+        result["expansion_chain"] = chain_expansion_log
     _cache_set(cache_key, result)
     if current_user:
         save_query_history(
