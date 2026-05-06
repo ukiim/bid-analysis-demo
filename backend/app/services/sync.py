@@ -39,6 +39,21 @@ def _parse_date(s) -> "datetime | None":
     return None
 
 
+def _validate_deadline(dt: "datetime | None") -> "datetime | None":
+    """입찰 마감일 검증 — 비현실적인 날짜는 NULL 처리.
+
+    G2B 데이터에 9999-12-31 sentinel 또는 다년 임대계약 종료일(예: 2030+)이
+    bidClseDt 필드에 잘못 들어오는 경우가 있어 입찰 마감일로 부적합.
+    cutoff: 현재로부터 2년 이후의 마감일은 NULL 처리.
+    """
+    if dt is None:
+        return None
+    cutoff = datetime.now().replace(year=datetime.now().year + 2)
+    if dt > cutoff or dt.year >= 9000:
+        return None
+    return dt
+
+
 def _extract_g2b_items(payload_bytes: bytes) -> list[dict]:
     """G2B BidPublicInfoService 응답에서 items 리스트 추출"""
     import json as _json
@@ -121,7 +136,7 @@ def _normalize_item(source: str, item: dict) -> "dict | None":
         base_amount = None
 
     announced_at = _parse_date(pick("bidNtceDt", "ntceDt", "announced_at")) or datetime.now()
-    deadline_at = _parse_date(pick("bidClseDt", "opengDt", "deadline_at"))
+    deadline_at = _validate_deadline(_parse_date(pick("bidClseDt", "opengDt", "deadline_at")))
     category = pick("bsnsDivNm", "category") or "용역"
     if isinstance(category, str):
         if "공사" in category:

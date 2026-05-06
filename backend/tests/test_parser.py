@@ -46,6 +46,26 @@ def test_parse_date_returns_none_for_invalid():
     assert _parse_date(20260420) is None  # 숫자는 거부
 
 
+# ── _validate_deadline (G2B 이상치 자동 NULL 변환 — 재발 방지) ────────
+def test_validate_deadline_filters_garbage():
+    """입찰 마감일이 비현실적으로 미래(>2년) 거나 9999 sentinel 일 때 NULL"""
+    from app.services.sync import _validate_deadline
+    # 정상 (1주일 후)
+    from datetime import timedelta
+    soon = datetime.now() + timedelta(days=7)
+    assert _validate_deadline(soon) == soon
+    # 9999 sentinel
+    assert _validate_deadline(datetime(9999, 12, 31)) is None
+    # 5년 미래 (다년 임대계약 종료일이 잘못 들어온 케이스)
+    far = datetime.now() + timedelta(days=365 * 5)
+    assert _validate_deadline(far) is None
+    # None 입력
+    assert _validate_deadline(None) is None
+    # 과거는 통과 (만료 공고는 정상 데이터)
+    past = datetime.now() - timedelta(days=30)
+    assert _validate_deadline(past) == past
+
+
 # ── _extract_g2b_items ────────────────────────────────────────────
 
 def test_extract_g2b_items_standard_structure():
