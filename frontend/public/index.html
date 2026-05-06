@@ -1299,6 +1299,13 @@ function ComprehensivePage({ announcement }) {
   const [orgScope, setOrgScope] = useState('specific');
   const [gapRangeStart, setGapRangeStart] = useState('');
   const [gapRangeEnd, setGapRangeEnd] = useState('');
+  // Item 3: 결과값 조정 offset (URL ?offset= 동기화)
+  const [rateOffset, setRateOffset] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    const v = new URLSearchParams(window.location.search).get('offset');
+    const n = v != null ? parseFloat(v) : 0;
+    return isNaN(n) ? 0 : n;
+  });
   // Item 5: 직전 동일공종 우선 fallback 토글
   const [useRecentFallback, setUseRecentFallback] = useState(false);
 
@@ -1381,6 +1388,11 @@ function ComprehensivePage({ announcement }) {
           setDetailRule(d.detail_rule || 'max_gap');
           if (d.rate_range_start) setGapRangeStart(String(d.rate_range_start));
           if (d.rate_range_end) setGapRangeEnd(String(d.rate_range_end));
+          if (typeof d.rate_offset === 'number') {
+            // URL 우선; URL에 offset 없을 때만 저장값 적용
+            const hasUrl = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('offset');
+            if (!hasUrl) setRateOffset(d.rate_offset);
+          }
         }
       })
       .catch(() => {})
@@ -1398,6 +1410,7 @@ function ComprehensivePage({ announcement }) {
       rate_range_start: gapRangeStart ? parseFloat(gapRangeStart) : null,
       rate_range_end: gapRangeEnd ? parseFloat(gapRangeEnd) : null,
       confirmed_rate: confirmedRate ? parseFloat(confirmedRate) : null,
+      rate_offset: rateOffset || 0,
     })
       .then(() => addToast('설정 저장 완료 — 다음 공고에 자동 적용됩니다', 'success'))
       .catch(() => addToast('설정 저장 실패', 'error'));
@@ -1541,6 +1554,16 @@ function ComprehensivePage({ announcement }) {
   // Item 2: 직전 공고 결과 비교 (지역/공종 fallback)
   const _prevUrl = announcement ? `/announcements/${announcement.id}/previous` : null;
   const { data: prevData } = useFetch(_prevUrl, [_prevUrl], { skip: !announcement });
+
+  // Item 3: rateOffset → URL 동기화
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const qs = new URLSearchParams(window.location.search);
+    if (rateOffset && rateOffset !== 0) qs.set('offset', String(rateOffset));
+    else qs.delete('offset');
+    const next = `${window.location.pathname}${qs.toString() ? '?' + qs.toString() : ''}${window.location.hash}`;
+    window.history.replaceState({}, '', next);
+  }, [rateOffset]);
 
   // Sync confirmedRateInput with confirmedRate
   useEffect(() => { setConfirmedRateInput(confirmedRate); }, [confirmedRate]);
@@ -2581,6 +2604,39 @@ function ComprehensivePage({ announcement }) {
                     </div>
                   </div>
                 )}
+                {/* Item 3: 결과값 조정 ListBox (±) */}
+                <div className="card mb-12" style={{padding:'10px 14px'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:'12px',flexWrap:'wrap'}}>
+                    <span className="label-bold-sm">결과값 조정:</span>
+                    <select data-testid="listbox-rate-offset"
+                      value={String(rateOffset)}
+                      onChange={e => setRateOffset(parseFloat(e.target.value))}
+                      className="filter-select" style={{minWidth:'90px'}}>
+                      {[-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3].map(v => (
+                        <option key={v} value={String(v)}>
+                          {v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="text-sm-muted">예측 사정률에 가산</span>
+                    {(() => {
+                      const base = (finalRate != null) ? finalRate : (confirmedRate ? parseFloat(confirmedRate) : null);
+                      if (base == null) return null;
+                      const adj = (base + rateOffset).toFixed(2);
+                      return (
+                        <>
+                          <span className="text-md-muted">기준 {base}% → 조정후</span>
+                          <span className="badge badge-blue" style={{fontSize:'12px',padding:'4px 8px'}}>{adj}%</span>
+                          {announcement?.budget && (
+                            <span className="text-xs-muted">
+                              = {fmtAmount(Math.round(announcement.budget * parseFloat(adj) / 100))}
+                            </span>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
                 {/* 사정률 예측 로직 §3.11 — 3가지 방법 + 종합 상관관계 */}
                 <div className="card mb-16" data-testid="card-correlation">
                   <div className="card-header flex-between" >
