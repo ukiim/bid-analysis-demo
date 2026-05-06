@@ -2222,7 +2222,7 @@ function ComprehensivePage({ announcement }) {
             <div className="card mb-16">
               <div className="card-header flex-between" >
                 <div>
-                  <div className="card-title">구간 분석 (스펙 §1) — 모드별 1순위 예측</div>
+                  <div className="card-title" data-testid="card-mode-analysis">구간 분석 — 모드별 1순위 예측</div>
                   <div className="card-sub">
                     빈도최대 / 공백 / 차이최대 3가지 알고리즘 + 세부값 추출 룰 적용
                   </div>
@@ -2388,8 +2388,8 @@ function ComprehensivePage({ announcement }) {
                 <div className="card mb-16" style={{padding:'12px 14px'}}>
                   <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'10px'}}>
                     <Icon name="search" size={14} />
-                    <span style={{fontSize:'13px',fontWeight:'700',color:'var(--primary-dark)'}}>
-                      KBID 검색 (스펙 §2)
+                    <span data-testid="card-kbid-search" style={{fontSize:'13px',fontWeight:'700',color:'var(--primary-dark)'}}>
+                      KBID 검색
                     </span>
                     {(orgSearch || priceVolatility || baseAmountMin || baseAmountMax || industryFilter) && (
                       <button onClick={() => {
