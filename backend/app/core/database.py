@@ -15,9 +15,14 @@ from app.models._base import Base
 
 
 # ─── DB 설정 (SQLite) ──────────────────────────────────────────────────────
-# server.py 와 동일 경로를 가리켜야 한다 — backend/demo.db
+# 기본 경로: backend/demo.db
+# 테스트 격리: BIDSTAR_DB_PATH 환경변수로 다른 파일 지정 가능 (예: testing.db)
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DB_PATH = os.path.join(_BACKEND_DIR, "demo.db")
+_db_env = os.environ.get("BIDSTAR_DB_PATH")
+if _db_env:
+    DB_PATH = _db_env if os.path.isabs(_db_env) else os.path.join(_BACKEND_DIR, _db_env)
+else:
+    DB_PATH = os.path.join(_BACKEND_DIR, "demo.db")
 engine = create_engine(f"sqlite:///{DB_PATH}", echo=False)
 SessionLocal = sessionmaker(bind=engine)
 
