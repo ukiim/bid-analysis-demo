@@ -195,13 +195,13 @@
   .mb-16 { margin-bottom: 16px; }
   .mb-20 { margin-bottom: 20px; }
   .kpi-card {
-    background: var(--surface); border-radius: var(--radius); padding: 16px 18px;
-    box-shadow: var(--shadow); display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border-radius: var(--radius); padding: 12px 14px;
+    box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px;
     transition: transform .15s ease, box-shadow .15s ease;
   }
   .kpi-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
   .kpi-icon-wrap {
-    width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+    width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     background: var(--primary-light); color: var(--primary);
   }
@@ -209,8 +209,8 @@
   .kpi-card.tone-green .kpi-icon-wrap { background: #D1FAE5; color: #047857; }
   .kpi-card.tone-purple .kpi-icon-wrap { background: #EDE9FE; color: #6D28D9; }
   .kpi-body { min-width: 0; flex: 1; }
-  .kpi-label { font-size: 11.5px; color: var(--text-secondary); font-weight: 500; margin-bottom: 4px; letter-spacing: -0.1px; }
-  .kpi-value { font-size: 22px; font-weight: 800; color: var(--text-primary); white-space: nowrap; letter-spacing: -0.4px; line-height: 1.2; }
+  .kpi-label { font-size: 11.5px; color: var(--text-secondary); font-weight: 500; margin-bottom: 2px; letter-spacing: -0.01em; }
+  .kpi-value { font-size: 19px; font-weight: 800; color: var(--text-primary); white-space: nowrap; letter-spacing: -0.025em; line-height: 1.2; }
   .kpi-change { font-size: 12px; margin-top: 4px; }
   .kpi-change.up { color: var(--success); }
   .kpi-change.down { color: var(--danger); }
@@ -420,9 +420,9 @@
   .nas-dot.online { background: #10B981; }
   .nas-dot.offline { background: #EF4444; }
   /* Step Guide */
-  .step-guide { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 20px; padding: 16px 20px; background: var(--surface); border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); }
-  .step-item { display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; flex: 1; }
-  .step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; transition: all 0.2s; }
+  .step-guide { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 16px; padding: 12px 20px; background: var(--surface); border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); }
+  .step-item { display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; flex: 1; }
+  .step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; transition: all 0.2s; }
   .step-circle.completed { background: #059669; color: #fff; }
   .step-circle.active { background: var(--primary); color: #fff; box-shadow: 0 0 0 4px rgba(0,102,204,0.2); }
   .step-circle.pending { background: #E2E8F0; color: #94A3B8; }
@@ -430,7 +430,7 @@
   .step-label.active { color: var(--primary); }
   .step-label.completed { color: #059669; }
   .step-value { font-size: 10px; color: var(--text-secondary); max-width: 120px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .step-connector { flex: 0 0 60px; height: 2px; background: #E2E8F0; margin: 0 -8px; margin-bottom: 24px; }
+  .step-connector { flex: 1; max-width: 100px; height: 2px; background: #E2E8F0; margin: 0 4px; align-self: center; margin-top: -22px; }
   .step-connector.completed { background: #059669; }
   /* Bid amount display */
   .bid-amount-box { background: var(--gradient-amount); border: 1.5px solid #FDE68A; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
@@ -1142,7 +1142,7 @@ function AnnouncementPage({ onSelectAnnouncement }) {
         <div className="card-header">
           <div>
             <div className="card-title">공고 목록</div>
-            <div className="card-sub">총 {data.total?.toLocaleString() || 0}건 조회됨 (페이지 {data.page}/{data.total_pages})</div>
+            <div className="card-sub">총 {data.total?.toLocaleString() || 0}건</div>
           </div>
           <button className="btn btn-outline" onClick={handleCSV}>CSV 다운로드</button>
         </div>
@@ -1825,22 +1825,30 @@ function ComprehensivePage({ announcement }) {
           </button>
         </div>
         <div className="summary-meta">
-          <div className="summary-item">
-            <div className="summary-item-label">발주기관</div>
-            <div className="summary-item-value">{announcement.org || '-'}</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-item-label">기초금액</div>
-            <div className="summary-item-value">{fmtAmount(announcement.budget)}</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-item-label">유형</div>
-            <div className="summary-item-value">{announcement.type || '-'}</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-item-label">지역</div>
-            <div className="summary-item-value">{announcement.area || '-'}</div>
-          </div>
+          {announcement.org && (
+            <div className="summary-item">
+              <div className="summary-item-label">발주기관</div>
+              <div className="summary-item-value">{announcement.org}</div>
+            </div>
+          )}
+          {announcement.budget && (
+            <div className="summary-item">
+              <div className="summary-item-label">기초금액</div>
+              <div className="summary-item-value">{fmtAmount(announcement.budget)}</div>
+            </div>
+          )}
+          {announcement.type && (
+            <div className="summary-item">
+              <div className="summary-item-label">유형</div>
+              <div className="summary-item-value">{announcement.type}</div>
+            </div>
+          )}
+          {announcement.area && (
+            <div className="summary-item">
+              <div className="summary-item-label">지역</div>
+              <div className="summary-item-value">{announcement.area}</div>
+            </div>
+          )}
           {selectedBidAmount && (
             <div className="summary-item">
               <div className="summary-item-label">투찰금액 (선택)</div>
@@ -1883,8 +1891,8 @@ function ComprehensivePage({ announcement }) {
         </div>
       </div>
 
-      {/* Item 2: 직전 공고 결과 비교 카드 */}
-      {prevData?.prev && (() => {
+      {/* Item 2: 직전 공고 결과 비교 카드 — 직전 사정률이 있을 때만 노출 */}
+      {prevData?.prev?.result?.assessment_rate != null && (() => {
         const p = prevData.prev;
         const r = p.result || {};
         const curRate = confirmedRate ? parseFloat(confirmedRate) : (selectedRate ? parseFloat(selectedRate) : null);
@@ -1937,13 +1945,25 @@ function ComprehensivePage({ announcement }) {
 
       {/* Tab Navigation */}
       <div className="tab-nav">
-        {TABS.map((label, idx) => (
-          <button key={idx} className={`tab-btn ${activeTab === idx ? 'active' : ''}`}
-            data-testid={TAB_TESTIDS[idx]}
-            onClick={() => setActiveTab(idx)}>
-            {label}
-          </button>
-        ))}
+        {TABS.map((label, idx) => {
+          const done = (idx === 0 && step1Done) || (idx === 1 && step2Done) || (idx === 2 && finalPrediction);
+          return (
+            <button key={idx} className={`tab-btn ${activeTab === idx ? 'active' : ''}`}
+              data-testid={TAB_TESTIDS[idx]}
+              onClick={() => setActiveTab(idx)}>
+              <span style={{display:'inline-flex',alignItems:'center',gap:'6px'}}>
+                <span style={{
+                  width:'18px',height:'18px',borderRadius:'50%',
+                  display:'inline-flex',alignItems:'center',justifyContent:'center',
+                  fontSize:'10px',fontWeight:'700',
+                  background: done ? '#059669' : (activeTab === idx ? 'var(--primary)' : '#E2E8F0'),
+                  color: done || activeTab === idx ? '#fff' : '#94A3B8',
+                }}>{done ? '✓' : idx + 1}</span>
+                {label}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab Content */}
@@ -1972,17 +1992,20 @@ function ComprehensivePage({ announcement }) {
                   data-testid="radio-org-scope-chain"
                   onClick={() => setOrgScope('chain')} title="자동확장: 결과 0건이면 상위기관으로 점진 확장">자동확장</button>
               </div>
-              <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap'}}>
-                <span className="text-sm-muted">선택사정률:</span>
-                <input className="rate-input" type="number" step="0.01" value={selectedRate}
-                  onChange={e => setSelectedRate(e.target.value)}
-                  placeholder="클릭 선택" />
-                {selectedBidAmount && (
-                  <span style={{fontSize:'12px',fontWeight:'700',color:'#B45309',background:'#FFFBEB',padding:'4px 8px',borderRadius:'4px'}}>
-                    = {fmtAmount(selectedBidAmount)}
-                  </span>
-                )}
-                <span style={{fontSize:'12px',color:'var(--text-secondary)',marginLeft:'8px'}}>확정사정률:</span>
+              <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:'12px',flexWrap:'wrap',rowGap:'8px'}}>
+                <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
+                  <span className="text-sm-muted">선택:</span>
+                  <input className="rate-input" type="number" step="0.01" value={selectedRate}
+                    onChange={e => setSelectedRate(e.target.value)}
+                    placeholder="막대 클릭" />
+                  {selectedBidAmount && (
+                    <span style={{fontSize:'12px',fontWeight:'700',color:'#B45309',background:'#FFFBEB',padding:'4px 8px',borderRadius:'4px'}}>
+                      = {fmtAmount(selectedBidAmount)}
+                    </span>
+                  )}
+                </div>
+                <div style={{width:'1px',height:'20px',background:'var(--border)'}}></div>
+                <span style={{fontSize:'12px',color:'var(--text-secondary)'}}>확정:</span>
                 <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
                   <select className="filter-select" value={confirmedRate}
                     onChange={e => { setConfirmedRate(e.target.value); setConfirmedRateInput(e.target.value); }}
@@ -3911,7 +3934,7 @@ function AdminUsersSection() {
       .catch(() => addToast('상태 변경 실패', 'error'))
       .finally(() => setToggling(null));
   };
-  if (loading) return <div className="loading">로딩 중...</div>;
+  if (loading) return <LoadingState message="사용자 목록 불러오는 중..." />;
   const filtered = users.filter(u => (u.email || '').includes(search));
   return (
     <div className="card">
