@@ -1535,6 +1535,10 @@ function ComprehensivePage({ announcement }) {
   const { data: yearlyData, loading: yearlyLoading } =
     useFetch(_yearUrl, [_yearUrl], { skip: _compSkip });
 
+  // Item 2: 직전 공고 결과 비교 (지역/공종 fallback)
+  const _prevUrl = announcement ? `/announcements/${announcement.id}/previous` : null;
+  const { data: prevData } = useFetch(_prevUrl, [_prevUrl], { skip: !announcement });
+
   // Sync confirmedRateInput with confirmedRate
   useEffect(() => { setConfirmedRateInput(confirmedRate); }, [confirmedRate]);
 
@@ -1847,6 +1851,58 @@ function ComprehensivePage({ announcement }) {
           <div className="step-value">{finalPrediction ? fmtAmount(finalPrediction) : '결과 확인'}</div>
         </div>
       </div>
+
+      {/* Item 2: 직전 공고 결과 비교 카드 */}
+      {prevData?.prev && (() => {
+        const p = prevData.prev;
+        const r = p.result || {};
+        const curRate = confirmedRate ? parseFloat(confirmedRate) : (selectedRate ? parseFloat(selectedRate) : null);
+        const prevRate = r.assessment_rate;
+        const gap = (curRate != null && prevRate != null) ? (curRate - prevRate) : null;
+        const fb = prevData.fallback_used || 'exact';
+        const fbWarn = fb !== 'exact';
+        const fbLabel = fb === 'no_region' ? '동일 지역 결과 없음 → 공종 기준만 적용'
+          : fb === 'no_industry' ? '동일 공종 결과 없음 → 지역 기준만 적용'
+          : fb === 'none' ? '동일 지역/공종 모두 없음 → 전체 표본 기준'
+          : '';
+        return (
+          <div className="card mb-16" data-testid="card-prev-result" style={{padding:'14px'}}>
+            <div className="card-header" style={{marginBottom:'10px'}}>
+              <div>
+                <div className="card-title">직전 결과 비교</div>
+                <div className="card-sub">동일 발주처/지역/공종 기준 가장 최근 마감 공고 결과</div>
+              </div>
+              {fbWarn && (
+                <span className="badge badge-amber" style={{fontSize:'11px'}} title={fbLabel}>{fbLabel}</span>
+              )}
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:'10px'}}>
+              <div className="metric-box">
+                <div className="metric-label">직전 공고</div>
+                <div className="metric-val" style={{fontSize:'13px'}} title={p.title || ''}>
+                  {(p.title || '').slice(0, 28)}{(p.title || '').length > 28 ? '…' : ''}
+                </div>
+                <div className="text-xs-muted">{p.announced_at || '-'}</div>
+              </div>
+              <div className="metric-box">
+                <div className="metric-label">직전 사정률</div>
+                <div className="metric-val text-rate">{prevRate != null ? `${prevRate}%` : '-'}</div>
+                <div className="text-xs-muted">1순위 {r.first_place_rate != null ? `${r.first_place_rate}%` : '-'}</div>
+              </div>
+              <div className="metric-box">
+                <div className="metric-label">현재 {confirmedRate ? '확정' : '선택'} 사정률</div>
+                <div className="metric-val text-rate">{curRate != null ? `${curRate}%` : '-'}</div>
+              </div>
+              <div className="metric-box">
+                <div className="metric-label">차이</div>
+                <div className="metric-val" style={{color: gap == null ? 'var(--text-secondary)' : (Math.abs(gap) < 0.3 ? '#059669' : '#DC2626')}}>
+                  {gap != null ? `${gap >= 0 ? '+' : ''}${gap.toFixed(2)}%p` : '-'}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Tab Navigation */}
       <div className="tab-nav">
