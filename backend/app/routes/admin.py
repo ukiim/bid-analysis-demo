@@ -386,19 +386,59 @@ def sync_history(page: int = 1, page_size: int = 20, current_user: User = Depend
     return {"items": result, "total": total, "page": page, "page_size": page_size}
 
 
+@router.get("/sync/progress")
+def admin_sync_progress(current_user: User = Depends(require_admin)):
+    """현재 진행 중인 수집의 진행률 반환 (Item 1).
+
+    가장 최근 in_progress DataSyncLog 한 건을 돌려준다. 없으면 in_progress=False.
+    """
+    db = SessionLocal()
+    try:
+        log = (
+            db.query(DataSyncLog)
+            .filter(DataSyncLog.status == "in_progress")
+            .order_by(DataSyncLog.started_at.desc())
+            .first()
+        )
+        if not log:
+            return {"in_progress": False}
+        return {
+            "in_progress": True,
+            "sync_id": log.id,
+            "source": log.source,
+            "sync_type": log.sync_type,
+            "progress_pct": round(log.progress_pct or 0.0, 2),
+            "last_page": log.last_page or 0,
+            "last_checkpoint": getattr(log, "last_checkpoint", None),
+            "last_cursor_date": log.last_cursor_date.strftime("%Y-%m-%d") if log.last_cursor_date else None,
+            "records_fetched": log.records_fetched or 0,
+            "inserted_count": log.inserted_count or 0,
+            "started_at": log.started_at.strftime("%Y-%m-%d %H:%M:%S") if log.started_at else None,
+        }
+    finally:
+        db.close()
+
+
 @router.post("/sync/{sync_id}/retry")
 def retry_sync(sync_id: str, current_user: User = Depends(require_admin)):
-    """실패한 수집 건 재시도 — 실 파이프라인 재실행"""
+    """실패한 수집 건 재시도 — 실 파이프라인 재실행
+
+    Item 1 — last_checkpoint 또는 last_page>0 이면 그 위치 다음부터 chunk-level resume.
+    """
     db = SessionLocal()
+    resume_id = None
     try:
         log = db.query(DataSyncLog).filter(DataSyncLog.id == sync_id).first()
         if not log:
             db.close()
             raise HTTPException(status_code=404, detail="수집 이력을 찾을 수 없습니다.")
         source = log.source
+        # Bug B 수정: last_checkpoint 가 있거나 (백워드 호환) last_page>0 이면 chunk-level resume 활성화
+        if getattr(log, "last_checkpoint", None) or (log.last_page or 0) > 0:
+            resume_id = sync_id
     finally:
         db.close()
-    res = _run_sync_for_source(source, trigger="retry")
+    res = _run_sync_for_source(source, trigger="retry", resume_from_log_id=resume_id)
     return {
         "message": "재시도 완료",
         "status": res["status"],

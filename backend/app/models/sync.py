@@ -20,6 +20,13 @@ class DataSyncLog(Base):
     error_message = Column(Text)
     started_at = Column(DateTime)
     finished_at = Column(DateTime)
+    # 진행률 + chunk-level resume 지원 필드 (Item 1)
+    progress_pct = Column(Float, default=0.0)            # 0~100 진행률
+    last_page = Column(Integer, default=0)                # 마지막 처리 페이지 (deprecated, 백워드 호환 표시용)
+    last_cursor_date = Column(DateTime, nullable=True)    # 마지막 윈도우 종료일
+    # chunk-level resume 정확도 — "category_idx:window_idx:page" 형식
+    # 글로벌 pages_done 만으로는 카테고리/윈도우 경계에서 잘못된 페이지에 재개되는 문제 수정 (Bug B)
+    last_checkpoint = Column(String, nullable=True)
 
 
 class ModelMetric(Base):

@@ -10,10 +10,51 @@ import math
 import statistics
 from datetime import datetime, timedelta
 
-from app.models import BidAnnouncement
+from app.models import BidAnnouncement, BidResult
 
 
 # ─── 사정률 예측 로직 (스펙 §1) — 3가지 구간 알고리즘 ─────────────────────
+
+def _resolve_recent_results(db, target: BidAnnouncement,
+                              lookback_days: list = None) -> dict:
+    """동일 공종 + 동일 지역 우선 fallback (Item 5).
+
+    target_industry + target_region + announced_at 가 N일 내인 BidResult 표본을
+    단계적으로 확장하여 최소 10건 이상이 될 때까지 lookback 일수를 늘린다.
+    Returns: {results: list[(BidResult, BidAnnouncement)], lookback_used_days, sample_source}
+    """
+    lookbacks = lookback_days or [30, 90, 180]
+    ref_date = target.announced_at or datetime.now()
+    last_results: list = []
+    last_lookback = lookbacks[-1]
+    for ld in lookbacks:
+        cutoff = ref_date - timedelta(days=ld)
+        q = db.query(BidResult, BidAnnouncement).join(
+            BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
+        ).filter(
+            BidAnnouncement.category == target.category,
+            BidResult.opened_at.isnot(None),
+            BidResult.opened_at >= cutoff,
+        )
+        if target.industry_code:
+            q = q.filter(BidAnnouncement.industry_code == target.industry_code)
+        if target.region:
+            q = q.filter(BidAnnouncement.region == target.region)
+        rows = q.all()
+        last_results = rows
+        last_lookback = ld
+        if len(rows) >= 10:
+            break
+    sample_source = (
+        f"기간:{last_lookback}일/공종:{target.industry_code or '전체'}/"
+        f"지역:{target.region or '전국'}"
+    )
+    return {
+        "results": last_results,
+        "lookback_used_days": last_lookback,
+        "sample_source": sample_source,
+    }
+
 
 def _remove_outliers_iqr(values: list, multiplier: float = 1.5) -> list:
     """IQR 기반 이상치 제거 — 사정률 분포 안정화.

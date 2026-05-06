@@ -7,6 +7,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+import random
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -523,11 +525,28 @@ def _http_fetch_with_retry(url: str, timeout: int = 15, retries: int = 2) -> byt
     raise last_exc  # 도달 불가
 
 
-def _run_sync_for_source(source: str, trigger: str = "manual") -> dict:
+def _lookup(name: str, default):
+    """server 모듈에 monkeypatch 된 동명 심볼이 있으면 우선 반환 (테스트 호환).
+
+    pytest 가 `monkeypatch.setattr(server_mod, "G2B_CATEGORIES", fake)` 처럼
+    facade 모듈에 stub 을 꽂는 경우, 실 파이프라인이 그 stub 을 보도록 한다.
+    """
+    server_mod = sys.modules.get("server")
+    if server_mod is not None and hasattr(server_mod, name):
+        return getattr(server_mod, name)
+    return default
+
+
+def _run_sync_for_source(source: str, trigger: str = "manual",
+                          resume_from_log_id: "str | None" = None) -> dict:
     """공공데이터 실 수집 파이프라인.
 
     API 키가 있으면 실제 호출 → JSON 파싱 → 정규화 → BidAnnouncement upsert.
     키가 없거나 호출/파싱이 실패하면 로그만 남기고 DB는 변경하지 않음.
+
+    Item 1 — 진행률 + chunk-level resume 지원:
+      - in_progress 레코드를 사전에 insert → 페이지마다 progress_pct/last_page/last_cursor_date 업데이트.
+      - resume_from_log_id 가 있고 last_checkpoint/last_page>0 이면 그 위치부터 재개.
     """
     db = SessionLocal()
     started = datetime.now()
@@ -536,6 +555,52 @@ def _run_sync_for_source(source: str, trigger: str = "manual") -> dict:
     summary = {"fetched": 0, "inserted": 0, "skipped": 0, "invalid": 0,
                "results_fetched": 0, "results_inserted": 0, "results_skipped": 0,
                "results_no_announcement": 0}
+
+    # 진행 상태 기록용 in_progress 로그 사전 등록 (Item 1)
+    progress_log = DataSyncLog(
+        source=source,
+        sync_type=f"공고+낙찰 수집 ({trigger})",
+        status="in_progress",
+        records_fetched=0,
+        inserted_count=0,
+        started_at=started,
+        progress_pct=0.0,
+        last_page=0,
+    )
+    db.add(progress_log)
+    db.commit()
+    db.refresh(progress_log)
+    progress_log_id = progress_log.id
+
+    # resume 정보 — last_checkpoint("cat_idx:win_idx:page") 우선, 없으면 last_page (deprecated) 폴백
+    resume_cat_idx = 0
+    resume_win_idx = 0
+    resume_page = 1
+    resume_active = False
+    if resume_from_log_id:
+        prev = db.query(DataSyncLog).filter(DataSyncLog.id == resume_from_log_id).first()
+        if prev:
+            ckpt = (getattr(prev, "last_checkpoint", None) or "").strip()
+            parsed = False
+            if ckpt:
+                try:
+                    parts = ckpt.split(":")
+                    if len(parts) == 3:
+                        resume_cat_idx = int(parts[0])
+                        resume_win_idx = int(parts[1])
+                        resume_page = int(parts[2]) + 1  # 다음 페이지부터
+                        resume_active = True
+                        parsed = True
+                        logger.info("sync resume: log=%s checkpoint=%s -> cat=%d win=%d page=%d",
+                                    resume_from_log_id, ckpt, resume_cat_idx, resume_win_idx, resume_page)
+                except (ValueError, IndexError):
+                    parsed = False
+            if not parsed and (prev.last_page or 0) > 0:
+                # 백워드 호환: 옛 last_page 만 있는 경우 첫 카테고리/첫 윈도우 시작 페이지로만 적용
+                resume_page = (prev.last_page or 0) + 1
+                resume_active = True
+                logger.info("sync resume (legacy last_page): log=%s 시작 페이지=%d",
+                            resume_from_log_id, resume_page)
 
     key_env = f"{source}_API_KEY"
     api_key = os.environ.get(key_env, "").strip()
@@ -575,33 +640,107 @@ def _run_sync_for_source(source: str, trigger: str = "manual") -> dict:
                 sync_start_res = inc_floor
             logger.info("incremental sync floor=%s (last_ok=%s)", inc_floor, last_ok[0])
 
+    # 테스트에서 server 모듈에 monkeypatch 한 stub 우선 사용
+    _windows_iter_fn = _lookup("_windows_iter", _windows_iter)
+    _http_fetch_fn = _lookup("_http_fetch_with_retry", _http_fetch_with_retry)
+    _extract_items_fn = _lookup("_extract_g2b_items", _extract_g2b_items)
+    _normalize_item_fn = _lookup("_normalize_item", _normalize_item)
+    _normalize_result_fn = _lookup("_normalize_result_item", _normalize_result_item)
+    _upsert_ann_fn = _lookup("_upsert_announcements", _upsert_announcements)
+    _upsert_res_fn = _lookup("_upsert_results", _upsert_results)
+    _build_sync_url_fn = _lookup("_build_sync_url", _build_sync_url)
+    _build_result_url_fn = _lookup("_build_result_url", _build_result_url)
+    _record_sync_error_fn = _lookup("_record_sync_error", _record_sync_error)
+    _G2B_CATEGORIES = _lookup("G2B_CATEGORIES", G2B_CATEGORIES)
+    _G2B_RESULT_CATEGORIES = _lookup("G2B_RESULT_CATEGORIES", G2B_RESULT_CATEGORIES)
+
+    # 총 페이지 추정치 (진행률 계산용) — 카테고리 × 윈도우 × 페이지
+    def _count_windows(total_days: int, win_days: int, start_date: "str | None") -> int:
+        try:
+            return sum(1 for _ in _windows_iter_fn(total_days, win_days, start_date=start_date))
+        except Exception:
+            return 1
+
     try:
         if api_key:
             # G2B는 용역/공사 2개 카테고리 순회 수집
-            categories = G2B_CATEGORIES if source == "G2B" else [(None, None)]
-            result_categories = G2B_RESULT_CATEGORIES if source == "G2B" else []
+            categories = _G2B_CATEGORIES if source == "G2B" else [(None, None)]
+            result_categories = _G2B_RESULT_CATEGORIES if source == "G2B" else []
             per_cat_errors = []
 
-            # ① 입찰공고 수집 (카테고리 × 슬라이딩 윈도우 × 페이지)
-            for cat_label, cat_op in categories:
-                cat_fetched = cat_inserted = 0
-                for win_start, win_end in _windows_iter(total_days_ann, window_days, start_date=sync_start_ann):
-                    for page in range(1, max_pages_ann + 1):
+            # 총 페이지 추정 (진행률 % 계산 분모)
+            ann_windows = _count_windows(total_days_ann, window_days, sync_start_ann)
+            res_windows = _count_windows(total_days_res, window_days, sync_start_res)
+            total_pages_est = max(1,
+                len(categories) * ann_windows * max_pages_ann +
+                len(result_categories) * res_windows * max_pages_res
+            )
+            pages_done = 0
+
+            progress_broken = {"flag": False}
+
+            def _commit_progress(page_idx: int, cursor_end: "str | None",
+                                 cat_idx: int = 0, win_idx: int = 0, page: int = 0):
+                """페이지마다 진행률을 DB 에 commit (Item 1).
+
+                Bug B 수정: last_checkpoint 에 (cat_idx:win_idx:page) 3-int 좌표 저장.
+                last_page 는 deprecated 글로벌 누적 (백워드 호환 표시용).
+                """
+                try:
+                    pl = db.query(DataSyncLog).filter(DataSyncLog.id == progress_log_id).first()
+                    if not pl:
+                        return
+                    pl.last_page = page_idx
+                    pl.last_checkpoint = f"{cat_idx}:{win_idx}:{page}"
+                    pl.progress_pct = round(min(100.0, page_idx / total_pages_est * 100.0), 2)
+                    if cursor_end:
                         try:
-                            url = _build_sync_url(
+                            pl.last_cursor_date = datetime.strptime(cursor_end[:10], "%Y-%m-%d")
+                        except Exception:
+                            pass
+                    pl.records_fetched = summary["fetched"] + summary.get("results_fetched", 0)
+                    pl.inserted_count = summary["inserted"] + summary.get("results_inserted", 0)
+                    db.commit()
+                except Exception as _e:
+                    # Quality 3: 단순 swallow 가 아니라 외부 루프가 알 수 있도록 플래그 셋
+                    logger.warning("progress commit failed: %s", _e)
+                    progress_broken["flag"] = True
+                    try:
+                        db.rollback()
+                    except Exception:
+                        pass
+
+            # ① 입찰공고 수집 (카테고리 × 슬라이딩 윈도우 × 페이지)
+            for cat_idx, (cat_label, cat_op) in enumerate(categories):
+                cat_fetched = cat_inserted = 0
+                # resume: 체크포인트보다 앞선 카테고리 전체 스킵
+                if resume_active and cat_idx < resume_cat_idx:
+                    continue
+                for win_idx, (win_start, win_end) in enumerate(_windows_iter_fn(total_days_ann, window_days, start_date=sync_start_ann)):
+                    # resume: 같은 카테고리에서 체크포인트보다 앞선 윈도우 스킵
+                    if resume_active and cat_idx == resume_cat_idx and win_idx < resume_win_idx:
+                        continue
+                    # resume: 정확히 체크포인트 (cat,win) 인 경우만 페이지를 늦춤, 그 외는 1
+                    if resume_active and cat_idx == resume_cat_idx and win_idx == resume_win_idx:
+                        page_start = resume_page
+                    else:
+                        page_start = 1
+                    for page in range(page_start, max_pages_ann + 1):
+                        try:
+                            url = _build_sync_url_fn(
                                 source, api_key, rows=rows_per_page, page_no=page,
                                 start_date=win_start, end_date=win_end,
                                 category_op=cat_op or "getBidPblancListInfoServc",
                             )
-                            payload = _http_fetch_with_retry(url, timeout=20, retries=2)
-                            raw_items = _extract_g2b_items(payload)
+                            payload = _http_fetch_fn(url, timeout=20, retries=2)
+                            raw_items = _extract_items_fn(payload)
                             if not raw_items:
                                 break
                             summary["fetched"] += len(raw_items)
                             cat_fetched += len(raw_items)
                             normalized = []
                             for it in raw_items:
-                                norm = _normalize_item(source, it)
+                                norm = _normalize_item_fn(source, it)
                                 if norm:
                                     # 엔드포인트가 카테고리를 명시한 경우 강제 적용
                                     # (Cnstwk/Servc 엔드포인트의 응답에는 bsnsDivNm 이 누락되거나 다른 값일 수 있어
@@ -611,14 +750,19 @@ def _run_sync_for_source(source: str, trigger: str = "manual") -> dict:
                                     normalized.append(norm)
                                 else:
                                     summary["invalid"] += 1
-                            up = _upsert_announcements(db, source, normalized)
+                            up = _upsert_ann_fn(db, source, normalized)
                             summary["inserted"] += up["inserted"]
                             summary["skipped"] += up["skipped"]
                             cat_inserted += up["inserted"]
+                            pages_done += 1
+                            _commit_progress(pages_done, win_end,
+                                             cat_idx=cat_idx, win_idx=win_idx, page=page)
+                            if progress_broken["flag"]:
+                                raise RuntimeError("progress commit failed (DB session 손상)")
                             if len(raw_items) < rows_per_page:
                                 break
                         except Exception as exc:
-                            _record_sync_error(per_cat_errors, "공고", cat_label, page, exc)
+                            _record_sync_error_fn(per_cat_errors, "공고", cat_label, page, exc)
                             break
                 if cat_label:
                     logger.info(
@@ -627,31 +771,47 @@ def _run_sync_for_source(source: str, trigger: str = "manual") -> dict:
                     )
 
             # ② 낙찰결과(예정가격 상세) 수집 - 슬라이딩 윈도우 적용
-            for cat_label, cat_op in result_categories:
+            # 체크포인트 cat_idx 는 [공고 카테고리 수 + 낙찰 카테고리 인덱스] 로 표현
+            res_cat_offset = len(categories)
+            for r_idx, (cat_label, cat_op) in enumerate(result_categories):
+                res_cat_idx = res_cat_offset + r_idx
                 cat_fetched = cat_inserted = 0
-                for win_start, win_end in _windows_iter(total_days_res, window_days, start_date=sync_start_res):
-                    for page in range(1, max_pages_res + 1):
+                if resume_active and res_cat_idx < resume_cat_idx:
+                    continue
+                for win_idx, (win_start, win_end) in enumerate(_windows_iter_fn(total_days_res, window_days, start_date=sync_start_res)):
+                    if resume_active and res_cat_idx == resume_cat_idx and win_idx < resume_win_idx:
+                        continue
+                    if resume_active and res_cat_idx == resume_cat_idx and win_idx == resume_win_idx:
+                        page_start_r = resume_page
+                    else:
+                        page_start_r = 1
+                    for page in range(page_start_r, max_pages_res + 1):
                         try:
-                            url = _build_result_url(
+                            url = _build_result_url_fn(
                                 api_key, cat_op, rows=rows_per_page,
                                 page_no=page, start_date=win_start, end_date=win_end,
                             )
-                            payload = _http_fetch_with_retry(url, timeout=30, retries=2)
-                            raw_items = _extract_g2b_items(payload)
+                            payload = _http_fetch_fn(url, timeout=30, retries=2)
+                            raw_items = _extract_items_fn(payload)
                             if not raw_items:
                                 break
                             summary["results_fetched"] += len(raw_items)
                             cat_fetched += len(raw_items)
-                            normalized = [n for n in (_normalize_result_item(it) for it in raw_items) if n]
-                            up = _upsert_results(db, normalized)
+                            normalized = [n for n in (_normalize_result_fn(it) for it in raw_items) if n]
+                            up = _upsert_res_fn(db, normalized)
                             summary["results_inserted"] += up["inserted"]
                             summary["results_skipped"] += up["skipped"]
                             summary["results_no_announcement"] += up["no_announcement"]
                             cat_inserted += up["inserted"]
+                            pages_done += 1
+                            _commit_progress(pages_done, win_end,
+                                             cat_idx=res_cat_idx, win_idx=win_idx, page=page)
+                            if progress_broken["flag"]:
+                                raise RuntimeError("progress commit failed (DB session 손상)")
                             if len(raw_items) < rows_per_page:
                                 break
                         except Exception as exc:
-                            _record_sync_error(per_cat_errors, "낙찰", cat_label, page, exc)
+                            _record_sync_error_fn(per_cat_errors, "낙찰", cat_label, page, exc)
                             break
                 logger.info(
                     "g2b result sync category=%s fetched=%d inserted=%d total_days=%d",
@@ -679,17 +839,21 @@ def _run_sync_for_source(source: str, trigger: str = "manual") -> dict:
     finished = datetime.now()
     total_fetched = summary["fetched"] + summary.get("results_fetched", 0)
     total_inserted = summary["inserted"] + summary.get("results_inserted", 0)
-    log = DataSyncLog(
-        source=source,
-        sync_type=f"공고+낙찰 수집 ({trigger})",
-        status=status,
-        records_fetched=total_fetched,
-        inserted_count=total_inserted,
-        error_message=(error_message[:500] if error_message else None),
-        started_at=started,
-        finished_at=finished,
-    )
-    db.add(log)
+    # 진행 로그를 최종 상태로 업데이트 (Item 1)
+    log = db.query(DataSyncLog).filter(DataSyncLog.id == progress_log_id).first()
+    if log is None:
+        log = DataSyncLog(
+            id=progress_log_id, source=source,
+            sync_type=f"공고+낙찰 수집 ({trigger})",
+            status=status, started_at=started,
+        )
+        db.add(log)
+    log.status = status
+    log.records_fetched = total_fetched
+    log.inserted_count = total_inserted
+    log.error_message = (error_message[:500] if error_message else None)
+    log.finished_at = finished
+    log.progress_pct = 100.0 if status == "success" else (log.progress_pct or 0.0)
     db.commit()
     db.refresh(log)
     sync_id = log.id

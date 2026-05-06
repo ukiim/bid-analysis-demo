@@ -30,7 +30,9 @@ from app.services.cache import (
     _cache_set,
     _cache_key,
 )
+from app.core.constants import org_chain as _org_chain
 from app.services.analysis import (
+    _resolve_recent_results,
     _remove_outliers_iqr,
     _time_weighted_rates,
     _confidence_interval,
@@ -343,6 +345,7 @@ def analysis_company_rates(
     base_amount_min: int = Query(0, ge=0, description="기초금액 하한"),
     base_amount_max: int = Query(0, ge=0, description="기초금액 상한 (0 이면 무시)"),
     industry_filter: str = Query("", description="업종 코드 부분 일치"),
+    use_recent_fallback: bool = Query(False, description="Item 5 — 직전 동일공종 우선 fallback 사용"),
     current_user: User = Depends(require_auth),
 ):
     """선택 구간 내 업체 투찰률 분포 + 최대 갭 분석 + 검색 5종 (스펙 §2)
@@ -513,6 +516,15 @@ def analysis_company_rates(
                     "cases": matches[:5],
                 })
 
+        # Item 5 — 직전 동일공종 우선 fallback (옵션)
+        recent_fallback_payload = None
+        if use_recent_fallback:
+            rf = _resolve_recent_results(db, ann)
+            recent_fallback_payload = {
+                "lookback_used_days": rf["lookback_used_days"],
+                "sample_source": rf["sample_source"],
+                "sample_count": len(rf["results"]),
+            }
     finally:
         db.close()
     result = {
@@ -525,6 +537,8 @@ def analysis_company_rates(
         "first_place_predictions": first_place_list,
         "next_year_validation": next_year_validation,
     }
+    if recent_fallback_payload is not None:
+        result.update(recent_fallback_payload)
     _cache_set(cache_key, result)
     if current_user:
         save_query_history(
@@ -578,6 +592,36 @@ def analysis_comprehensive(
         periods = [1, 3, 6, 12, 24]
         period_results = {}
 
+        # Item 6 — chain 모드: 표본 부족 시 상위 기관까지 단계적으로 확장
+        chain_used_org = None
+        chain_expansion_log: list = []
+        if org_scope == "chain":
+            chain = _org_chain(ann.ordering_org_name)
+            # 가장 긴 기간(period_months) 기준으로 expansion org 결정
+            cutoff_full = ref_date - timedelta(days=period_months * 30)
+            chain_counts: list[tuple[str, int]] = []
+            for org in chain:
+                cnt = db.query(BidResult).join(
+                    BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
+                ).filter(
+                    BidAnnouncement.category == ann.category,
+                    BidAnnouncement.ordering_org_name == org,
+                    BidResult.assessment_rate.isnot(None),
+                    BidResult.first_place_rate.isnot(None),
+                    BidResult.opened_at >= cutoff_full,
+                ).count()
+                chain_counts.append((org, int(cnt)))
+                if chain_used_org is None and cnt >= 10:
+                    chain_used_org = org
+            # 끝까지 10건 미달이면 마지막(최상위) 기관 사용
+            if chain_used_org is None:
+                chain_used_org = chain[-1] if chain else ann.ordering_org_name
+            # 프론트엔드 breadcrumb 용 객체 리스트 ({org, count, used})
+            chain_expansion_log = [
+                {"org": org, "count": int(count), "used": (org == chain_used_org)}
+                for org, count in chain_counts
+            ]
+
         for pm in periods:
             if pm > period_months:
                 continue
@@ -594,6 +638,8 @@ def analysis_comprehensive(
 
             if org_scope == "parent" and ann.parent_org_name:
                 q = q.filter(BidAnnouncement.parent_org_name == ann.parent_org_name)
+            elif org_scope == "chain" and chain_used_org:
+                q = q.filter(BidAnnouncement.ordering_org_name == chain_used_org)
             elif org_scope == "specific":
                 q = q.filter(BidAnnouncement.ordering_org_name == ann.ordering_org_name)
 
@@ -678,6 +724,16 @@ def analysis_comprehensive(
         "period_results": period_results,
         "parent_analysis": parent_analysis,
     }
+    # Item 6 — chain 모드 메타 정보
+    if org_scope == "chain":
+        used_count = 0
+        for entry in chain_expansion_log:
+            if chain_used_org and entry.get("org") == chain_used_org:
+                used_count = int(entry.get("count") or 0)
+                break
+        result["org_scope_used"] = chain_used_org
+        result["sample_count"] = used_count
+        result["expansion_chain"] = chain_expansion_log
     _cache_set(cache_key, result)
     if current_user:
         save_query_history(
