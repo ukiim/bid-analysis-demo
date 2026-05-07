@@ -232,12 +232,16 @@
       <span class="label">서버 상태</span>
       <span class="value" id="status-badge"><span class="badge-status">확인 중...</span></span>
     </div>
+    <div class="info-row" id="status-detail-row" style="display:none;">
+      <span class="label">상세</span>
+      <span class="value" id="status-detail" style="font-size:11px; color:var(--text-muted);">-</span>
+    </div>
   </div>
 
   <div class="notice">
     <div class="ntitle">📌 사용 시 알아두실 점</div>
     <ul>
-      <li>G2B 2019~2026년 약 138만 건 실 데이터 적재 완료</li>
+      <li>G2B 2019~2026년 약 138만 건 실 데이터 적재 완료 및 추가 진행중</li>
       <li>관리자 메뉴는 권한 차단 (열람만 가능)</li>
       <li>첫 분석 호출은 캐시 미적중 시 3~5초 소요</li>
       <li>데모는 임시 공개 환경으로, 데이터 변경 작업은 차단됩니다</li>
@@ -245,8 +249,7 @@
   </div>
 
   <footer>
-    공공데이터 기반 입찰가 산정 및 사정률 분석 웹<br>
-    피드백/문의: 본 페이지 회신
+    공공데이터 기반 입찰가 산정 및 사정률 분석 웹
   </footer>
 
 </div>
@@ -275,19 +278,42 @@
     });
   });
 
-  // 서버 상태 체크 (CORS 허용 시)
-  fetch(demoUrl + '/healthz', { mode: 'cors' })
-    .then(r => r.ok ? r.json() : Promise.reject())
-    .then(d => {
-      const ok = d && d.status === 'ok';
-      document.getElementById('status-badge').innerHTML =
-        ok ? '<span class="badge-status">● 정상</span>'
-           : '<span class="badge-status warning">⚠ 응답 이상</span>';
-    })
-    .catch(() => {
-      document.getElementById('status-badge').innerHTML =
-        '<span class="badge-status warning">⚠ 확인 불가 (CORS 또는 오프라인)</span>';
-    });
+  // 서버 상태 실시간 체크 (15초마다 자동 갱신)
+  function checkServerStatus() {
+    const t0 = performance.now();
+    fetch(demoUrl + '/healthz', { mode: 'cors', cache: 'no-store' })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+      .then(d => {
+        const ms = Math.round(performance.now() - t0);
+        const checks = (d && d.checks) || {};
+        const allOk = d && d.status === 'ok'
+          && checks.db === 'ok'
+          && checks.scheduler === 'running';
+        const badgeCls = allOk ? '' : 'warning';
+        const badgeIcon = allOk ? '●' : '⚠';
+        const badgeText = allOk ? '정상' : '일부 이상';
+        document.getElementById('status-badge').innerHTML =
+          `<span class="badge-status ${badgeCls}">${badgeIcon} ${badgeText}</span>`;
+        // 상세 정보
+        const parts = [];
+        if (checks.db) parts.push('DB ' + checks.db);
+        if (checks.scheduler) parts.push('스케줄러 ' + checks.scheduler);
+        if (checks.env) parts.push('환경 ' + checks.env);
+        parts.push(`응답 ${ms}ms`);
+        parts.push('업데이트 ' + new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit', second:'2-digit'}));
+        document.getElementById('status-detail').textContent = parts.join(' · ');
+        document.getElementById('status-detail-row').style.display = 'flex';
+      })
+      .catch(err => {
+        document.getElementById('status-badge').innerHTML =
+          '<span class="badge-status warning">⚠ 응답 없음</span>';
+        document.getElementById('status-detail').textContent =
+          (err.message || '연결 실패') + ' · ' + new Date().toLocaleTimeString('ko-KR');
+        document.getElementById('status-detail-row').style.display = 'flex';
+      });
+  }
+  checkServerStatus();
+  setInterval(checkServerStatus, 15000);
 </script>
 </body>
 </html>
