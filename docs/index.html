@@ -232,9 +232,8 @@
       <span class="label">서버 상태</span>
       <span class="value" id="status-badge"><span class="badge-status">확인 중...</span></span>
     </div>
-    <div class="info-row" id="status-detail-row" style="display:none;">
-      <span class="label">상세</span>
-      <span class="value" id="status-detail" style="font-size:11px; color:var(--text-muted);">-</span>
+    <div id="status-detail-row" style="display:none; padding:6px 2px 0; font-size:11px; color:var(--text-muted); line-height:1.6; word-break:keep-all; text-align:right;">
+      <span id="status-detail">-</span>
     </div>
   </div>
 
@@ -294,22 +293,22 @@
         const badgeText = allOk ? '정상' : '일부 이상';
         document.getElementById('status-badge').innerHTML =
           `<span class="badge-status ${badgeCls}">${badgeIcon} ${badgeText}</span>`;
-        // 상세 정보
-        const parts = [];
-        if (checks.db) parts.push('DB ' + checks.db);
-        if (checks.scheduler) parts.push('스케줄러 ' + checks.scheduler);
-        if (checks.env) parts.push('환경 ' + checks.env);
-        parts.push(`응답 ${ms}ms`);
-        parts.push('업데이트 ' + new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit', second:'2-digit'}));
-        document.getElementById('status-detail').textContent = parts.join(' · ');
-        document.getElementById('status-detail-row').style.display = 'flex';
+        // 상세 정보 — 2줄로 분리 (첫 줄: 점검 / 둘째 줄: 응답+갱신시각)
+        const line1Parts = [];
+        if (checks.db) line1Parts.push('DB ' + checks.db);
+        if (checks.scheduler) line1Parts.push('스케줄러 ' + checks.scheduler);
+        if (checks.env) line1Parts.push(checks.env);
+        const time = new Date().toLocaleTimeString('ko-KR', {hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        document.getElementById('status-detail').innerHTML =
+          line1Parts.join(' · ') + `<br>응답 ${ms}ms · 업데이트 ${time}`;
+        document.getElementById('status-detail-row').style.display = 'block';
       })
       .catch(err => {
         document.getElementById('status-badge').innerHTML =
           '<span class="badge-status warning">⚠ 응답 없음</span>';
         document.getElementById('status-detail').textContent =
           (err.message || '연결 실패') + ' · ' + new Date().toLocaleTimeString('ko-KR');
-        document.getElementById('status-detail-row').style.display = 'flex';
+        document.getElementById('status-detail-row').style.display = 'block';
       });
   }
   checkServerStatus();
