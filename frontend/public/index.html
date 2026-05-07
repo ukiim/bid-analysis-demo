@@ -4439,7 +4439,12 @@ function LoginPage({ onSwitch }) {
     setPassword('demo1234');
     setError('');
     setLoading(true);
-    try { await login('admin@bidinsight.kr', 'demo1234'); }
+    try {
+      await login('admin@bidinsight.kr', 'demo1234');
+      // 데모 빠른 로그인은 admin 자동 진입을 우회하고 항상 서비스 화면으로
+      window.history.pushState(null, '', '/announcements');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
     catch (err) { setError(err.message); }
     finally { setLoading(false); }
   };
