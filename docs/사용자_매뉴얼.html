@@ -11,8 +11,8 @@
     --brand-soft: #E0F2FE;
     --success: #059669;
     --success-soft: #D1FAE5;
-    --warn: #B45309;
-    --warn-soft: #FEF3C7;
+    --warning-deep: #B45309;
+    --warning-soft: #FEF3C7;
     --text: #0F172A;
     --text-muted: #64748B;
     --text-light: #94A3B8;
@@ -95,10 +95,10 @@
 
   .badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; }
   .badge.ok { background: var(--success-soft); color: var(--success); }
-  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.warn { background: var(--warning-soft); color: var(--warning-deep); }
   .badge.blue { background: #DBEAFE; color: #1E40AF; }
 
-  .info-box { background: var(--warn-soft); border-left: 3px solid #F59E0B; padding: 10px 14px; border-radius: 4px; font-size: 13px; margin: 12px 0; }
+  .info-box { background: var(--warning-soft); border-left: 3px solid #F59E0B; padding: 10px 14px; border-radius: 4px; font-size: 13px; margin: 12px 0; }
 
   footer { margin-top: 48px; padding: 16px 0; border-top: 1px solid var(--border); text-align: center; font-size: 11px; color: var(--text-light); }
 
@@ -327,7 +327,7 @@
           <span style="font-weight:800;">데이터 수집 관리</span>
           <span class="badge warn">● 수집 12%</span>
         </div>
-        <div style="background:var(--warn-soft); color:var(--warn); padding:8px 12px; border-radius:4px; font-size:11.5px; font-weight:600;">
+        <div style="background:var(--warning-soft); color:var(--warning-deep); padding:8px 12px; border-radius:4px; font-size:11.5px; font-weight:600;">
           ⏳ 진행 중 — 12% (페이지 48 / 약 400) · 마지막 커서 2024-08-15
         </div>
       </div>

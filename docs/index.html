@@ -12,8 +12,8 @@
     --brand-deep: #1E3A5F;
     --brand-soft: #E0F2FE;
     --success: #059669;
-    --warn: #B45309;
-    --warn-soft: #FEF3C7;
+    --warning-deep: #B45309;
+    --warning-soft: #FEF3C7;
     --text: #0F172A;
     --text-muted: #64748B;
     --text-light: #94A3B8;
@@ -137,7 +137,7 @@
   }
 
   .notice {
-    background: var(--warn-soft);
+    background: var(--warning-soft);
     border-left: 3px solid #F59E0B;
     border-radius: 6px;
     padding: 14px 18px;
@@ -146,7 +146,7 @@
   }
   .notice .ntitle {
     font-size: 11.5px;
-    color: var(--warn);
+    color: var(--warning-deep);
     font-weight: 800;
     letter-spacing: 0.5px;
     margin-bottom: 6px;
@@ -178,7 +178,7 @@
     background: #ECFDF5; color: var(--success);
   }
   .badge-status.warning {
-    background: var(--warn-soft); color: var(--warn);
+    background: var(--warning-soft); color: var(--warning-deep);
   }
 
   /* Toast */
