@@ -568,8 +568,94 @@
   .skeleton-row { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #F1F5F9; }
   .skeleton-cell { height: 14px; border-radius: 4px; }
 
+  /* ── 인터렉션 개선 (UI Polish v2) ─────────────────────────────────── */
+  /* A2: 페이지/탭 전환 페이드 */
+  @keyframes pageEnter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .page-enter { animation: pageEnter 200ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .tab-content-enter { animation: pageEnter 150ms ease-out; }
+
+  /* A1: Modal 진입 애니메이션 */
+  @keyframes modalEnter { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  .modal-enter { animation: modalEnter 180ms cubic-bezier(0.32, 0.72, 0, 1); }
+
+  /* A3: 카드 모양 스켈레톤 */
+  .skel-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .skel-line { height: 12px; background: #E2E8F0; border-radius: 3px; position: relative; overflow: hidden; }
+  .skel-line.short { width: 40%; }
+  .skel-line.long { width: 80%; }
+  .skel-line.lg { height: 22px; }
+  .skel-line::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.65), transparent);
+    animation: skeletonShimmer 1.4s infinite;
+  }
+
+  /* A4: 진행률 progress bar (SyncProgressBadge 안에) */
+  .progress-bar-mini {
+    height: 3px; background: rgba(180, 83, 9, 0.18); border-radius: 2px;
+    overflow: hidden; margin-top: 4px;
+  }
+  .progress-bar-mini > span {
+    display: block; height: 100%; background: var(--warning, #F59E0B);
+    border-radius: 2px; transition: width 0.3s ease;
+  }
+  .progress-pulse { animation: pulse 0.8s ease 1; }
+
+  /* A5: 토스트 stack 애니메이션 */
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .toast { animation: toastIn 200ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .toast-close {
+    background: none; border: 0; color: rgba(255,255,255,0.8);
+    margin-left: 12px; padding: 0 4px; cursor: pointer; font-size: 16px;
+    border-radius: 3px;
+  }
+  .toast-close:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+  /* B 그룹 — 마이크로 피드백 */
+  /* 3-A: 버튼 ripple (가벼운 클릭 펄스) */
+  .btn { position: relative; overflow: hidden; }
+  .btn:active::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.35), transparent 60%);
+    animation: btnRipple 280ms ease-out;
+    pointer-events: none;
+  }
+  @keyframes btnRipple { from { opacity: 1; transform: scale(0.6); } to { opacity: 0; transform: scale(1); } }
+
+  /* 3-B: 카드 hover 미세 깊이감 */
+  .kpi-card, .card { transition: transform 200ms ease, box-shadow 200ms ease; }
+  .kpi-card:hover { transform: translateY(-1px) scale(1.005); }
+  table tbody tr { transition: background 150ms ease; }
+
+  /* 3-D: Form input focus highlight */
+  input:not([type=checkbox]):not([type=radio]):focus,
+  select:focus, textarea:focus {
+    border-color: var(--brand) !important;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+  .search-input:focus { transform: scale(1.01); transition: transform 150ms ease, box-shadow 150ms ease; }
+
+  /* 3-E: SearchableSelect 호버 강조 */
+  .searchable-select-item.hovered { background: var(--brand-soft); color: var(--brand); }
+
+  /* prefers-reduced-motion: 모든 애니메이션 0.01ms 처리 */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   /* Focus visible */
-  button:focus-visible, input:focus-visible, select:focus-visible {
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
     outline: 2px solid var(--brand); outline-offset: 2px;
   }
 
@@ -904,30 +990,71 @@ function useToast() { return useContext(ToastContext); }
 
 function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  const removeToast = useCallback((id) => setToasts(t => t.filter(x => x.id !== id)), []);
   const addToast = useCallback((message, type = 'info') => {
-    const id = Date.now();
+    const id = Date.now() + Math.random();
     setToasts(t => [...t, { id, message, type }]);
-    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000);
-  }, []);
+    setTimeout(() => removeToast(id), 3000);
+  }, [removeToast]);
   return (
     <ToastContext.Provider value={addToast}>
       {children}
-      <div className="toast-container">
-        {toasts.map(t => <div key={t.id} className={`toast toast-${t.type}`}>{t.message}</div>)}
+      <div className="toast-container" role="status" aria-live="polite">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast toast-${t.type}`}
+            style={{display:'inline-flex', alignItems:'center'}}>
+            <span>{t.message}</span>
+            <button className="toast-close" onClick={() => removeToast(t.id)} aria-label="알림 닫기">×</button>
+          </div>
+        ))}
       </div>
     </ToastContext.Provider>
   );
 }
 
+// ── 공용 포커스 트랩 훅 ────────────────────────────────────────────────────
+// Tab/Shift+Tab 가 모달 안에서만 순환, ESC 닫기, 직전 focused 요소 복원.
+function useFocusTrap(ref, isOpen, onClose) {
+  useEffect(() => {
+    if (!isOpen || !ref.current) return;
+    const root = ref.current;
+    const previouslyFocused = document.activeElement;
+    const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const getFocusable = () => Array.from(root.querySelectorAll(focusableSelector)).filter(el => !el.hasAttribute('aria-hidden'));
+    // 첫 focusable로 진입
+    setTimeout(() => {
+      const first = getFocusable()[0];
+      if (first) first.focus();
+    }, 0);
+    const onKey = (e) => {
+      if (e.key === 'Escape' && onClose) { onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const items = getFocusable();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      try { previouslyFocused && previouslyFocused.focus && previouslyFocused.focus(); } catch (e) {}
+    };
+  }, [isOpen, onClose]);
+}
+
 // ── Modal ──────────────────────────────────────────────────────────────────────
 function Modal({ open, onClose, title, children }) {
+  const ref = useRef(null);
+  useFocusTrap(ref, open, onClose);
   if (!open) return null;
   return (
     <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-content">
+      <div ref={ref} className="modal-content modal-enter" role="dialog" aria-modal="true" aria-label={title || '대화상자'}>
         <div className="modal-header">
           <div className="modal-title">{title}</div>
-          <button className="modal-close" onClick={onClose}>&times;</button>
+          <button className="modal-close" onClick={onClose} aria-label="닫기">&times;</button>
         </div>
         {children}
       </div>
@@ -1014,6 +1141,9 @@ function AnnouncementPage({ onSelectAnnouncement }) {
       })
       .catch(() => setLoading(false));
   };
+
+  const previewPanelRef = useRef(null);
+  useFocusTrap(previewPanelRef, !!previewItem, () => setPreviewItem(null));
 
   useEffect(() => { fetchData(); }, [page]);
   useEffect(() => {
@@ -1224,7 +1354,7 @@ function AnnouncementPage({ onSelectAnnouncement }) {
       {/* Quick Preview Panel — scrim 클릭 시 닫힘 */}
       <div className={`quick-preview-scrim ${previewItem ? 'open' : ''}`}
         onClick={() => setPreviewItem(null)} aria-hidden="true"></div>
-      <div className={`quick-preview ${previewItem ? 'open' : ''}`} role="dialog" aria-modal="true">
+      <div ref={previewPanelRef} className={`quick-preview ${previewItem ? 'open' : ''}`} role="dialog" aria-modal="true" aria-label="공고 미리보기">
         {previewItem && (
           <>
             <button className="quick-preview-close" onClick={() => setPreviewItem(null)}>&times;</button>
@@ -1972,8 +2102,9 @@ function ComprehensivePage({ announcement }) {
         })}
       </div>
 
-      {/* Tab Content */}
-      <div className="tab-content">
+      {/* Tab Content (탭 전환 시 페이드 애니메이션) */}
+      <div className="tab-content" key={`tab-${activeTab}`}>
+        <div className="tab-content-enter">
         {/* ── Tab 1: 사정률 발생빈도와 구간분석 ── */}
         {activeTab === 0 && (
           <div>
@@ -3548,6 +3679,7 @@ function ComprehensivePage({ announcement }) {
             )}
           </div>
         )}
+        </div>{/* /tab-content-enter */}
       </div>
     </div>
   );
@@ -4670,7 +4802,9 @@ function AdminApp({ path, navigate, user, logout, authFetch }) {
           </div>
         </header>
         <main className="content">
-          {renderAdminPage()}
+          <div key={path} className="page-enter">
+            {renderAdminPage()}
+          </div>
         </main>
       </div>
     </div>
@@ -4717,12 +4851,16 @@ function SyncProgressBadge() {
   if (!prog) return null;
   const pct = Math.round(prog.progress_pct || 0);
   return (
-    <span data-testid="progress-badge" className="badge badge-amber"
+    <span data-testid="progress-badge" className="badge badge-amber progress-pulse"
       title={`수집 중 — ${prog.source || ''} ${prog.sync_type || ''} · 페이지 ${prog.last_page || '-'}`}
-      style={{display:'inline-flex',alignItems:'center',gap:'6px',fontSize:'11px',padding:'4px 8px'}}>
-      <span style={{width:'8px',height:'8px',borderRadius:'50%',background:'#F59E0B',
-        animation:'pulse 1.4s infinite'}}></span>
-      수집 {pct}%
+      style={{display:'inline-flex',flexDirection:'column',alignItems:'stretch',gap:'2px',fontSize:'11px',padding:'4px 10px',minWidth:'92px'}}
+      key={pct} /* pct 변경 시 progress-pulse 애니메이션 재발생 */>
+      <span style={{display:'inline-flex',alignItems:'center',gap:'6px'}}>
+        <span style={{width:'8px',height:'8px',borderRadius:'50%',background:'#F59E0B',
+          animation:'pulse 1.4s infinite'}}></span>
+        수집 {pct}%
+      </span>
+      <span className="progress-bar-mini"><span style={{width: pct + '%'}}></span></span>
     </span>
   );
 }
@@ -4887,7 +5025,9 @@ function App() {
           </div>
         </div>
         <div className="content">
-          {renderPage()}
+          <div key={path} className="page-enter">
+            {renderPage()}
+          </div>
         </div>
       </div>
     </div>
