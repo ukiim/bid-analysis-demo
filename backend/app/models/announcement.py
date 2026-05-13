@@ -21,9 +21,13 @@ class BidAnnouncement(Base):
     region = Column(String, index=True)
     industry_code = Column(String, index=True)
     base_amount = Column(Integer)
+    estimated_price = Column(Integer)                   # 추정가격 (KBID: 1차 데모 검토 §0)
     bid_method = Column(String)
+    license_category = Column(String, index=True)       # 업종면허 (예: 토건/전기/통신/소방)
     announced_at = Column(DateTime, index=True)        # 정렬·범위 필터 핵심
     deadline_at = Column(DateTime)
+    opening_at = Column(DateTime)                       # 개찰일시 (공고 단계, BidResult.opened_at과 분리)
+    site_visit_at = Column(DateTime)                    # 현설일 (현장설명회 일시)
     status = Column(String, default="진행중", index=True)
     is_defense = Column(Boolean, default=False, index=True)  # 국방부/군 발주 자동 태깅
     external_url = Column(Text)  # 원본 공고 상세 페이지 URL (G2B 응답의 bidNtceDtlUrl)

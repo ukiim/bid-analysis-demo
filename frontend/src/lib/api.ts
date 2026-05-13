@@ -1,9 +1,19 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
+function getAuthHeader(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = window.localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeader(),
+      ...(options?.headers as Record<string, string> | undefined),
+    },
   });
 
   if (!res.ok) {
@@ -54,6 +64,112 @@ export const api = {
     fetchApi<{ message: string }>(`/api/v1/admin/sync?source=${source}`, {
       method: "POST",
     }),
+
+  // 분석
+  analysis: {
+    getFrequency: (id: string, params?: Record<string, string | number>) => {
+      const query = params
+        ? "?" +
+          new URLSearchParams(
+            Object.entries(params)
+              .filter(([, v]) => v !== "" && v !== undefined)
+              .map(([k, v]) => [k, String(v)])
+          ).toString()
+        : "";
+      return fetchApi<import("@/types/analysis").AnalysisFrequencyResponse>(
+        `/api/v1/analysis/frequency/${id}${query}`
+      );
+    },
+
+    getRateBuckets: (id: string, params?: Record<string, string | number>) => {
+      const query = params
+        ? "?" +
+          new URLSearchParams(
+            Object.entries(params)
+              .filter(([, v]) => v !== "" && v !== undefined)
+              .map(([k, v]) => [k, String(v)])
+          ).toString()
+        : "";
+      return fetchApi<import("@/types/analysis").AnalysisRateBucketsResponse>(
+        `/api/v1/analysis/rate-buckets/${id}${query}`
+      );
+    },
+
+    getCompanyRates: (id: string, params?: Record<string, string | number>) => {
+      const query = params
+        ? "?" +
+          new URLSearchParams(
+            Object.entries(params)
+              .filter(([, v]) => v !== "" && v !== undefined)
+              .map(([k, v]) => [k, String(v)])
+          ).toString()
+        : "";
+      return fetchApi<import("@/types/analysis").AnalysisCompanyRatesResponse>(
+        `/api/v1/analysis/company-rates/${id}${query}`
+      );
+    },
+
+    getComprehensive: (id: string, params?: Record<string, string | number>) => {
+      const query = params
+        ? "?" +
+          new URLSearchParams(
+            Object.entries(params)
+              .filter(([, v]) => v !== "" && v !== undefined)
+              .map(([k, v]) => [k, String(v)])
+          ).toString()
+        : "";
+      return fetchApi<import("@/types/analysis").AnalysisComprehensiveResponse>(
+        `/api/v1/analysis/comprehensive/${id}${query}`
+      );
+    },
+
+    getTrend: (id: string) =>
+      fetchApi<import("@/types/analysis").AnalysisTrendResponse>(
+        `/api/v1/analysis/trend/${id}`
+      ),
+
+    getPreliminaryFrequency: (id: string) =>
+      fetchApi<import("@/types/analysis").AnalysisPreliminaryFrequencyResponse>(
+        `/api/v1/analysis/preliminary-frequency/${id}`
+      ),
+
+    getCorrelation: (id: string) =>
+      fetchApi<import("@/types/analysis").AnalysisCorrelationResponse>(
+        `/api/v1/analysis/correlation/${id}`
+      ),
+
+    exportExcel: async (
+      type: "buckets" | "company" | "correlation" | "bid_list",
+      id: string,
+      extraParams?: Record<string, string | number>
+    ) => {
+      const qs = new URLSearchParams({ announcement_id: id });
+      if (extraParams) {
+        for (const [k, v] of Object.entries(extraParams)) {
+          qs.set(k, String(v));
+        }
+      }
+      const res = await fetch(
+        `${API_BASE}/api/v1/analysis/export/${type}?${qs.toString()}`,
+        { headers: getAuthHeader() }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "엑셀 다운로드 실패" }));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const cd = res.headers.get("content-disposition") ?? "";
+      const m = cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+      a.download = m ? decodeURIComponent(m[1]) : `${type}_${id}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    },
+  },
 };
 
 // Types

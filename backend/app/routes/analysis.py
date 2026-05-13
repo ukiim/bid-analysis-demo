@@ -70,10 +70,17 @@ def analysis_frequency(
     announcement_id: str,
     period_months: int = Query(12, ge=1, le=24),
     org_scope: str = Query("specific"),  # specific | parent
+    bin_size: float = Query(0.01, ge=0.001, le=1.0),  # KBID 동등성: 0.01% 기본 (1차 데모 검토 §1)
+    category_filter: str = Query("same", pattern="^(same|all|construction|service|industry)$"),
     current_user: User = Depends(require_auth),
 ):
-    """사정률 발생빈도 히스토그램 + 피크 구간 분석 (TTL 캐시)"""
-    cache_key = _cache_key("freq", announcement_id, period_months, org_scope)
+    """사정률 발생빈도 히스토그램 + 피크 구간 분석 (TTL 캐시)
+
+    KBID 1차 데모 검토 §1: 동일 공종·동일 발주처 풀로 매트릭스를 KBID 정밀도(0.01%)로 생성.
+    bin_size 파라미터로 정밀도 조절 (기본 0.01, 최대 1.0, 최소 0.001).
+    category_filter 로 동일공종/동일업종 풀 확장 (same/construction/service/industry/all).
+    """
+    cache_key = _cache_key("freq", announcement_id, period_months, org_scope, bin_size, category_filter)
     cached = _cache_get(cache_key)
     if cached is not None:
         # 캐시 히트 시에도 인증 사용자의 이력은 저장
@@ -97,20 +104,22 @@ def analysis_frequency(
         ref_date = ann.announced_at or datetime.now()
         cutoff = ref_date - timedelta(days=period_months * 30)
 
-        # 동일 카테고리 + 발주처 범위의 과거 사정률
+        # 동일 카테고리 + 발주처 범위의 과거 사정률 (KBID 동등성: 동일공종·동일발주처)
         q = db.query(BidResult.assessment_rate, BidResult.first_place_rate).join(
             BidAnnouncement, BidResult.announcement_id == BidAnnouncement.id
         ).filter(
-            BidAnnouncement.category == ann.category,
             BidResult.assessment_rate.isnot(None),
             BidResult.opened_at >= cutoff,
         )
+        # category_filter 적용 (same/construction/service/industry/all)
+        q = _apply_category_filter(q, category_filter, ann)
         if org_scope == "parent" and ann.parent_org_name:
             # 상위 기관 범위
             q = q.filter(BidAnnouncement.parent_org_name == ann.parent_org_name)
-        else:
+        elif org_scope == "specific":
             # 동일 발주기관
             q = q.filter(BidAnnouncement.ordering_org_name == ann.ordering_org_name)
+        # org_scope == "all" 인 경우 발주처 필터 미적용 (전체 풀)
 
         rows = q.all()
         if not rows:
@@ -132,21 +141,38 @@ def analysis_frequency(
             db.close()
             return {"bins": [], "peaks": [], "stats": {}, "data_count": 0}
 
-        # 0.1% 단위 히스토그램
-        min_r = math.floor(min(rates) * 10) / 10
-        max_r = math.ceil(max(rates) * 10) / 10
-        bin_size = 0.1
+        # 가변 정밀도 히스토그램 (KBID 동등성: 0.01% 기본)
+        # bin_size 의 소수 자릿수에 맞춰 정렬용 round 자릿수 결정
+        decimals = max(0, -int(math.floor(math.log10(bin_size))) + 1) if bin_size < 1 else 1
+        # 정밀도가 작을수록 셀 수 폭증 → 좌우 1% margin 만 추가하고 최대 셀 한계 적용
+        min_r = math.floor(min(rates) / bin_size) * bin_size
+        max_r = math.ceil(max(rates) / bin_size) * bin_size
+        max_bins = 10000  # 안전 한계
         bins = []
+        # 사전 인덱싱으로 O(n*m) 방지
+        from collections import Counter
+        rate_buckets = Counter()
+        fp_buckets = Counter()
+        for r in rates:
+            key = round(round(r / bin_size) * bin_size, decimals + 2)
+            rate_buckets[key] += 1
+        for r in first_place_rates:
+            key = round(round(r / bin_size) * bin_size, decimals + 2)
+            fp_buckets[key] += 1
+
+        bin_count = 0
         current = min_r
-        while current <= max_r + 0.001:
-            count = sum(1 for r in rates if current - bin_size / 2 <= r < current + bin_size / 2)
-            fp_count = sum(1 for r in first_place_rates if current - bin_size / 2 <= r < current + bin_size / 2)
+        while current <= max_r + bin_size / 2:
+            bin_count += 1
+            if bin_count > max_bins:
+                break
+            key = round(current, decimals + 2)
             bins.append({
-                "rate": round(current, 2),
-                "count": count,
-                "first_place_count": fp_count,
+                "rate": round(current, decimals),
+                "count": rate_buckets.get(key, 0),
+                "first_place_count": fp_buckets.get(key, 0),
             })
-            current = round(current + bin_size, 2)
+            current = round(current + bin_size, decimals + 2)
 
         # 피크 구간 (상위 5개)
         sorted_bins = sorted(bins, key=lambda b: b["count"], reverse=True)
@@ -155,8 +181,8 @@ def analysis_frequency(
             if b["count"] > 0:
                 peaks.append({
                     "rate": b["rate"],
-                    "range_start": round(b["rate"] - bin_size / 2, 2),
-                    "range_end": round(b["rate"] + bin_size / 2, 2),
+                    "range_start": round(b["rate"] - bin_size / 2, decimals + 2),
+                    "range_end": round(b["rate"] + bin_size / 2, decimals + 2),
                     "count": b["count"],
                 })
 
@@ -185,7 +211,7 @@ def analysis_frequency(
         # 상위 후보에 추천 마크
         for i, c in enumerate(prediction_candidates[:3]):
             c["is_recommended"] = True
-        # 순위 부여
+        # 순위 부여 (1순위/2순위/3순위 — 1차 데모 검토 §1 — 낙찰순위)
         for i, c in enumerate(prediction_candidates):
             c["rank"] = i + 1
 
@@ -205,6 +231,9 @@ def analysis_frequency(
         "stats": stat,
         "data_count": len(rates),
         "first_place_total": total_fp,
+        "bin_size": bin_size,            # KBID 동등성: 프론트가 매트릭스 정밀도 알 수 있도록 노출
+        "category_filter": category_filter,
+        "org_scope": org_scope,
         "prediction_candidates": prediction_candidates[:15],
         "announcement": {
             "id": ann.id, "title": ann.title, "type": ann.category,
@@ -656,6 +685,15 @@ def analysis_comprehensive(
                 if is_match:
                     match_count += 1
 
+                # 낙찰순위 (rank) — 동일 공고 안에서 assessment_rate 가 first_place_rate 와
+                # 가까울수록 상위. 정확한 ranking 은 CompanyBidRecord 가 있을 때만 알 수 있으므로
+                # diff 기반 추정값을 함께 제공. 1순위 일치(예측-실제 first_place 동일)면 rank=1.
+                if res.first_place_rate and abs(res.assessment_rate - res.first_place_rate) < 0.0001:
+                    rank = 1
+                else:
+                    # diff 크기로 2~10 추정 (0.5% 마다 단계)
+                    rank = min(10, max(2, int(actual_diff / 0.5) + 2))
+
                 comparisons.append({
                     "id": past_ann.id,
                     "title": past_ann.title,
@@ -668,6 +706,7 @@ def analysis_comprehensive(
                     "predicted_diff": round(diff, 4),
                     "actual_first_diff": round(actual_diff, 4),
                     "is_match": is_match,
+                    "rank": rank,  # 1차 데모 검토 §1: 낙찰순위 컬럼
                     "first_place_amount": res.first_place_amount,
                 })
 

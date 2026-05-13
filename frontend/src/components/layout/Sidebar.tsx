@@ -22,7 +22,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activePage, onPageChange }: SidebarProps) {
-  const sections = [...new Set(NAV_ITEMS.map((item) => item.section))];
+  const sections = Array.from(new Set(NAV_ITEMS.map((item) => item.section)));
 
   return (
     <aside className="w-[260px] bg-secondary flex flex-col flex-shrink-0 overflow-y-auto">
