@@ -4,6 +4,8 @@
  * 관리자 모니터링 페이지 — v4 KBID 톤
  */
 import AmLineChart from "@/components/charts/AmLineChart";
+import NasStatusCard from "@/components/admin/NasStatusCard";
+import PurgeOldDataCard from "@/components/admin/PurgeOldDataCard";
 
 const KPI_DATA = [
   { label: "전체 사용자", value: "1,284", unit: "명", change: "+18명 (이번주)" },
@@ -62,6 +64,12 @@ export default function AdminPage() {
         <p className="text-[12px] mt-1" style={{ color: "var(--kbid-text-meta)" }}>
           데이터 파이프라인 상태 · 예측 모델 성능 · 사용자 관리
         </p>
+      </div>
+
+      {/* v5: NAS 다운로드 현황 + 10년 삭제 (PDF 04 §1, PDF 03 §10) */}
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <NasStatusCard />
+        <PurgeOldDataCard />
       </div>
 
       {/* KPI 4종 — KBID form-table 스타일 */}

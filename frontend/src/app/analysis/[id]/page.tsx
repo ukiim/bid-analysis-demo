@@ -28,9 +28,10 @@ import AnalysisCalculator from "@/components/analysis/AnalysisCalculator";
 import Tab1RateChart from "@/components/analysis/tabs/Tab1RateChart";
 import Tab2PreliminaryFreq from "@/components/analysis/tabs/Tab2PreliminaryFreq";
 import Tab3FrequencyMatrix from "@/components/analysis/tabs/Tab3FrequencyMatrix";
-import Tab4RateTable from "@/components/analysis/tabs/Tab4RateTable";
 import Tab5CompanyRates from "@/components/analysis/tabs/Tab5CompanyRates";
 import Tab6Comprehensive from "@/components/analysis/tabs/Tab6Comprehensive";
+import BidListPanel from "@/components/bid-list/BidListPanel";
+import { addToBidList, loadBidList } from "@/lib/bidList";
 
 const DEFAULT_FILTERS: AnalysisSearchFilters = {
   org_search: "",
@@ -95,6 +96,11 @@ export default function AnalysisPage() {
   const [companyData, setCompanyData] = useState<AnalysisCompanyRatesResponse | null>(null);
   const [correlation, setCorrelation] = useState<AnalysisCorrelationResponse | null>(null);
   const [comprehensiveData, setComprehensiveData] = useState<AnalysisComprehensiveResponse | null>(null);
+  const [bidListOpen, setBidListOpen] = useState(false);
+  const [bidListCount, setBidListCount] = useState(0);
+  useEffect(() => {
+    if (typeof window !== "undefined") setBidListCount(loadBidList().length);
+  }, [bidListOpen]);
 
   const fetchAll = useCallback(async () => {
     if (!id) return;
@@ -177,6 +183,28 @@ export default function AnalysisPage() {
     fetchAll();
   }, [fetchAll]);
 
+  const handleAddToBidList = () => {
+    if (!announcement || selectedRate == null) {
+      alert("먼저 사정률을 선택해주세요 (Tab3 매트릭스 셀 또는 차트 클릭)");
+      return;
+    }
+    const bidAmount = announcement.budget
+      ? Math.round(announcement.budget * (selectedRate / 100))
+      : null;
+    const next = addToBidList({
+      announcement_id: announcement.id,
+      title: announcement.title,
+      org: announcement.org ?? "-",
+      base_amount: announcement.budget ?? null,
+      predicted_rate: selectedRate,
+      predicted_bid_amount: bidAmount,
+      adjustment: 0,
+      added_at: new Date().toISOString(),
+    });
+    setBidListCount(next.length);
+    alert(`투찰리스트에 추가됨 (총 ${next.length}건)`);
+  };
+
   const handleExport = async () => {
     if (!id) return;
     try {
@@ -189,7 +217,7 @@ export default function AnalysisPage() {
     }
   };
 
-  // KBID 동등 4-탭 (v4) — 우측 보조 모드 (업체사정률 / 사정률 표) 별도
+  // v5 — PDF 정합화: 5탭 (업체사정률을 메인 탭으로 승격, 보조 모드 제거)
   const tabs = [
     {
       key: "tab1",
@@ -218,6 +246,17 @@ export default function AnalysisPage() {
     },
     {
       key: "tab4",
+      label: "업체사정률 분석",
+      content: (
+        <Tab5CompanyRates
+          data={companyData}
+          selectedRate={selectedRate}
+          onRateSelect={setSelectedRate}
+        />
+      ),
+    },
+    {
+      key: "tab5",
       label: "종합분석",
       content: (
         <Tab6Comprehensive
@@ -231,28 +270,6 @@ export default function AnalysisPage() {
       ),
     },
   ];
-
-  // 보조 모드 (KBID 4탭과 별도 — 우측 액션 버튼으로 진입)
-  const secondaryViews: Record<string, { label: string; content: React.ReactNode }> = {
-    "company-rates": {
-      label: "업체사정률 분석",
-      content: (
-        <Tab5CompanyRates
-          data={companyData}
-          selectedRate={selectedRate}
-          onRateSelect={setSelectedRate}
-        />
-      ),
-    },
-    "rate-table": {
-      label: "사정률 표",
-      content: <Tab4RateTable records={firstPlacePreds} selectedRate={selectedRate} />,
-    },
-  };
-  const secondaryMode = activeTab.startsWith("sec-")
-    ? activeTab.slice(4)
-    : null;
-  const isSecondary = secondaryMode != null && secondaryViews[secondaryMode] != null;
 
   if (loading) {
     return (
@@ -284,6 +301,27 @@ export default function AnalysisPage() {
 
   return (
     <div>
+      {/* v5: 투찰리스트 액션 (PDF 03 §9) */}
+      <div className="mx-4 flex items-center justify-end gap-2 mb-2">
+        <button
+          onClick={handleAddToBidList}
+          className="kbid-btn-secondary"
+          style={{ padding: "5px 12px", fontSize: 12 }}
+          title="현재 선택 사정률을 투찰리스트에 추가"
+        >
+          ➕ 투찰리스트 담기
+        </button>
+        <button
+          onClick={() => setBidListOpen(true)}
+          className="kbid-btn-primary"
+          style={{ padding: "5px 14px", fontSize: 12 }}
+        >
+          📋 투찰리스트 보기 ({bidListCount})
+        </button>
+      </div>
+
+      {bidListOpen && <BidListPanel onClose={() => setBidListOpen(false)} />}
+
       <AnalysisHeader announcement={announcement} />
 
       <AnalysisFilterPanel
@@ -302,62 +340,12 @@ export default function AnalysisPage() {
 
       <AnalysisDataTable comparisons={comparisons} />
 
-      {/* 우측 보조 모드 액션 (KBID 4탭과 별도) */}
-      <div
-        className="mx-4 mt-2 flex items-center justify-between gap-2"
-        style={{
-          background: "var(--kbid-panel-bg)",
-          border: "1px solid var(--kbid-border)",
-          padding: "8px 14px",
-        }}
-      >
-        <div className="text-[12px]" style={{ color: "var(--kbid-text-meta)" }}>
-          {isSecondary
-            ? `보조 모드: ${secondaryViews[secondaryMode!].label}`
-            : "KBID 4-탭 분석 + 우측 보조 화면"}
-        </div>
-        <div className="flex items-center gap-1.5">
-          {!isSecondary ? (
-            <>
-              <button
-                className="kbid-btn-secondary"
-                onClick={() => setActiveTab("sec-company-rates")}
-              >
-                업체사정률 분석
-              </button>
-              <button
-                className="kbid-btn-secondary"
-                onClick={() => setActiveTab("sec-rate-table")}
-              >
-                사정률 표
-              </button>
-            </>
-          ) : (
-            <button
-              className="kbid-btn-primary"
-              onClick={() => setActiveTab("tab3")}
-              style={{ padding: "5px 14px", fontSize: 12 }}
-            >
-              ← KBID 4-탭으로 돌아가기
-            </button>
-          )}
-        </div>
-      </div>
-
-      {isSecondary ? (
-        <div
-          className="mx-4 mt-2 bg-white border border-gray-300 p-4"
-          style={{ borderColor: "var(--kbid-border)" }}
-        >
-          {secondaryViews[secondaryMode!].content}
-        </div>
-      ) : (
-        <AnalysisTabs
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-      )}
+      {/* v5: PDF 정합 5-탭 (보조 모드 제거) */}
+      <AnalysisTabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
       <AnalysisCalculator
         baseAmount={announcement?.budget ?? null}

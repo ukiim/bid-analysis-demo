@@ -5,11 +5,9 @@ import { useSearchParams } from "next/navigation";
 import TopNav from "@/components/layout/TopNav";
 import Footer from "@/components/layout/Footer";
 import AnnouncementsPage from "@/components/pages/AnnouncementsPage";
-import PredictionPage from "@/components/pages/PredictionPage";
-import StatisticsPage from "@/components/pages/StatisticsPage";
 import AdminPage from "@/components/pages/AdminPage";
 
-// v3 — KBID UI 전면 교체: Sidebar 제거, TopNav + Footer 도입
+// v5 — PDF 정합화: 공고화면 + 관리자만 (예측·통계 제거)
 export default function Home() {
   const sp = useSearchParams();
   const [page, setPage] = useState(sp.get("page") ?? "announcements");
@@ -22,14 +20,10 @@ export default function Home() {
     switch (page) {
       case "announcements":
         return <AnnouncementsPage />;
-      case "prediction":
-        return <PredictionPage />;
-      case "statistics":
-        return <StatisticsPage />;
       case "admin":
         return <AdminPage />;
       default:
-        return null;
+        return <AnnouncementsPage />;
     }
   };
 

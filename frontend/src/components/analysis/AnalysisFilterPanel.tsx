@@ -10,13 +10,14 @@ interface Props {
   onSearch: () => void;
 }
 
+// PDF 01 §5 + PDF 03: 밀어내기식 기간 6개 (1일/5일/1개월/3개월/6개월/1년)
 const PERIOD_OPTIONS = [
+  { label: "1일", value: 0.033 },
+  { label: "5일", value: 0.167 },
   { label: "1개월", value: 1 },
   { label: "3개월", value: 3 },
   { label: "6개월", value: 6 },
-  { label: "9개월", value: 9 },
   { label: "1년", value: 12 },
-  { label: "2년", value: 24 },
 ];
 
 const CATEGORY_OPTIONS = [
@@ -155,11 +156,11 @@ export default function AnalysisFilterPanel({
               <input className={readonlyCls} readOnly value={`${dataCount}건`} />
             </td>
           </tr>
-          {/* Row 6 */}
+          {/* Row 6 — 분석기간 + 발주처 계층 (PDF 04 §6) */}
           <tr>
             <td className={labelCls}>분석기간</td>
             <td className={cellCls} colSpan={3}>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-wrap">
                 {PERIOD_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
@@ -173,11 +174,29 @@ export default function AnalysisFilterPanel({
                     {opt.label}
                   </button>
                 ))}
+                <span className="ml-3 text-[11px] text-gray-500">발주처 범위:</span>
+                <select
+                  className="text-[11px] py-1 px-2 border border-gray-300"
+                  defaultValue="specific"
+                  onChange={(e) => {
+                    // org_scope는 백엔드 파라미터로 전달 (별도 키 — fetchAll에서 처리)
+                    if (typeof window !== "undefined") {
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("org_scope", e.target.value);
+                      window.history.replaceState({}, "", url);
+                    }
+                  }}
+                  title="PDF 04 §6: 동일 발주처 / 상위 기관 / 전체 풀"
+                >
+                  <option value="specific">동일 발주처만</option>
+                  <option value="parent">상위 기관 포함</option>
+                  <option value="all">전체 (공종)</option>
+                </select>
                 <button
                   onClick={onSearch}
                   className="ml-2 px-4 py-1 bg-[#437194] text-white text-[11px] font-bold hover:bg-[#346081]"
                 >
-                  검색
+                  🔍 검색
                 </button>
               </div>
             </td>

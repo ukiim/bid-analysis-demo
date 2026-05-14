@@ -37,12 +37,11 @@ async function captureSidebar(page, pageKey, fileName) {
     { url: `${BASE}/analysis/${ID}`, name: "02_analysis_tab3_default.png" },
     { url: `${BASE}/analysis/${ID}?tab=tab1`, name: "03_analysis_tab1_rate_chart.png" },
     { url: `${BASE}/analysis/${ID}?tab=tab2`, name: "04_analysis_tab2_preliminary_freq.png" },
-    { url: `${BASE}/analysis/${ID}?tab=sec-rate-table`, name: "05_analysis_tab4_rate_table.png" },
+    { url: `${BASE}/analysis/${ID}?tab=tab4`, name: "25_analysis_tab4_company_rates.png" },
     { url: `${BASE}/analysis/${ID}?tab=tab3&rate=99.36`, name: "06_analysis_tab3_with_selected_rate.png" },
     { url: `${BASE}/analysis/${ID}?period_months=6&category=service`, name: "10_analysis_filters_applied.png" },
-    // KBID 동등 4-탭 + 우측 보조 모드
-    { url: `${BASE}/analysis/${ID}?tab=sec-company-rates`, name: "25_analysis_tab5_company_rates.png" },
-    { url: `${BASE}/analysis/${ID}?tab=tab4`, name: "26_analysis_tab6_comprehensive.png" },
+    // v5: 5-탭 — Tab4 업체사정률 / Tab5 종합분석
+    { url: `${BASE}/analysis/${ID}?tab=tab5`, name: "26_analysis_tab5_comprehensive.png" },
   ];
 
   for (const s of urlShots) {
@@ -53,10 +52,8 @@ async function captureSidebar(page, pageKey, fileName) {
     console.log(`  → ${path.join(OUT_DIR, s.name)}`);
   }
 
-  // SPA pages — v3: ?page= 쿼리
+  // SPA pages — v5: prediction/statistics 제거, admin만
   const sidebarShots = [
-    { key: "prediction", name: "07_prediction_page.png" },
-    { key: "statistics", name: "08_statistics_page.png" },
     { key: "admin", name: "09_admin_page.png" },
   ];
 

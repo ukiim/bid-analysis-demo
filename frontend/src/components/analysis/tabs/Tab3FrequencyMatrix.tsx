@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
+import { useParams } from "next/navigation";
 import AmHistogram from "@/components/charts/AmHistogram";
+import PreviousAnnouncementCard from "@/components/analysis/PreviousAnnouncementCard";
 import type {
   FrequencyBin,
   FrequencyStats,
@@ -29,6 +31,7 @@ export default function Tab3FrequencyMatrix({
   selectedRate,
   onRateSelect,
 }: Props) {
+  const { id: annId } = useParams<{ id: string }>();
   const chartData = useMemo(
     () =>
       bins.map((b) => ({
@@ -73,6 +76,16 @@ export default function Tab3FrequencyMatrix({
       <div className="text-[13px] font-bold text-[#437194] mb-3">
         사정률 발생빈도와 구간분석
       </div>
+
+      {/* v5: 바로 이전 결과공고 갭 비교 (PDF 04 §2) */}
+      {annId && (
+        <div className="mb-3">
+          <PreviousAnnouncementCard
+            announcementId={annId}
+            currentRate={selectedRate}
+          />
+        </div>
+      )}
 
       {/* Histogram — KBID 동등 amCharts 5 (v4) */}
       <AmHistogram

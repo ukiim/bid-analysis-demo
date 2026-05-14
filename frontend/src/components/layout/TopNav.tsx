@@ -17,20 +17,16 @@ interface Props {
   onPageChange: (page: string) => void;
 }
 
+// v5 — PDF 정합화: 메뉴 2개로 축소 (공고 + 관리자)
 const MENU = [
   { id: "announcements", label: "공고 통합 조회", icon: "📋" },
-  { id: "prediction", label: "사정률 예측", icon: "📈" },
-  { id: "statistics", label: "통계 리포트", icon: "📊" },
   { id: "admin", label: "관리자 모니터링", icon: "⚙️" },
 ];
 
+// v5 — 빠른 카테고리 간소화 (공사·용역 강조)
 const QUICK_LINKS = [
   { label: "공사입찰", color: "#0E47C8" },
   { label: "용역입찰", color: "#6F2B96" },
-  { label: "물품입찰", color: "#2B8B3C" },
-  { label: "맞춤서비스", color: "#E8913A" },
-  { label: "분석알리미", color: "#D9342B" },
-  { label: "낙찰결과", color: "#346081" },
 ];
 
 export default function TopNav({ activePage, onPageChange }: Props) {
