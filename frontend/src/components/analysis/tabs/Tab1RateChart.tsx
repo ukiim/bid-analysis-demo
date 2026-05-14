@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from "recharts";
+import AmLineChart from "@/components/charts/AmLineChart";
 import type { TrendPoint } from "@/types/analysis";
 
 interface Props {
@@ -17,6 +8,7 @@ interface Props {
   selectedRate?: number | null;
 }
 
+// v4 — amCharts 5 시계열 라인 차트로 마이그레이션
 export default function Tab1RateChart({ series, selectedRate }: Props) {
   if (series.length === 0) {
     return (
@@ -38,66 +30,7 @@ export default function Tab1RateChart({ series, selectedRate }: Props) {
           </div>
         )}
       </div>
-      <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={series} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-          <XAxis
-            dataKey="period"
-            tick={{ fontSize: 11 }}
-            tickLine={false}
-          />
-          <YAxis
-            domain={["auto", "auto"]}
-            tick={{ fontSize: 11 }}
-            tickFormatter={(v: number) => `${v.toFixed(1)}%`}
-          />
-          <Tooltip
-            formatter={(value: number) => [`${value.toFixed(4)}%`, "사정률"]}
-            labelFormatter={(label: string) => `기간: ${label}`}
-            contentStyle={{ fontSize: 12 }}
-          />
-          <ReferenceLine y={100} stroke="#E8913A" strokeDasharray="5 5" label={{ value: "100%", fontSize: 11, fill: "#E8913A" }} />
-          {selectedRate != null && (
-            <ReferenceLine
-              y={selectedRate}
-              stroke="#437194"
-              strokeWidth={2}
-              label={{
-                value: `선택: ${selectedRate.toFixed(2)}%`,
-                fontSize: 11,
-                fill: "#437194",
-                position: "left",
-              }}
-            />
-          )}
-          <Line
-            type="monotone"
-            dataKey="avg_rate"
-            stroke="#437194"
-            strokeWidth={2}
-            dot={{ r: 3, fill: "#437194" }}
-            name="평균 사정률"
-          />
-          <Line
-            type="monotone"
-            dataKey="min_rate"
-            stroke="#4CAF50"
-            strokeWidth={1}
-            strokeDasharray="3 3"
-            dot={false}
-            name="최저 사정률"
-          />
-          <Line
-            type="monotone"
-            dataKey="max_rate"
-            stroke="#E8913A"
-            strokeWidth={1}
-            strokeDasharray="3 3"
-            dot={false}
-            name="최고 사정률"
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <AmLineChart data={series} height={350} referenceRate={selectedRate} />
     </div>
   );
 }

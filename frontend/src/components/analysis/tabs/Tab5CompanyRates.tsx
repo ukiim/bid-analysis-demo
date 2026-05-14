@@ -130,33 +130,68 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
       </div>
 
       <div className="grid grid-cols-12 gap-3">
-        {/* 좌측 사이드: 회사 목록 + 체크박스 */}
-        <div className="col-span-3 border border-gray-300 max-h-[600px] overflow-y-auto">
-          <div className="bg-gradient-to-b from-[#5481B8] to-[#437194] text-white px-3 py-1.5 text-[11px] font-bold sticky top-0">
-            업체 목록 ({companies.length}곳)
+        {/* 좌측 사이드: 회사 목록 + 체크박스 (v4 KBID 동등) */}
+        <div className="col-span-3 border max-h-[600px] overflow-y-auto" style={{ borderColor: "var(--kbid-border)" }}>
+          <div className="text-white px-3 py-2 text-[11px] font-bold sticky top-0" style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}>
+            <div className="flex items-center justify-between">
+              <span>업체 목록 ({companies.length}곳)</span>
+              <span style={{ color: "rgba(255,255,255,0.9)" }}>
+                선택 {companies.length - hiddenCompanies.size}/{companies.length}
+              </span>
+            </div>
+          </div>
+          {/* 전체 선택/해제 */}
+          <div
+            className="flex items-center gap-2 px-2 py-1.5 border-b text-[11px]"
+            style={{ background: "var(--kbid-panel-bg)", borderColor: "var(--kbid-border)" }}
+          >
+            <button
+              onClick={() => setHiddenCompanies(new Set())}
+              className="kbid-btn-secondary"
+              style={{ padding: "2px 8px", fontSize: 11 }}
+            >
+              전체 선택
+            </button>
+            <button
+              onClick={() =>
+                setHiddenCompanies(new Set(companies.map((c) => c.name)))
+              }
+              className="kbid-btn-secondary"
+              style={{ padding: "2px 8px", fontSize: 11 }}
+            >
+              전체 해제
+            </button>
           </div>
           <table className="w-full border-collapse text-[11px]">
             <thead>
               <tr className="bg-[#E8EDF3]">
-                <th className="border border-gray-300 px-1.5 py-1 text-center">표시</th>
+                <th className="border border-gray-300 px-1.5 py-1 text-center w-[36px]">표시</th>
                 <th className="border border-gray-300 px-1.5 py-1 text-left">업체명</th>
                 <th className="border border-gray-300 px-1.5 py-1 text-center">사정률</th>
                 <th className="border border-gray-300 px-1.5 py-1 text-center">순위</th>
               </tr>
             </thead>
             <tbody>
-              {companies.slice(0, 50).map((c) => (
-                <tr key={c.name} className="hover:bg-blue-50">
+              {companies.slice(0, 50).map((c) => {
+                const visible = !hiddenCompanies.has(c.name);
+                return (
+                <tr
+                  key={c.name}
+                  className="cursor-pointer hover:bg-blue-50"
+                  style={{ background: visible ? "transparent" : "#F4F4F4" }}
+                  onClick={() => {
+                    const next = new Set(hiddenCompanies);
+                    if (visible) next.add(c.name);
+                    else next.delete(c.name);
+                    setHiddenCompanies(next);
+                  }}
+                >
                   <td className="border border-gray-300 px-1.5 py-1 text-center">
                     <input
                       type="checkbox"
-                      checked={!hiddenCompanies.has(c.name)}
-                      onChange={(e) => {
-                        const next = new Set(hiddenCompanies);
-                        if (e.target.checked) next.delete(c.name);
-                        else next.add(c.name);
-                        setHiddenCompanies(next);
-                      }}
+                      checked={visible}
+                      readOnly
+                      style={{ width: 14, height: 14, accentColor: "var(--kbid-primary)" }}
                     />
                   </td>
                   <td className="border border-gray-300 px-1.5 py-1 max-w-[140px] truncate">
@@ -178,7 +213,8 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
                     </span>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

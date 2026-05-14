@@ -139,14 +139,14 @@ export default function Tab6Comprehensive({
   return (
     <div>
       <div className="text-[13px] font-bold text-[#437194] mb-3">
-        종합분석 — 4-카드 (KBID 동등성)
+        종합분석 — KBID 4-카드 + 종합정보 (v4)
       </div>
 
-      {/* 5-카드 그리드: 구간정보 + A + B + C + 종합정보 */}
-      <div className="grid grid-cols-5 gap-3 mb-3">
+      {/* 4-카드 그리드: 구간정보 + A + B + C — KBID 동등 */}
+      <div className="grid grid-cols-4 gap-3 mb-3">
         {/* 구간정보 카드 */}
-        <div className="border border-gray-300 bg-white">
-          <div className="bg-gradient-to-b from-[#346081] to-[#1E3A6B] text-white px-3 py-2 text-[12px] font-bold">
+        <div className="border bg-white" style={{ borderColor: "var(--kbid-border)" }}>
+          <div className="text-white px-3 py-2 text-[12px] font-bold" style={{ background: "linear-gradient(to bottom, #346081, #1E3A6B)" }}>
             구간정보
           </div>
           <div className="p-3 space-y-2 text-[11px]">
@@ -212,64 +212,73 @@ export default function Tab6Comprehensive({
           onRateSelect={onRateSelect}
         />
 
-        {/* 종합정보 카드 */}
-        <div className="border border-gray-300 bg-white">
-          <div className="bg-gradient-to-b from-[#E8913A] to-[#C56F1A] text-white px-3 py-2 text-[12px] font-bold">
-            종합정보
+      </div>
+
+      {/* 종합정보 row — 별도 풀폭 row (v4 KBID 동등 구조) */}
+      {correlation && (
+        <div className="border bg-white mb-3" style={{ borderColor: "var(--kbid-border)" }}>
+          <div
+            className="text-white px-4 py-2 text-[13px] font-bold"
+            style={{ background: "linear-gradient(to bottom, #E8913A, #C56F1A)" }}
+          >
+            종합정보 — 3가지 방법 종합
           </div>
-          {correlation ? (
-            <div className="p-3 space-y-2 text-[11px]">
-              <div>
-                <div className="text-gray-500 text-[10px]">종합 1순위</div>
-                <button
-                  onClick={() => onRateSelect(correlation.correlation.final_top1)}
-                  className="text-[20px] font-extrabold text-[#437194] hover:underline"
-                >
-                  {correlation.correlation.final_top1.toFixed(2)}%
-                </button>
+          <div className="grid grid-cols-4 gap-0">
+            <div className="p-4 border-r" style={{ borderColor: "var(--kbid-border)" }}>
+              <div className="text-[11px] text-gray-500 mb-1">종합 1순위</div>
+              <button
+                onClick={() => onRateSelect(correlation.correlation.final_top1)}
+                className="text-[26px] font-extrabold text-[#437194] hover:underline"
+              >
+                {correlation.correlation.final_top1.toFixed(2)}%
+              </button>
+            </div>
+            <div className="p-4 border-r" style={{ borderColor: "var(--kbid-border)" }}>
+              <div className="text-[11px] text-gray-500 mb-1">예상 투찰금액</div>
+              <div className="text-[18px] font-bold" style={{ color: "var(--kbid-text-strong)" }}>
+                {correlation.correlation.predicted_bid_amount.toLocaleString()}원
               </div>
-              <div className="border-t border-gray-200 pt-2">
-                <div className="text-gray-500 text-[10px]">예상 투찰</div>
-                <div className="font-bold text-[#437194]">
-                  {correlation.correlation.predicted_bid_amount.toLocaleString()}원
-                </div>
+              <div className="text-[10px] text-gray-500 mt-1">
+                기초금액 × 종합 사정률
               </div>
-              <div className="border-t border-gray-200 pt-2 flex items-center justify-between">
-                <div>
-                  <div className="text-gray-500 text-[10px]">합치도</div>
-                  <div className="font-bold">
-                    {(correlation.correlation.agreement * 100).toFixed(0)}%
-                  </div>
-                </div>
+            </div>
+            <div className="p-4 border-r" style={{ borderColor: "var(--kbid-border)" }}>
+              <div className="text-[11px] text-gray-500 mb-1">합치도 (3개 방법 일치)</div>
+              <div className="text-[18px] font-bold">
+                {(correlation.correlation.agreement * 100).toFixed(0)}%
+                <span className="text-[11px] text-gray-500 ml-1">
+                  ({correlation.correlation.methods_aligned.length}/3)
+                </span>
+              </div>
+            </div>
+            <div className="p-4">
+              <div className="text-[11px] text-gray-500 mb-1">신뢰도</div>
+              <div className="flex items-center gap-2">
                 <span
-                  className="px-2 py-1 text-white text-[10px] font-bold rounded"
-                  style={{ backgroundColor: confColor }}
+                  className="px-2.5 py-1 text-white text-[12px] font-bold"
+                  style={{ backgroundColor: confColor, borderRadius: 2 }}
                 >
-                  신뢰도{" "}
                   {conf?.level === "high"
                     ? "높음"
                     : conf?.level === "medium"
                     ? "중간"
-                    : "낮음"}
+                    : "낮음"}{" "}
+                  ({conf?.score ?? 0})
                 </span>
               </div>
-              <div className="text-[9px] text-gray-500 border-t border-gray-200 pt-2">
+              <div className="text-[10px] text-gray-500 mt-2">
                 표본 {correlation.correlation.sample_size.toLocaleString()}건 · 이상치{" "}
                 {correlation.correlation.outliers_removed}건 제거
               </div>
               {conf && (
-                <div className="text-[9px] text-gray-600">
+                <div className="text-[10px] text-gray-600 mt-1">
                   {conf.reasons.slice(0, 2).join(" · ")}
                 </div>
               )}
             </div>
-          ) : (
-            <div className="p-3 text-[11px] text-gray-400 text-center">
-              correlation 데이터 없음
-            </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 3가지 방법 상세 (correlation.methods) */}
       {correlation?.methods && correlation.methods.length > 0 && (

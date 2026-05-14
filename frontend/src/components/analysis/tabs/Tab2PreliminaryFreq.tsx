@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
+import AmHistogram from "@/components/charts/AmHistogram";
 import type { PreliminaryFreqBin } from "@/types/analysis";
 
 interface Props {
@@ -17,6 +8,7 @@ interface Props {
   total: number;
 }
 
+// v4 — Recharts → amCharts 마이그레이션 (KBID 동등 검정 막대)
 export default function Tab2PreliminaryFreq({ bins, total }: Props) {
   if (bins.length === 0) {
     return (
@@ -27,6 +19,13 @@ export default function Tab2PreliminaryFreq({ bins, total }: Props) {
   }
 
   const maxCount = Math.max(...bins.map((b) => b.count));
+  // AmHistogram의 데이터 포맷 (rate / count / first_place) 에 맞춰 변환
+  // 여기서는 rate=number(예가번호), count=count, first_place=peak 강조
+  const chartData = bins.map((b) => ({
+    rate: b.number,
+    count: b.count,
+    first_place: b.count === maxCount ? b.count : 0,
+  }));
 
   return (
     <div>
@@ -34,34 +33,9 @@ export default function Tab2PreliminaryFreq({ bins, total }: Props) {
         추첨된 예가빈도수 분석
       </div>
       <div className="text-[11px] text-gray-500 mb-3">
-        총 {total}건의 예정가격 추첨 빈도 분포
+        총 {total}건의 예정가격 추첨 빈도 분포 (피크 = 오렌지)
       </div>
-      <ResponsiveContainer width="100%" height={350}>
-        <BarChart data={bins} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-          <XAxis
-            dataKey="number"
-            tick={{ fontSize: 11 }}
-            label={{ value: "예가번호", position: "insideBottom", offset: -2, fontSize: 11 }}
-          />
-          <YAxis
-            tick={{ fontSize: 11 }}
-            label={{ value: "빈도", angle: -90, position: "insideLeft", fontSize: 11 }}
-          />
-          <Tooltip
-            formatter={(value: number) => [`${value}회`, "빈도"]}
-            contentStyle={{ fontSize: 12 }}
-          />
-          <Bar dataKey="count" radius={[2, 2, 0, 0]}>
-            {bins.map((entry, index) => (
-              <Cell
-                key={index}
-                fill={entry.count === maxCount ? "#E8913A" : "#437194"}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      <AmHistogram data={chartData} height={350} />
     </div>
   );
 }
