@@ -1,7 +1,22 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+/**
+ * 공고화면 — KBID 입찰사이트 동등 UI (v3)
+ *
+ * 구조:
+ *  1. 4-탭 (법령공고/결과공고/지사공고/전체공고) — KBID 상단 카테고리
+ *  2. 6-행 form-table 검색 패널 (카테고리/기간/공고명/기관/도서면적/수집구분)
+ *  3. 좌하단 검색약관 안내
+ *  4. 14-컬럼 분리 리스트
+ *  5. 페이지네이션 + 단위씩 조회
+ *
+ * KBID 캡쳐(1차 데모 검토 PDF 1페이지) 동등.
+ */
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import KbidTabBar from "@/components/kbid/KbidTabBar";
+import KbidFormTable from "@/components/kbid/KbidFormTable";
+import KbidPager from "@/components/kbid/KbidPager";
 
 interface AnnouncementRow {
   id: string;
@@ -28,17 +43,18 @@ interface RegionMeta {
   sigungu_list: string[];
   count: number;
 }
-
 interface LicenseMeta {
   value: string;
   count: number;
 }
 
-const KPI_DATA = [
-  { label: "오늘 수집 공고", value: "436건", change: "+12.4%", up: true },
-  { label: "공사 공고", value: "248건", change: "+8.1%", up: true },
-  { label: "용역 공고", value: "188건", change: "+18.3%", up: true },
-  { label: "국방부 공고", value: "89건", change: "-2.1%", up: false },
+type NoticeTab = "law" | "result" | "branch" | "all";
+
+const NOTICE_TABS = [
+  { key: "law" as const, label: "법령공고" },
+  { key: "result" as const, label: "결과공고" },
+  { key: "branch" as const, label: "지사공고" },
+  { key: "all" as const, label: "전체공고" },
 ];
 
 function formatBudget(n: number | null): string {
@@ -54,19 +70,33 @@ function authHeaders(): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+function quickRangeDates(months: number): { from: string; to: string } {
+  const to = new Date();
+  const from = new Date();
+  from.setMonth(from.getMonth() - months);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  return { from: fmt(from), to: fmt(to) };
+}
+
 export default function AnnouncementsPage() {
+  const [tab, setTab] = useState<NoticeTab>("all");
   const [filter, setFilter] = useState({
     type: "all",
     region_sido: "all",
     region_sigungu: "all",
     license_category: "all",
     keyword: "",
+    org_search: "",
     date_from: "",
     date_to: "",
-    first_only: false,
+    area_min: "",
+    area_max: "",
+    source: "all",
   });
   const [items, setItems] = useState<AnnouncementRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(100);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,19 +119,26 @@ export default function AnnouncementsPage() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    const params = new URLSearchParams({ page: "1", page_size: "20" });
+    const params = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+    });
     if (filter.type !== "all") params.set("category", filter.type);
     if (filter.region_sido !== "all") params.set("region_sido", filter.region_sido);
-    if (filter.region_sigungu !== "all") params.set("region_sigungu", filter.region_sigungu);
+    if (filter.region_sigungu !== "all")
+      params.set("region_sigungu", filter.region_sigungu);
     if (filter.license_category !== "all")
       params.set("license_category", filter.license_category);
     if (filter.keyword) params.set("keyword", filter.keyword);
     if (filter.date_from) params.set("date_from", filter.date_from);
     if (filter.date_to) params.set("date_to", filter.date_to);
+    if (filter.source !== "all") params.set("source", filter.source);
+    // 4-탭 매핑 — status 또는 source 로 표현
+    if (tab === "law") params.set("status", "진행중");
+    else if (tab === "result") params.set("status", "낙찰");
+    else if (tab === "branch") params.set("source", "D2B");
 
-    fetch(`/api/v1/announcements?${params.toString()}`, {
-      headers: authHeaders(),
-    })
+    fetch(`/api/v1/announcements?${params.toString()}`, { headers: authHeaders() })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -121,22 +158,7 @@ export default function AnnouncementsPage() {
     return () => {
       cancelled = true;
     };
-  }, [
-    filter.type,
-    filter.region_sido,
-    filter.region_sigungu,
-    filter.license_category,
-    filter.keyword,
-    filter.date_from,
-    filter.date_to,
-  ]);
-
-  const visible = useMemo(() => {
-    return items.filter((a) => {
-      if (filter.first_only && a.first_place_rate == null) return false;
-      return true;
-    });
-  }, [items, filter.first_only]);
+  }, [tab, page, pageSize, filter]);
 
   const sigunguOptions = useMemo(() => {
     if (filter.region_sido === "all") return [];
@@ -144,301 +166,413 @@ export default function AnnouncementsPage() {
     return r?.sigungu_list ?? [];
   }, [filter.region_sido, regions]);
 
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  const setRange = (months: number) => {
+    const { from, to } = quickRangeDates(months);
+    setFilter((f) => ({ ...f, date_from: from, date_to: to }));
+  };
+
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-xl font-extrabold">공고 통합 조회</h1>
-        <p className="text-[13px] text-slate-500 mt-1">
-          나라장터 + 국방부 OpenAPI 통합 수집 · 업종/지역/기간 다차원 필터 (KBID 동등성)
-        </p>
-      </div>
+      {/* 상단 KBID 4-탭 */}
+      <KbidTabBar
+        items={NOTICE_TABS}
+        activeKey={tab}
+        onChange={(k) => {
+          setTab(k);
+          setPage(1);
+        }}
+      />
 
-      <div className="grid grid-cols-4 gap-4 mb-4">
-        {KPI_DATA.map((k, i) => (
-          <div
-            key={i}
-            className="bg-white rounded-[10px] p-[18px_20px] shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)]"
-          >
-            <div className="text-xs text-slate-500 font-medium mb-1.5">{k.label}</div>
-            <div className="text-2xl font-extrabold">{k.value}</div>
-            <div className={`text-xs mt-1 ${k.up ? "text-green-600" : "text-red-600"}`}>
-              {k.up ? "↑" : "↓"} 전일 대비 {k.change}
-            </div>
+      {/* 6-행 form-table */}
+      <div className="bg-white">
+        <KbidFormTable
+          columns={4}
+          rows={[
+            [
+              {
+                label: "카테고리",
+                content: (
+                  <select
+                    value={filter.type}
+                    onChange={(e) =>
+                      setFilter((f) => ({ ...f, type: e.target.value }))
+                    }
+                  >
+                    <option value="all">전체</option>
+                    <option value="공사">공사입찰</option>
+                    <option value="용역">용역입찰</option>
+                    <option value="물품">물품입찰</option>
+                    <option value="구매">구매</option>
+                  </select>
+                ),
+              },
+              {
+                label: "수집구분",
+                content: (
+                  <select
+                    value={filter.source}
+                    onChange={(e) =>
+                      setFilter((f) => ({ ...f, source: e.target.value }))
+                    }
+                  >
+                    <option value="all">전체 출처</option>
+                    <option value="G2B">나라장터(G2B)</option>
+                    <option value="D2B">국방부(D2B)</option>
+                  </select>
+                ),
+              },
+            ],
+            [
+              {
+                label: "기간",
+                colSpan: 3,
+                content: (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <select className="text-[12px]">
+                      <option>입찰일</option>
+                      <option>공고일</option>
+                      <option>개찰일</option>
+                    </select>
+                    <input
+                      type="date"
+                      value={filter.date_from}
+                      onChange={(e) =>
+                        setFilter((f) => ({ ...f, date_from: e.target.value }))
+                      }
+                    />
+                    <span className="text-[12px]">~</span>
+                    <input
+                      type="date"
+                      value={filter.date_to}
+                      onChange={(e) =>
+                        setFilter((f) => ({ ...f, date_to: e.target.value }))
+                      }
+                    />
+                    <button className="kbid-btn-quick" onClick={() => setRange(0.25)}>1주</button>
+                    <button className="kbid-btn-quick" onClick={() => setRange(1)}>1개월</button>
+                    <button className="kbid-btn-quick" onClick={() => setRange(3)}>3개월</button>
+                    <button className="kbid-btn-quick" onClick={() => setRange(6)}>6개월</button>
+                    <button className="kbid-btn-quick" onClick={() => setRange(12)}>1년</button>
+                  </div>
+                ),
+              },
+            ],
+            [
+              {
+                label: "공고명",
+                colSpan: 3,
+                content: (
+                  <input
+                    type="text"
+                    style={{ width: "100%" }}
+                    placeholder="공고명 또는 공고번호 일부 입력"
+                    value={filter.keyword}
+                    onChange={(e) =>
+                      setFilter((f) => ({ ...f, keyword: e.target.value }))
+                    }
+                  />
+                ),
+              },
+            ],
+            [
+              {
+                label: "기관",
+                colSpan: 3,
+                content: (
+                  <input
+                    type="text"
+                    style={{ width: "100%" }}
+                    placeholder="공고기관 또는 수요기관"
+                    value={filter.org_search}
+                    onChange={(e) =>
+                      setFilter((f) => ({ ...f, org_search: e.target.value }))
+                    }
+                  />
+                ),
+              },
+            ],
+            [
+              {
+                label: "지역",
+                content: (
+                  <select
+                    value={filter.region_sido}
+                    onChange={(e) =>
+                      setFilter((f) => ({
+                        ...f,
+                        region_sido: e.target.value,
+                        region_sigungu: "all",
+                      }))
+                    }
+                  >
+                    <option value="all">전체 시·도</option>
+                    {regions.map((r) => (
+                      <option key={r.sido} value={r.sido}>
+                        {r.sido} ({r.count})
+                      </option>
+                    ))}
+                  </select>
+                ),
+              },
+              {
+                label: "시·군·구",
+                content: (
+                  <select
+                    value={filter.region_sigungu}
+                    onChange={(e) =>
+                      setFilter((f) => ({ ...f, region_sigungu: e.target.value }))
+                    }
+                    disabled={sigunguOptions.length === 0}
+                  >
+                    <option value="all">
+                      {sigunguOptions.length === 0 ? "시·군·구 데이터 없음" : "전체"}
+                    </option>
+                    {sigunguOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                ),
+              },
+            ],
+            [
+              {
+                label: "업종/면허",
+                content: (
+                  <select
+                    value={filter.license_category}
+                    onChange={(e) =>
+                      setFilter((f) => ({ ...f, license_category: e.target.value }))
+                    }
+                  >
+                    <option value="all">전체 업종면허</option>
+                    {licenseCategories.map((lc) => (
+                      <option key={lc.value} value={lc.value}>
+                        {lc.value} ({lc.count})
+                      </option>
+                    ))}
+                  </select>
+                ),
+              },
+              {
+                label: "도서면적",
+                content: (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      style={{ width: 80 }}
+                      placeholder="최소"
+                      value={filter.area_min}
+                      onChange={(e) =>
+                        setFilter((f) => ({ ...f, area_min: e.target.value }))
+                      }
+                    />
+                    <span className="text-[12px]">~</span>
+                    <input
+                      type="number"
+                      style={{ width: 80 }}
+                      placeholder="최대"
+                      value={filter.area_max}
+                      onChange={(e) =>
+                        setFilter((f) => ({ ...f, area_max: e.target.value }))
+                      }
+                    />
+                    <span className="text-[11px] text-gray-500">㎡</span>
+                  </div>
+                ),
+              },
+            ],
+          ]}
+        />
+
+        {/* 검색 버튼 행 */}
+        <div
+          className="flex items-center justify-between"
+          style={{
+            padding: "10px 12px",
+            background: "var(--kbid-panel-bg)",
+            borderLeft: "1px solid var(--kbid-border)",
+            borderRight: "1px solid var(--kbid-border)",
+            borderBottom: "1px solid var(--kbid-border)",
+          }}
+        >
+          <div className="text-[11px]" style={{ color: "var(--kbid-text-meta)" }}>
+            검색약관: 공고명 또는 공고번호로 부분 일치 검색 · 동일 기간 입찰 결과 통합 조회
           </div>
-        ))}
-      </div>
-
-      {/* 필터 패널 — KBID 동등성 */}
-      <div className="bg-white rounded-[10px] mb-4 shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)]">
-        <div className="grid grid-cols-12 gap-2.5 p-3.5">
-          {/* 1행: 검색 + 카테고리 */}
-          <input
-            className="col-span-5 py-[7px] px-3 border-[1.5px] border-border rounded-[7px] text-[13px] outline-none focus:border-primary"
-            placeholder="🔍  공고명, 발주기관 검색"
-            value={filter.keyword}
-            onChange={(e) => setFilter((f) => ({ ...f, keyword: e.target.value }))}
-          />
-          <select
-            className="col-span-2 py-[7px] px-3 border-[1.5px] border-border rounded-[7px] text-[13px] bg-[#F0F4F8] cursor-pointer"
-            value={filter.type}
-            onChange={(e) => setFilter((f) => ({ ...f, type: e.target.value }))}
-          >
-            <option value="all">전체 카테고리</option>
-            <option value="공사">공사</option>
-            <option value="용역">용역</option>
-            <option value="물품">물품</option>
-            <option value="구매">구매</option>
-          </select>
-          <select
-            className="col-span-2 py-[7px] px-3 border-[1.5px] border-border rounded-[7px] text-[13px] bg-[#F0F4F8] cursor-pointer"
-            value={filter.license_category}
-            onChange={(e) => setFilter((f) => ({ ...f, license_category: e.target.value }))}
-          >
-            <option value="all">전체 업종면허</option>
-            {licenseCategories.map((lc) => (
-              <option key={lc.value} value={lc.value}>
-                {lc.value} ({lc.count})
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() =>
-              setFilter((f) => ({ ...f, first_only: !f.first_only }))
-            }
-            className={`col-span-3 inline-flex items-center justify-center gap-1.5 py-[7px] rounded-[7px] text-[13px] font-semibold transition border-[1.5px] ${
-              filter.first_only
-                ? "bg-[#E8913A] text-white border-[#E8913A]"
-                : "bg-white text-slate-700 border-border hover:bg-[#FFF7ED]"
-            }`}
-            title="과거 1순위 낙찰률이 기록된 공고만 표시"
-          >
-            ★ 1순위만
-          </button>
-
-          {/* 2행: 시도 + 시군구 + 날짜 범위 */}
-          <select
-            className="col-span-2 py-[7px] px-3 border-[1.5px] border-border rounded-[7px] text-[13px] bg-[#F0F4F8] cursor-pointer"
-            value={filter.region_sido}
-            onChange={(e) =>
-              setFilter((f) => ({
-                ...f,
-                region_sido: e.target.value,
-                region_sigungu: "all",
-              }))
-            }
-          >
-            <option value="all">전체 시·도</option>
-            {regions.map((r) => (
-              <option key={r.sido} value={r.sido}>
-                {r.sido} ({r.count})
-              </option>
-            ))}
-          </select>
-          <select
-            className="col-span-2 py-[7px] px-3 border-[1.5px] border-border rounded-[7px] text-[13px] bg-[#F0F4F8] cursor-pointer disabled:opacity-50"
-            value={filter.region_sigungu}
-            onChange={(e) =>
-              setFilter((f) => ({ ...f, region_sigungu: e.target.value }))
-            }
-            disabled={sigunguOptions.length === 0}
-          >
-            <option value="all">
-              {sigunguOptions.length === 0 ? "시·군·구 없음" : "전체 시·군·구"}
-            </option>
-            {sigunguOptions.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-          <span className="col-span-1 flex items-center text-[12px] text-slate-500 justify-end pr-1">
-            공고기간
-          </span>
-          <input
-            type="date"
-            className="col-span-2 py-[7px] px-3 border-[1.5px] border-border rounded-[7px] text-[13px]"
-            value={filter.date_from}
-            onChange={(e) => setFilter((f) => ({ ...f, date_from: e.target.value }))}
-          />
-          <span className="col-span-1 flex items-center justify-center text-[12px] text-slate-500">
-            ~
-          </span>
-          <input
-            type="date"
-            className="col-span-2 py-[7px] px-3 border-[1.5px] border-border rounded-[7px] text-[13px]"
-            value={filter.date_to}
-            onChange={(e) => setFilter((f) => ({ ...f, date_to: e.target.value }))}
-          />
-          <button
-            onClick={() =>
-              setFilter({
-                type: "all",
-                region_sido: "all",
-                region_sigungu: "all",
-                license_category: "all",
-                keyword: "",
-                date_from: "",
-                date_to: "",
-                first_only: false,
-              })
-            }
-            className="col-span-2 py-[7px] rounded-[7px] text-[13px] font-semibold border-[1.5px] border-border hover:bg-slate-50"
-          >
-            필터 초기화
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="kbid-btn-secondary"
+              onClick={() =>
+                setFilter({
+                  type: "all",
+                  region_sido: "all",
+                  region_sigungu: "all",
+                  license_category: "all",
+                  keyword: "",
+                  org_search: "",
+                  date_from: "",
+                  date_to: "",
+                  area_min: "",
+                  area_max: "",
+                  source: "all",
+                })
+              }
+            >
+              초기화
+            </button>
+            <button
+              className="kbid-btn-primary"
+              onClick={() => setPage(1)}
+              style={{ minWidth: 90 }}
+            >
+              🔍 검 색
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-[10px] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)]">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="text-sm font-bold">공고 목록</div>
-            <div className="text-xs text-slate-500 mt-0.5">
-              {loading
-                ? "조회 중..."
-                : `${visible.length}건 표시 / 총 ${total.toLocaleString()}건`}
-            </div>
-          </div>
-          <button className="inline-flex items-center gap-1.5 px-3.5 py-[7px] rounded-[7px] text-[13px] font-semibold border-[1.5px] border-border hover:bg-[#F0F4F8] transition">
-            📥 CSV 다운로드
-          </button>
+      {/* 결과 헤더 */}
+      <div className="mt-4 mb-2 flex items-center justify-between">
+        <div className="text-[13px]">
+          <span className="font-bold" style={{ color: "var(--kbid-text-strong)" }}>
+            공고 목록
+          </span>
+          <span className="ml-2 text-[11px]" style={{ color: "var(--kbid-text-meta)" }}>
+            {loading
+              ? "조회 중..."
+              : `총 ${total.toLocaleString()}건 · ${page}/${totalPages} 페이지`}
+          </span>
         </div>
+        <div className="flex items-center gap-2">
+          <button className="kbid-btn-secondary">📥 엑셀 출력</button>
+          <button className="kbid-btn-secondary">🖨 인쇄</button>
+        </div>
+      </div>
 
-        {error && (
-          <div className="p-3 mb-3 bg-red-50 border border-red-200 text-red-700 text-[13px] rounded">
-            {error}
-          </div>
-        )}
+      {error && (
+        <div className="mb-2 px-3 py-2 text-[12px] border" style={{ borderColor: "var(--kbid-accent-red)", color: "var(--kbid-accent-red)" }}>
+          {error}
+        </div>
+      )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-[13px] min-w-[1400px]">
-            <thead>
+      {/* 14-컬럼 분리 리스트 */}
+      <div className="overflow-x-auto" style={{ borderTop: "2px solid var(--kbid-primary)" }}>
+        <table className="kbid-list-table" style={{ minWidth: 1500 }}>
+          <thead>
+            <tr>
+              <th style={{ width: 44 }}>번호</th>
+              <th>공고명</th>
+              <th style={{ width: 90 }}>공고번호</th>
+              <th style={{ width: 70 }}>업종</th>
+              <th style={{ width: 70 }}>면허</th>
+              <th style={{ width: 70 }}>지역</th>
+              <th style={{ width: 140 }}>공고기관</th>
+              <th style={{ width: 110 }}>수요기관</th>
+              <th style={{ width: 100 }}>기초금액</th>
+              <th style={{ width: 100 }}>추정가격</th>
+              <th style={{ width: 110 }}>투찰마감일시</th>
+              <th style={{ width: 110 }}>개찰일시</th>
+              <th style={{ width: 80 }}>현설</th>
+              <th style={{ width: 56 }}>분석</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
               <tr>
-                <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">
-                  공고명 / 공고번호
-                </th>
-                <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">
-                  업종면허 / 지역
-                </th>
-                <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">
-                  공고기관 / 수요기관
-                </th>
-                <th className="text-right p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">
-                  기초금액 / 추정가격
-                </th>
-                <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">
-                  투찰마감
-                </th>
-                <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">
-                  개찰일시
-                </th>
-                <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">
-                  현설일
-                </th>
-                <th className="text-center p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">
-                  유형
-                </th>
-                <th className="text-center p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">
-                  사정률 / 1순위
-                </th>
-                <th className="text-center p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">
-                  분석
-                </th>
+                <td colSpan={14} style={{ padding: 22, color: "#999" }}>
+                  공고 데이터 로딩 중...
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={10} className="p-6 text-center text-slate-400">
-                    공고 데이터 로딩 중...
-                  </td>
-                </tr>
-              )}
-              {!loading && visible.length === 0 && (
-                <tr>
-                  <td colSpan={10} className="p-6 text-center text-slate-400">
-                    조건에 맞는 공고가 없습니다
-                  </td>
-                </tr>
-              )}
-              {visible.map((a) => (
-                <tr key={a.id} className="hover:bg-[#F8FAFC]">
-                  <td className="p-[11px_12px] border-b border-border max-w-[340px]">
-                    <div className="font-semibold truncate">{a.title}</div>
-                    <div className="text-[11px] text-slate-400 font-mono">
-                      {a.bid_number}
-                    </div>
-                  </td>
-                  <td className="p-[11px_12px] border-b border-border">
-                    <div className="text-[12.5px]">{a.license_category ?? "-"}</div>
-                    <div className="text-[11px] text-slate-500">{a.area ?? "-"}</div>
-                  </td>
-                  <td className="p-[11px_12px] border-b border-border max-w-[200px]">
-                    <div className="text-[12.5px] truncate">{a.org}</div>
-                    <div className="text-[11px] text-slate-500 truncate">
-                      {a.parent_org && a.parent_org !== a.org ? a.parent_org : ""}
-                    </div>
-                  </td>
-                  <td className="p-[11px_12px] border-b border-border text-right">
-                    <div className="font-bold text-[12.5px]">
-                      {formatBudget(a.budget)}
-                    </div>
-                    <div className="text-[11px] text-slate-500">
-                      {a.estimated_price ? formatBudget(a.estimated_price) : "-"}
-                    </div>
-                  </td>
-                  <td className="p-[11px_12px] border-b border-border text-[12px] text-slate-600">
-                    {a.deadline ?? "-"}
-                  </td>
-                  <td className="p-[11px_12px] border-b border-border text-[12px] text-slate-600">
-                    {a.opening_at ?? "-"}
-                  </td>
-                  <td className="p-[11px_12px] border-b border-border text-[12px] text-slate-600">
-                    {a.site_visit_at ?? "-"}
-                  </td>
-                  <td className="p-[11px_12px] border-b border-border text-center">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${
+            )}
+            {!loading && items.length === 0 && (
+              <tr>
+                <td colSpan={14} style={{ padding: 22, color: "#999" }}>
+                  조건에 맞는 공고가 없습니다
+                </td>
+              </tr>
+            )}
+            {items.map((a, idx) => (
+              <tr key={a.id}>
+                <td>{(page - 1) * pageSize + idx + 1}</td>
+                <td style={{ textAlign: "left", maxWidth: 320 }}>
+                  <Link
+                    href={`/analysis/${a.id}`}
+                    style={{ color: "var(--kbid-primary)", fontWeight: 600 }}
+                  >
+                    {a.title}
+                  </Link>
+                </td>
+                <td style={{ fontFamily: "monospace", fontSize: 11 }}>
+                  {a.bid_number}
+                </td>
+                <td>
+                  <span
+                    className="inline-block px-1.5 py-0.5 text-[10px] font-semibold"
+                    style={{
+                      background:
                         a.type === "공사"
-                          ? "bg-blue-50 text-blue-600"
+                          ? "#E8F0FA"
                           : a.type === "용역"
-                          ? "bg-purple-50 text-purple-600"
-                          : "bg-slate-50 text-slate-600"
-                      }`}
-                    >
-                      {a.type}
-                    </span>
-                  </td>
-                  <td className="p-[11px_12px] border-b border-border text-center">
-                    {a.rate != null ? (
-                      <div className="font-bold text-primary text-[12.5px]">
-                        {a.rate.toFixed(2)}%
-                      </div>
-                    ) : (
-                      <div className="text-slate-300 text-[12px]">-</div>
-                    )}
-                    {a.first_place_rate != null ? (
-                      <div className="font-bold text-[#3358A4] text-[11px]">
-                        1순위 {a.first_place_rate.toFixed(2)}%
-                      </div>
-                    ) : (
-                      <div className="text-slate-300 text-[11px]">-</div>
-                    )}
-                  </td>
-                  <td className="p-[11px_12px] border-b border-border text-center">
-                    <Link
-                      href={`/analysis/${a.id}`}
-                      className="inline-flex items-center gap-1 px-3 py-1 rounded text-[11px] font-semibold bg-[#3358A4] text-white hover:bg-[#2C4F8A] transition"
-                    >
-                      분석
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                          ? "#F3E8FA"
+                          : "#F0F0F0",
+                      color:
+                        a.type === "공사"
+                          ? "#1B5092"
+                          : a.type === "용역"
+                          ? "#6F2B96"
+                          : "#555",
+                    }}
+                  >
+                    {a.type}
+                  </span>
+                </td>
+                <td style={{ fontSize: 11, color: "#666" }}>
+                  {a.license_category ?? "-"}
+                </td>
+                <td>{a.area ?? "-"}</td>
+                <td style={{ textAlign: "left", maxWidth: 140 }} className="truncate">
+                  {a.org}
+                </td>
+                <td style={{ textAlign: "left", fontSize: 11, color: "#666" }} className="truncate">
+                  {a.parent_org && a.parent_org !== a.org ? a.parent_org : "-"}
+                </td>
+                <td style={{ textAlign: "right", fontWeight: 600 }}>
+                  {formatBudget(a.budget)}
+                </td>
+                <td style={{ textAlign: "right", color: "#666" }}>
+                  {a.estimated_price ? formatBudget(a.estimated_price) : "-"}
+                </td>
+                <td style={{ fontSize: 11, color: "#555" }}>{a.deadline ?? "-"}</td>
+                <td style={{ fontSize: 11, color: "#555" }}>{a.opening_at ?? "-"}</td>
+                <td style={{ fontSize: 11, color: "#555" }}>{a.site_visit_at ?? "-"}</td>
+                <td>
+                  <Link
+                    href={`/analysis/${a.id}`}
+                    className="kbid-btn-primary"
+                    style={{ padding: "2px 8px", fontSize: 11 }}
+                  >
+                    분석
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+
+      <KbidPager
+        page={page}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(n) => {
+          setPageSize(n);
+          setPage(1);
+        }}
+      />
     </div>
   );
 }

@@ -29,7 +29,7 @@ export default function Tab1RateChart({ series, selectedRate }: Props) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[13px] font-bold text-[#3358A4]">
+        <div className="text-[13px] font-bold text-[#437194]">
           사정률 그래프 분석
         </div>
         {selectedRate != null && (
@@ -60,12 +60,12 @@ export default function Tab1RateChart({ series, selectedRate }: Props) {
           {selectedRate != null && (
             <ReferenceLine
               y={selectedRate}
-              stroke="#3358A4"
+              stroke="#437194"
               strokeWidth={2}
               label={{
                 value: `선택: ${selectedRate.toFixed(2)}%`,
                 fontSize: 11,
-                fill: "#3358A4",
+                fill: "#437194",
                 position: "left",
               }}
             />
@@ -73,9 +73,9 @@ export default function Tab1RateChart({ series, selectedRate }: Props) {
           <Line
             type="monotone"
             dataKey="avg_rate"
-            stroke="#3358A4"
+            stroke="#437194"
             strokeWidth={2}
-            dot={{ r: 3, fill: "#3358A4" }}
+            dot={{ r: 3, fill: "#437194" }}
             name="평균 사정률"
           />
           <Line

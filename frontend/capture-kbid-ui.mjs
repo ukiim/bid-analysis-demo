@@ -12,12 +12,10 @@ const ID = "aabbcca3-8351-4fa1-9a2b-d6cb3cf8a564";  // 워크트리 DB (3000건)
 const REAL_TOKEN =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4YTY3NGIxMS00YmI2LTQzMTUtYTM0My02YTIyYjNmMDAxNjEiLCJleHAiOjE3Nzg3NzU0ODR9.jGhdoW9fJRC5E_KUthTX2rh2RkT4Flbr7HApfZJVUzU";
 
-async function captureSidebar(page, sidebarLabel, fileName) {
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle", timeout: 30000 });
-  await page.waitForTimeout(800);
-  const btn = page.locator(`aside button:has-text("${sidebarLabel}")`).first();
-  await btn.click();
-  await page.waitForTimeout(2000);
+async function captureSidebar(page, pageKey, fileName) {
+  // v3: 사이드바 → TopNav. ?page= 쿼리로 진입
+  await page.goto(`${BASE}/?page=${pageKey}`, { waitUntil: "networkidle", timeout: 30000 });
+  await page.waitForTimeout(2500);
   const file = path.join(OUT_DIR, fileName);
   await page.screenshot({ path: file, fullPage: true });
   console.log(`  → ${file}`);
@@ -53,16 +51,16 @@ async function captureSidebar(page, sidebarLabel, fileName) {
     console.log(`  → ${path.join(OUT_DIR, s.name)}`);
   }
 
-  // SPA sidebar pages (no separate URL — internal state)
+  // SPA pages — v3: ?page= 쿼리
   const sidebarShots = [
-    { label: "사정률 예측", name: "07_prediction_page.png" },
-    { label: "통계 리포트", name: "08_statistics_page.png" },
-    { label: "관리자 모니터링", name: "09_admin_page.png" },
+    { key: "prediction", name: "07_prediction_page.png" },
+    { key: "statistics", name: "08_statistics_page.png" },
+    { key: "admin", name: "09_admin_page.png" },
   ];
 
   for (const s of sidebarShots) {
-    console.log(`Capturing ${s.name} via sidebar "${s.label}" ...`);
-    await captureSidebar(page, s.label, s.name);
+    console.log(`Capturing ${s.name} via ?page=${s.key} ...`);
+    await captureSidebar(page, s.key, s.name);
   }
 
   await browser.close();

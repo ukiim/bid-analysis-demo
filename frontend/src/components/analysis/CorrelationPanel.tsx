@@ -7,7 +7,7 @@ interface Props {
   onRateSelect: (rate: number) => void;
 }
 
-const METHOD_COLORS = ["#3358A4", "#4A7ABF", "#7C9CD1"];
+const METHOD_COLORS = ["#437194", "#5481B8", "#8AA7C9"];
 
 export default function CorrelationPanel({ data, onRateSelect }: Props) {
   if (!data) return null;
@@ -23,7 +23,7 @@ export default function CorrelationPanel({ data, onRateSelect }: Props) {
 
   return (
     <div className="mx-4 mt-2 bg-white border border-gray-300">
-      <div className="bg-gradient-to-b from-[#4A7ABF] to-[#3358A4] text-white px-4 py-2 text-[12px] font-bold flex items-center justify-between">
+      <div className="bg-gradient-to-b from-[#5481B8] to-[#437194] text-white px-4 py-2 text-[12px] font-bold flex items-center justify-between">
         <span>상관관계 분석 — 3가지 방법 종합</span>
         <span className="text-[10px] opacity-90">
           표본 {correlation.sample_size.toLocaleString()}건 · 이상치 {correlation.outliers_removed}건 제거
@@ -44,13 +44,13 @@ export default function CorrelationPanel({ data, onRateSelect }: Props) {
               >
                 <div
                   className="px-2 py-1 text-white text-[10px] font-bold"
-                  style={{ backgroundColor: METHOD_COLORS[i] ?? "#3358A4" }}
+                  style={{ backgroundColor: METHOD_COLORS[i] ?? "#437194" }}
                 >
                   {m.name}
                 </div>
                 <div className="p-2">
                   <div className="text-[10px] text-gray-500">예측 1순위</div>
-                  <div className="text-[18px] font-extrabold text-[#3358A4]">
+                  <div className="text-[18px] font-extrabold text-[#437194]">
                     {m.top1_rate.toFixed(4)}%
                   </div>
                   <div className="text-[10px] text-gray-500 mt-1.5 flex justify-between">
@@ -82,7 +82,7 @@ export default function CorrelationPanel({ data, onRateSelect }: Props) {
           </div>
           <div className="flex items-baseline gap-1.5">
             <span className="text-[11px] font-semibold text-gray-700">예상 투찰</span>
-            <span className="text-[13px] font-bold text-[#3358A4]">
+            <span className="text-[13px] font-bold text-[#437194]">
               {correlation.predicted_bid_amount.toLocaleString()}원
             </span>
           </div>

@@ -1,0 +1,254 @@
+/* KBID 디자인 토큰 — kbid.co.kr 실 사이트 추출 (capture-kbid-reference.mjs 결과 기반)
+ *
+ * 추출 일자: 2026-05-14
+ * 소스: docs/kbid_reference/00_home.html computed styles
+ */
+
+:root {
+  /* === 색 팔레트 === */
+  --kbid-text-base: #555555;          /* body 본문 */
+  --kbid-text-strong: #333333;        /* 링크/제목 */
+  --kbid-text-meta: #666666;          /* 보조 */
+
+  --kbid-primary: #437194;            /* 메인 액션 버튼 BG */
+  --kbid-primary-border: #346081;     /* 메인 액션 버튼 테두리 */
+  --kbid-primary-hover: #355A78;
+  --kbid-primary-light: #5481B8;      /* 부가 액션 */
+
+  --kbid-header-bg: #0A4FB7;          /* KBID 상단 진한 인디고 (헤더 영역) */
+  --kbid-header-text: #ffffff;
+  --kbid-subheader-bg: #1E5BC0;       /* 헤더 하위 */
+
+  --kbid-accent-orange: #F08020;      /* 강조 (강설/주의) */
+  --kbid-accent-red: #D9342B;
+  --kbid-accent-green: #2B8B3C;
+
+  --kbid-page-bg: #FFFFFF;
+  --kbid-panel-bg: #F4F7FA;           /* 폼·요약 박스 */
+  --kbid-table-row-alt: #FAFBFD;
+  --kbid-label-bg: #E5EBF2;           /* form-table 라벨 회색 */
+  --kbid-label-bg-dark: #D4DBE3;
+  --kbid-disabled-bg: #F0F0F0;
+
+  --kbid-border: #C8CED6;             /* 1px 표 테두리 */
+  --kbid-border-strong: #A0A8B3;
+  --kbid-border-light: #DDE2E8;
+
+  /* === 폰트 === */
+  --kbid-font-family: "Nanum Gothic", NanumGothic, "맑은 고딕", "Malgun Gothic", dotum, sans-serif;
+  --kbid-font-size-base: 13px;
+  --kbid-font-size-sm: 12px;
+  --kbid-font-size-xs: 11px;
+  --kbid-font-size-lg: 14px;
+  --kbid-font-size-xl: 16px;
+
+  /* === 여백 === */
+  --kbid-cell-padding-y: 6px;
+  --kbid-cell-padding-x: 10px;
+
+  /* === 폰트 무게 === */
+  --kbid-weight-normal: 400;
+  --kbid-weight-bold: 600;
+}
+
+/* === 글로벌 KBID 톤 === */
+.kbid-app {
+  font-family: var(--kbid-font-family);
+  font-size: var(--kbid-font-size-base);
+  color: var(--kbid-text-base);
+  background: var(--kbid-page-bg);
+}
+
+.kbid-app a {
+  color: var(--kbid-text-strong);
+  text-decoration: none;
+}
+
+.kbid-app a:hover {
+  color: var(--kbid-primary);
+  text-decoration: underline;
+}
+
+/* === 컴포넌트 클래스 === */
+
+/* 메인 액션 버튼 */
+.kbid-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  font-family: var(--kbid-font-family);
+  font-size: var(--kbid-font-size-base);
+  font-weight: var(--kbid-weight-bold);
+  color: #ffffff;
+  background: var(--kbid-primary);
+  border: 1px solid var(--kbid-primary-border);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.kbid-btn-primary:hover { background: var(--kbid-primary-hover); }
+
+.kbid-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  font-family: var(--kbid-font-family);
+  font-size: var(--kbid-font-size-sm);
+  color: var(--kbid-text-strong);
+  background: #ffffff;
+  border: 1px solid var(--kbid-border);
+  cursor: pointer;
+}
+.kbid-btn-secondary:hover { background: var(--kbid-panel-bg); }
+
+.kbid-btn-quick {
+  padding: 3px 9px;
+  font-size: var(--kbid-font-size-xs);
+  border: 1px solid var(--kbid-border);
+  background: #ffffff;
+  color: var(--kbid-text-strong);
+  cursor: pointer;
+}
+.kbid-btn-quick.active {
+  background: var(--kbid-primary);
+  color: #ffffff;
+  border-color: var(--kbid-primary-border);
+}
+
+/* Form-table — 라벨(좌) + 셀(우) */
+.kbid-form-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 2px solid var(--kbid-primary);
+  background: #ffffff;
+}
+.kbid-form-table th,
+.kbid-form-table td {
+  border: 1px solid var(--kbid-border);
+  padding: var(--kbid-cell-padding-y) var(--kbid-cell-padding-x);
+  vertical-align: middle;
+  font-size: var(--kbid-font-size-base);
+}
+.kbid-form-table th {
+  background: var(--kbid-label-bg);
+  font-weight: var(--kbid-weight-bold);
+  color: var(--kbid-text-strong);
+  text-align: center;
+  white-space: nowrap;
+}
+.kbid-form-table input[type="text"],
+.kbid-form-table input[type="number"],
+.kbid-form-table input[type="date"],
+.kbid-form-table select {
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--kbid-border);
+  background: #ffffff;
+  font-family: var(--kbid-font-family);
+  font-size: var(--kbid-font-size-sm);
+  color: var(--kbid-text-strong);
+}
+
+/* List-table — 결과 목록 */
+.kbid-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+.kbid-list-table thead th {
+  background: var(--kbid-label-bg);
+  border: 1px solid var(--kbid-border);
+  padding: 7px 4px;
+  font-size: var(--kbid-font-size-sm);
+  font-weight: var(--kbid-weight-bold);
+  color: var(--kbid-text-strong);
+  text-align: center;
+}
+.kbid-list-table tbody td {
+  border: 1px solid var(--kbid-border);
+  padding: 6px 6px;
+  font-size: var(--kbid-font-size-sm);
+  text-align: center;
+}
+.kbid-list-table tbody tr:nth-child(even) td {
+  background: var(--kbid-table-row-alt);
+}
+.kbid-list-table tbody tr:hover td {
+  background: #EFF5FB;
+}
+
+/* Tab bar — 큰 파란 탭 */
+.kbid-tab-bar {
+  display: flex;
+  border-bottom: 2px solid var(--kbid-primary);
+}
+.kbid-tab {
+  padding: 9px 22px;
+  font-size: var(--kbid-font-size-base);
+  font-weight: var(--kbid-weight-bold);
+  background: var(--kbid-label-bg);
+  border: 1px solid var(--kbid-border);
+  border-bottom: none;
+  color: var(--kbid-text-strong);
+  cursor: pointer;
+}
+.kbid-tab.active {
+  background: var(--kbid-primary);
+  color: #ffffff;
+  border-color: var(--kbid-primary-border);
+}
+
+/* Pager */
+.kbid-pager {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px 0;
+}
+.kbid-pager .page-btn {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  font-size: var(--kbid-font-size-xs);
+  border: 1px solid var(--kbid-border);
+  background: #ffffff;
+  color: var(--kbid-text-strong);
+  cursor: pointer;
+}
+.kbid-pager .page-btn.active {
+  background: var(--kbid-primary);
+  color: #ffffff;
+  border-color: var(--kbid-primary-border);
+}
+
+/* Summary bar */
+.kbid-summary-bar {
+  background: var(--kbid-panel-bg);
+  border: 1px solid var(--kbid-border);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: var(--kbid-font-size-base);
+}
+
+/* Top nav */
+.kbid-topnav {
+  background: var(--kbid-header-bg);
+  color: var(--kbid-header-text);
+}
+.kbid-topnav .menu-item {
+  display: inline-flex;
+  padding: 0 18px;
+  height: 42px;
+  align-items: center;
+  font-size: var(--kbid-font-size-base);
+  font-weight: var(--kbid-weight-bold);
+  color: var(--kbid-header-text);
+  cursor: pointer;
+}
+.kbid-topnav .menu-item.active,
+.kbid-topnav .menu-item:hover {
+  background: var(--kbid-subheader-bg);
+}

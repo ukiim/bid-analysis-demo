@@ -97,12 +97,12 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
     <div>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <div className="text-[13px] font-bold text-[#3358A4]">업체사정률 분석</div>
+          <div className="text-[13px] font-bold text-[#437194]">업체사정률 분석</div>
           <div className="text-[11px] text-gray-500 mt-0.5">
             전체 업체 {data.total_companies.toLocaleString()}곳 · 고유 사정률{" "}
             {data.unique_rate_count}건 · 표시 중 {companies.length}곳
             {data.refined_rate != null && (
-              <span className="ml-2 text-[#3358A4] font-bold">
+              <span className="ml-2 text-[#437194] font-bold">
                 · 세밀 사정률 {data.refined_rate.toFixed(4)}%
               </span>
             )}
@@ -132,7 +132,7 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
       <div className="grid grid-cols-12 gap-3">
         {/* 좌측 사이드: 회사 목록 + 체크박스 */}
         <div className="col-span-3 border border-gray-300 max-h-[600px] overflow-y-auto">
-          <div className="bg-gradient-to-b from-[#4A7ABF] to-[#3358A4] text-white px-3 py-1.5 text-[11px] font-bold sticky top-0">
+          <div className="bg-gradient-to-b from-[#5481B8] to-[#437194] text-white px-3 py-1.5 text-[11px] font-bold sticky top-0">
             업체 목록 ({companies.length}곳)
           </div>
           <table className="w-full border-collapse text-[11px]">
@@ -217,7 +217,7 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
                       onClick={() => hasAny && onRateSelect(row.rate)}
                       className={`border border-gray-300 px-1.5 py-0.5 text-center font-mono sticky left-0 z-10 ${
                         isSelectedRow
-                          ? "bg-[#3358A4] text-white font-bold cursor-pointer"
+                          ? "bg-[#437194] text-white font-bold cursor-pointer"
                           : hasAny
                           ? "bg-white cursor-pointer hover:bg-[#FFF7ED]"
                           : "bg-gray-50 text-gray-300"
@@ -230,7 +230,7 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
                         key={idx}
                         className={`border border-gray-300 px-1 py-0.5 text-center ${
                           cell.count > 0
-                            ? "bg-[#3358A4] text-white font-bold"
+                            ? "bg-[#437194] text-white font-bold"
                             : "text-gray-200"
                         }`}
                       >
@@ -248,7 +248,7 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
       {/* 갭 분석 요약 (KBID 동등성: 사이드 정보) */}
       {data.gaps && data.gaps.length > 0 && (
         <div className="mt-3 border border-gray-300">
-          <div className="bg-gradient-to-b from-[#4A7ABF] to-[#3358A4] text-white px-3 py-1.5 text-[11px] font-bold">
+          <div className="bg-gradient-to-b from-[#5481B8] to-[#437194] text-white px-3 py-1.5 text-[11px] font-bold">
             업체 사정률 갭 분석 (상위 5건)
           </div>
           <table className="w-full border-collapse text-[11px]">
@@ -271,13 +271,13 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
                   <td className="border border-gray-300 px-2 py-1 text-center font-semibold text-[#E8913A]">
                     {g.size.toFixed(4)}
                   </td>
-                  <td className="border border-gray-300 px-2 py-1 text-center font-bold text-[#3358A4]">
+                  <td className="border border-gray-300 px-2 py-1 text-center font-bold text-[#437194]">
                     {g.midpoint.toFixed(4)}%
                   </td>
                   <td className="border border-gray-300 px-2 py-1 text-center">
                     <button
                       onClick={() => onRateSelect(g.midpoint)}
-                      className="px-2 py-0.5 text-[10px] bg-[#3358A4] text-white hover:bg-[#2C4F8A]"
+                      className="px-2 py-0.5 text-[10px] bg-[#437194] text-white hover:bg-[#346081]"
                     >
                       선택
                     </button>

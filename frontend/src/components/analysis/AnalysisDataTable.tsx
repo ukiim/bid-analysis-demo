@@ -46,7 +46,7 @@ export default function AnalysisDataTable({ comparisons }: Props) {
                 <td className="border border-gray-300 px-3 py-1.5 text-gray-600">
                   {row.date}
                 </td>
-                <td className="border border-gray-300 px-3 py-1.5 text-[#3358A4] cursor-pointer hover:underline max-w-[300px] truncate">
+                <td className="border border-gray-300 px-3 py-1.5 text-[#437194] cursor-pointer hover:underline max-w-[300px] truncate">
                   {row.title}
                 </td>
                 <td className="border border-gray-300 px-3 py-1.5 text-gray-600">
@@ -55,7 +55,7 @@ export default function AnalysisDataTable({ comparisons }: Props) {
                 <td className="border border-gray-300 px-3 py-1.5 text-center font-semibold">
                   {row.assessment_rate.toFixed(4)}%
                 </td>
-                <td className="border border-gray-300 px-3 py-1.5 text-center text-[#3358A4] font-semibold">
+                <td className="border border-gray-300 px-3 py-1.5 text-center text-[#437194] font-semibold">
                   {row.first_place_rate != null ? `${row.first_place_rate.toFixed(4)}%` : "-"}
                 </td>
                 <td className="border border-gray-300 px-3 py-1.5 text-center">
@@ -66,9 +66,9 @@ export default function AnalysisDataTable({ comparisons }: Props) {
                         row.rank === 1
                           ? "bg-[#E8913A] text-white"
                           : row.rank === 2
-                          ? "bg-[#3358A4] text-white"
+                          ? "bg-[#437194] text-white"
                           : row.rank === 3
-                          ? "bg-[#7C9CD1] text-white"
+                          ? "bg-[#8AA7C9] text-white"
                           : "bg-slate-100 text-slate-600"
                       }`}
                     >
@@ -110,7 +110,7 @@ export default function AnalysisDataTable({ comparisons }: Props) {
                 onClick={() => setPage(p)}
                 className={`px-2 py-1 text-[11px] border ${
                   p === page
-                    ? "bg-[#3358A4] text-white border-[#3358A4]"
+                    ? "bg-[#437194] text-white border-[#437194]"
                     : "border-gray-300 hover:bg-gray-100"
                 }`}
               >

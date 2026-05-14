@@ -27,7 +27,7 @@ export default function AnalysisTabs({ tabs, activeTab, onTabChange }: Props) {
             onClick={() => onTabChange(tab.key)}
             className={`px-5 py-2.5 text-[12px] font-bold border border-b-0 border-gray-300 ${
               activeTab === tab.key
-                ? "bg-gradient-to-b from-[#4A7ABF] to-[#3358A4] text-white"
+                ? "bg-gradient-to-b from-[#5481B8] to-[#437194] text-white"
                 : "bg-[#E8EDF3] text-gray-600 hover:bg-[#D0D8E4]"
             }`}
           >

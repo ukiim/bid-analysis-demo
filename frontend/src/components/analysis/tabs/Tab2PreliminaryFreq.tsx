@@ -30,7 +30,7 @@ export default function Tab2PreliminaryFreq({ bins, total }: Props) {
 
   return (
     <div>
-      <div className="text-[13px] font-bold text-[#3358A4] mb-1">
+      <div className="text-[13px] font-bold text-[#437194] mb-1">
         추첨된 예가빈도수 분석
       </div>
       <div className="text-[11px] text-gray-500 mb-3">
@@ -56,7 +56,7 @@ export default function Tab2PreliminaryFreq({ bins, total }: Props) {
             {bins.map((entry, index) => (
               <Cell
                 key={index}
-                fill={entry.count === maxCount ? "#E8913A" : "#3358A4"}
+                fill={entry.count === maxCount ? "#E8913A" : "#437194"}
               />
             ))}
           </Bar>

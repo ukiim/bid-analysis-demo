@@ -27,7 +27,7 @@ export default function Tab4RateTable({ records, selectedRate }: Props) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[13px] font-bold text-[#3358A4]">사정률 표</div>
+        <div className="text-[13px] font-bold text-[#437194]">사정률 표</div>
         {selectedRate != null && (
           <div className="text-[11px] bg-[#FFF7ED] border border-[#E8913A] text-[#E8913A] px-2.5 py-1 font-bold">
             ★ Tab3 선택 {selectedRate.toFixed(4)}% — 인접 항목 하이라이트
@@ -66,7 +66,7 @@ export default function Tab4RateTable({ records, selectedRate }: Props) {
                   <td className="border border-gray-300 px-2 py-1 text-center font-semibold">
                     {r.assessment_rate.toFixed(4)}%
                   </td>
-                  <td className="border border-gray-300 px-2 py-1 text-center text-[#3358A4] font-semibold">
+                  <td className="border border-gray-300 px-2 py-1 text-center text-[#437194] font-semibold">
                     {r.first_place_rate.toFixed(4)}%
                   </td>
                   <td className="border border-gray-300 px-2 py-1 text-right">
@@ -97,7 +97,7 @@ export default function Tab4RateTable({ records, selectedRate }: Props) {
                 onClick={() => setPage(p)}
                 className={`px-2 py-1 text-[11px] border ${
                   p === page
-                    ? "bg-[#3358A4] text-white border-[#3358A4]"
+                    ? "bg-[#437194] text-white border-[#437194]"
                     : "border-gray-300 hover:bg-gray-100"
                 }`}
               >

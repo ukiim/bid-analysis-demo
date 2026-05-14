@@ -78,7 +78,7 @@ export default function Tab3FrequencyMatrix({
 
   return (
     <div>
-      <div className="text-[13px] font-bold text-[#3358A4] mb-3">
+      <div className="text-[13px] font-bold text-[#437194] mb-3">
         사정률 발생빈도와 구간분석
       </div>
 
@@ -89,7 +89,7 @@ export default function Tab3FrequencyMatrix({
           <XAxis dataKey="rate" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
           <YAxis tick={{ fontSize: 10 }} />
           <Tooltip contentStyle={{ fontSize: 11 }} />
-          <Bar dataKey="count" fill="#3358A4" name="빈도" radius={[1, 1, 0, 0]} />
+          <Bar dataKey="count" fill="#437194" name="빈도" radius={[1, 1, 0, 0]} />
           <Bar dataKey="first_place" fill="#E8913A" name="1순위" radius={[1, 1, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
@@ -129,7 +129,7 @@ export default function Tab3FrequencyMatrix({
                       title={`${cell.rate.toFixed(2)}% · ${cell.count}건`}
                       className={`border border-gray-300 px-0 py-0.5 text-center transition-colors ${
                         isSelected
-                          ? "bg-[#3358A4] text-white font-bold cursor-pointer"
+                          ? "bg-[#437194] text-white font-bold cursor-pointer"
                           : cell.count > 0
                           ? "bg-[#E8913A] text-white font-semibold cursor-pointer"
                           : "text-gray-200"
@@ -148,7 +148,7 @@ export default function Tab3FrequencyMatrix({
       <div className="mt-1.5 text-[10px] text-gray-500 flex items-center gap-3">
         <span>← 가로 스크롤로 .00 ~ .99 (0.01% 단위 100컬럼) 전체 확인</span>
         {selectedRate != null && (
-          <span className="text-[#3358A4] font-bold">
+          <span className="text-[#437194] font-bold">
             선택: {selectedRate.toFixed(2)}%
           </span>
         )}
@@ -163,7 +163,7 @@ export default function Tab3FrequencyMatrix({
               mode === "A" ? "빈도최대" : mode === "B" ? "공백" : "차이최대";
             return (
               <div key={mode} className="border border-gray-300">
-                <div className="bg-gradient-to-b from-[#4A7ABF] to-[#3358A4] text-white px-3 py-1.5 text-[11px] font-bold">
+                <div className="bg-gradient-to-b from-[#5481B8] to-[#437194] text-white px-3 py-1.5 text-[11px] font-bold">
                   구간 {mode} — {modeLabel}
                 </div>
                 <table className="w-full border-collapse text-[11px]">
@@ -182,7 +182,7 @@ export default function Tab3FrequencyMatrix({
                         onClick={() => onRateSelect(item.rate)}
                         className="cursor-pointer hover:bg-blue-50"
                       >
-                        <td className="border border-gray-300 px-2 py-1 text-center font-bold text-[#3358A4]">
+                        <td className="border border-gray-300 px-2 py-1 text-center font-bold text-[#437194]">
                           {item.rank}
                         </td>
                         <td className="border border-gray-300 px-2 py-1 text-center font-semibold">
@@ -219,7 +219,7 @@ export default function Tab3FrequencyMatrix({
                   c.is_recommended
                     ? "bg-[#E8913A] text-white border-[#E8913A] font-bold"
                     : selectedRate != null && Math.abs(c.rate - selectedRate) < 0.05
-                    ? "bg-[#3358A4] text-white border-[#3358A4]"
+                    ? "bg-[#437194] text-white border-[#437194]"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }`}
               >
@@ -234,7 +234,7 @@ export default function Tab3FrequencyMatrix({
       {/* Company gap analysis */}
       {companyData && (companyData.gaps?.length > 0 || companyData.refined_rate != null) && (
         <div className="mt-4 border border-gray-300">
-          <div className="bg-gradient-to-b from-[#4A7ABF] to-[#3358A4] text-white px-3 py-1.5 text-[11px] font-bold flex items-center justify-between">
+          <div className="bg-gradient-to-b from-[#5481B8] to-[#437194] text-white px-3 py-1.5 text-[11px] font-bold flex items-center justify-between">
             <span>업체사정률 갭 분석</span>
             <span className="text-[10px] opacity-90">
               업체 {companyData.total_companies}곳 · 고유사정률 {companyData.unique_rate_count}건
@@ -255,7 +255,7 @@ export default function Tab3FrequencyMatrix({
                     <span className="bg-[#E8EDF3] px-2 py-1 font-semibold text-gray-700 ml-2">최대 갭 중간값</span>
                     <button
                       onClick={() => onRateSelect(companyData.largest_gap_midpoint!)}
-                      className="px-3 py-1 bg-white border border-[#3358A4] text-[#3358A4] font-bold hover:bg-blue-50"
+                      className="px-3 py-1 bg-white border border-[#437194] text-[#437194] font-bold hover:bg-blue-50"
                     >
                       {companyData.largest_gap_midpoint.toFixed(4)}%
                     </button>
@@ -287,7 +287,7 @@ export default function Tab3FrequencyMatrix({
                       <td className="border border-gray-300 px-2 py-1 text-center font-semibold text-[#E8913A]">
                         {g.size.toFixed(4)}
                       </td>
-                      <td className="border border-gray-300 px-2 py-1 text-center font-bold text-[#3358A4]">
+                      <td className="border border-gray-300 px-2 py-1 text-center font-bold text-[#437194]">
                         {g.midpoint.toFixed(4)}%
                       </td>
                     </tr>
@@ -307,7 +307,7 @@ export default function Tab3FrequencyMatrix({
         <span>최소: <b>{stats.min.toFixed(4)}%</b></span>
         <span>최대: <b>{stats.max.toFixed(4)}%</b></span>
         {rateBuckets?.detail_rate != null && (
-          <span className="text-[#3358A4] font-bold">
+          <span className="text-[#437194] font-bold">
             세부값: {rateBuckets.detail_rate.toFixed(4)}%
           </span>
         )}

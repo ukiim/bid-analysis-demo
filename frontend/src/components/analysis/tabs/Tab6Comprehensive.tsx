@@ -28,9 +28,9 @@ interface Props {
 }
 
 const MODE_LABELS: Record<"A" | "B" | "C", { name: string; desc: string; color: string }> = {
-  A: { name: "구간 A", desc: "빈도최대", color: "#3358A4" },
-  B: { name: "구간 B", desc: "공백 (낮은 빈도)", color: "#7C9CD1" },
-  C: { name: "구간 C", desc: "차이최대 (인접 갭)", color: "#4A7ABF" },
+  A: { name: "구간 A", desc: "빈도최대", color: "#437194" },
+  B: { name: "구간 B", desc: "공백 (낮은 빈도)", color: "#8AA7C9" },
+  C: { name: "구간 C", desc: "차이최대 (인접 갭)", color: "#5481B8" },
 };
 
 function BucketCard({
@@ -64,7 +64,7 @@ function BucketCard({
           <div className="text-[10px] text-gray-500">1순위 예측</div>
           <button
             onClick={() => onRateSelect(top.rate)}
-            className="text-[20px] font-extrabold text-[#3358A4] hover:underline"
+            className="text-[20px] font-extrabold text-[#437194] hover:underline"
           >
             {top.rate.toFixed(2)}%
           </button>
@@ -98,7 +98,7 @@ function BucketCard({
                     isSel ? "bg-[#FFF7ED]" : "hover:bg-blue-50"
                   }`}
                 >
-                  <td className="border border-gray-300 px-1.5 py-1 text-center font-bold text-[#3358A4]">
+                  <td className="border border-gray-300 px-1.5 py-1 text-center font-bold text-[#437194]">
                     {it.rank}
                   </td>
                   <td className="border border-gray-300 px-1.5 py-1 text-center font-semibold">
@@ -138,7 +138,7 @@ export default function Tab6Comprehensive({
 
   return (
     <div>
-      <div className="text-[13px] font-bold text-[#3358A4] mb-3">
+      <div className="text-[13px] font-bold text-[#437194] mb-3">
         종합분석 — 4-카드 (KBID 동등성)
       </div>
 
@@ -146,7 +146,7 @@ export default function Tab6Comprehensive({
       <div className="grid grid-cols-5 gap-3 mb-3">
         {/* 구간정보 카드 */}
         <div className="border border-gray-300 bg-white">
-          <div className="bg-gradient-to-b from-[#2C4F8A] to-[#1E3A6B] text-white px-3 py-2 text-[12px] font-bold">
+          <div className="bg-gradient-to-b from-[#346081] to-[#1E3A6B] text-white px-3 py-2 text-[12px] font-bold">
             구간정보
           </div>
           <div className="p-3 space-y-2 text-[11px]">
@@ -162,7 +162,7 @@ export default function Tab6Comprehensive({
             </div>
             <div>
               <div className="text-gray-500">기초금액</div>
-              <div className="font-bold text-[#3358A4] text-[12px]">
+              <div className="font-bold text-[#437194] text-[12px]">
                 {announcement?.budget
                   ? `${announcement.budget.toLocaleString()}원`
                   : "-"}
@@ -223,14 +223,14 @@ export default function Tab6Comprehensive({
                 <div className="text-gray-500 text-[10px]">종합 1순위</div>
                 <button
                   onClick={() => onRateSelect(correlation.correlation.final_top1)}
-                  className="text-[20px] font-extrabold text-[#3358A4] hover:underline"
+                  className="text-[20px] font-extrabold text-[#437194] hover:underline"
                 >
                   {correlation.correlation.final_top1.toFixed(2)}%
                 </button>
               </div>
               <div className="border-t border-gray-200 pt-2">
                 <div className="text-gray-500 text-[10px]">예상 투찰</div>
-                <div className="font-bold text-[#3358A4]">
+                <div className="font-bold text-[#437194]">
                   {correlation.correlation.predicted_bid_amount.toLocaleString()}원
                 </div>
               </div>
@@ -274,7 +274,7 @@ export default function Tab6Comprehensive({
       {/* 3가지 방법 상세 (correlation.methods) */}
       {correlation?.methods && correlation.methods.length > 0 && (
         <div className="border border-gray-300 bg-white">
-          <div className="bg-gradient-to-b from-[#4A7ABF] to-[#3358A4] text-white px-3 py-2 text-[12px] font-bold">
+          <div className="bg-gradient-to-b from-[#5481B8] to-[#437194] text-white px-3 py-2 text-[12px] font-bold">
             3가지 분석 방법 결과
           </div>
           <table className="w-full border-collapse text-[11px]">
@@ -302,7 +302,7 @@ export default function Tab6Comprehensive({
                       {aligned && <span className="text-[#E8913A] mr-1">★</span>}
                       {m.name}
                     </td>
-                    <td className="border border-gray-300 px-2 py-1 text-center font-bold text-[#3358A4]">
+                    <td className="border border-gray-300 px-2 py-1 text-center font-bold text-[#437194]">
                       {m.top1_rate.toFixed(4)}%
                     </td>
                     <td className="border border-gray-300 px-2 py-1 text-center">
@@ -320,7 +320,7 @@ export default function Tab6Comprehensive({
                     <td className="border border-gray-300 px-2 py-1 text-center">
                       <button
                         onClick={() => onRateSelect(m.top1_rate)}
-                        className="px-2 py-0.5 text-[10px] bg-[#3358A4] text-white hover:bg-[#2C4F8A]"
+                        className="px-2 py-0.5 text-[10px] bg-[#437194] text-white hover:bg-[#346081]"
                       >
                         선택
                       </button>
