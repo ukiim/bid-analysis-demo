@@ -1,15 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import AmHistogram from "@/components/charts/AmHistogram";
 import type {
   FrequencyBin,
   FrequencyStats,
@@ -40,7 +32,7 @@ export default function Tab3FrequencyMatrix({
   const chartData = useMemo(
     () =>
       bins.map((b) => ({
-        rate: b.rate.toFixed(1),
+        rate: b.rate,
         count: b.count,
         first_place: b.first_place_count,
       })),
@@ -82,17 +74,13 @@ export default function Tab3FrequencyMatrix({
         사정률 발생빈도와 구간분석
       </div>
 
-      {/* Histogram */}
-      <ResponsiveContainer width="100%" height={250}>
-        <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-          <XAxis dataKey="rate" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
-          <YAxis tick={{ fontSize: 10 }} />
-          <Tooltip contentStyle={{ fontSize: 11 }} />
-          <Bar dataKey="count" fill="#437194" name="빈도" radius={[1, 1, 0, 0]} />
-          <Bar dataKey="first_place" fill="#E8913A" name="1순위" radius={[1, 1, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+      {/* Histogram — KBID 동등 amCharts 5 (v4) */}
+      <AmHistogram
+        data={chartData}
+        height={280}
+        highlightRate={selectedRate}
+        onBarClick={onRateSelect}
+      />
 
       {/* Interactive matrix (KBID 동등성: 0.01% 정밀도 — 100컬럼 × N행) */}
       <div className="mt-4 overflow-x-auto border border-gray-300">

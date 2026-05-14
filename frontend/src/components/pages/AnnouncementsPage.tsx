@@ -458,103 +458,116 @@ export default function AnnouncementsPage() {
         </div>
       )}
 
-      {/* 14-컬럼 분리 리스트 */}
+      {/* KBID 9-컬럼 리스트 (v4) */}
       <div className="overflow-x-auto" style={{ borderTop: "2px solid var(--kbid-primary)" }}>
-        <table className="kbid-list-table" style={{ minWidth: 1500 }}>
+        <table className="kbid-list-table" style={{ minWidth: 1280 }}>
           <thead>
             <tr>
               <th style={{ width: 44 }}>번호</th>
-              <th>공고명</th>
-              <th style={{ width: 90 }}>공고번호</th>
-              <th style={{ width: 70 }}>업종</th>
-              <th style={{ width: 70 }}>면허</th>
+              <th>공고명 / 공고번호</th>
+              <th style={{ width: 120 }}>업종 / 면허</th>
               <th style={{ width: 70 }}>지역</th>
-              <th style={{ width: 140 }}>공고기관</th>
-              <th style={{ width: 110 }}>수요기관</th>
-              <th style={{ width: 100 }}>기초금액</th>
-              <th style={{ width: 100 }}>추정가격</th>
-              <th style={{ width: 110 }}>투찰마감일시</th>
-              <th style={{ width: 110 }}>개찰일시</th>
-              <th style={{ width: 80 }}>현설</th>
-              <th style={{ width: 56 }}>분석</th>
+              <th style={{ width: 180 }}>공고기관 / 수요기관</th>
+              <th style={{ width: 130 }}>기초금액 / 추정가격</th>
+              <th style={{ width: 120 }}>투찰마감일시</th>
+              <th style={{ width: 120 }}>개찰일시</th>
+              <th style={{ width: 100 }}>현설일</th>
+              <th style={{ width: 70 }}>분석</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={14} style={{ padding: 22, color: "#999" }}>
+                <td colSpan={10} style={{ padding: 22, color: "#999" }}>
                   공고 데이터 로딩 중...
                 </td>
               </tr>
             )}
             {!loading && items.length === 0 && (
               <tr>
-                <td colSpan={14} style={{ padding: 22, color: "#999" }}>
+                <td colSpan={10} style={{ padding: 22, color: "#999" }}>
                   조건에 맞는 공고가 없습니다
                 </td>
               </tr>
             )}
             {items.map((a, idx) => (
-              <tr key={a.id} style={{ height: 40 }}>
+              <tr key={a.id} style={{ height: 44 }}>
                 <td style={{ fontSize: 12 }}>{(page - 1) * pageSize + idx + 1}</td>
-                <td style={{ textAlign: "left", maxWidth: 340, padding: "8px 8px" }}>
-                  <Link
-                    href={`/analysis/${a.id}`}
-                    style={{
-                      color: "var(--kbid-primary)",
-                      fontWeight: 700,
-                      fontSize: 13,
-                      textDecoration: "none",
-                    }}
-                    className="hover:underline"
-                  >
-                    {a.title}
-                  </Link>
+                {/* 공고명 / 공고번호 (통합) — KBID 동일 */}
+                <td style={{ textAlign: "left", maxWidth: 380, padding: "8px 10px" }}>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="inline-block px-1.5 py-0.5 text-[10px] font-bold flex-shrink-0"
+                      style={{
+                        background:
+                          a.type === "공사"
+                            ? "#DCE8F6"
+                            : a.type === "용역"
+                            ? "#EEDCF6"
+                            : "#E8E8E8",
+                        color:
+                          a.type === "공사"
+                            ? "#0E47C8"
+                            : a.type === "용역"
+                            ? "#6F2B96"
+                            : "#555",
+                        borderRadius: 2,
+                      }}
+                    >
+                      {a.type}
+                    </span>
+                    <Link
+                      href={`/analysis/${a.id}`}
+                      style={{
+                        color: "var(--kbid-primary)",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        textDecoration: "none",
+                      }}
+                      className="hover:underline truncate"
+                    >
+                      {a.title}
+                    </Link>
+                  </div>
+                  <div className="text-[10px] font-mono mt-0.5" style={{ color: "#888" }}>
+                    {a.bid_number}
+                  </div>
                 </td>
-                <td style={{ fontFamily: "monospace", fontSize: 11, color: "#777" }}>
-                  {a.bid_number}
-                </td>
-                <td>
-                  <span
-                    className="inline-block px-2 py-1 text-[11px] font-bold"
-                    style={{
-                      background:
-                        a.type === "공사"
-                          ? "#DCE8F6"
-                          : a.type === "용역"
-                          ? "#EEDCF6"
-                          : "#E8E8E8",
-                      color:
-                        a.type === "공사"
-                          ? "#0E47C8"
-                          : a.type === "용역"
-                          ? "#6F2B96"
-                          : "#555",
-                      borderRadius: 2,
-                    }}
-                  >
-                    {a.type}
-                  </span>
-                </td>
+                {/* 업종 / 면허 (통합) */}
                 <td style={{ fontSize: 11, color: "#555" }}>
                   {a.license_category ?? "-"}
                 </td>
+                {/* 지역 */}
                 <td style={{ fontSize: 12, fontWeight: 600 }}>{a.area ?? "-"}</td>
-                <td style={{ textAlign: "left", maxWidth: 140, fontSize: 12 }} className="truncate">
-                  {a.org}
+                {/* 공고기관 / 수요기관 (통합) */}
+                <td style={{ textAlign: "left", padding: "8px 10px" }}>
+                  <div className="text-[12px] truncate" style={{ fontWeight: 600 }}>
+                    {a.org}
+                  </div>
+                  {a.parent_org && a.parent_org !== a.org && (
+                    <div className="text-[10px] truncate" style={{ color: "#888", marginTop: 1 }}>
+                      → {a.parent_org}
+                    </div>
+                  )}
                 </td>
-                <td style={{ textAlign: "left", fontSize: 11, color: "#666" }} className="truncate">
-                  {a.parent_org && a.parent_org !== a.org ? a.parent_org : "-"}
+                {/* 기초금액 / 추정가격 (통합) */}
+                <td style={{ textAlign: "right", padding: "8px 10px" }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: "var(--kbid-text-strong)" }}>
+                    {formatBudget(a.budget)}
+                  </div>
+                  {a.estimated_price && (
+                    <div className="text-[10px]" style={{ color: "#888", marginTop: 1 }}>
+                      추정 {formatBudget(a.estimated_price)}
+                    </div>
+                  )}
                 </td>
-                <td style={{ textAlign: "right", fontWeight: 700, fontSize: 13, color: "var(--kbid-text-strong)" }}>
-                  {formatBudget(a.budget)}
-                </td>
-                <td style={{ textAlign: "right", color: "#666", fontSize: 12 }}>
-                  {a.estimated_price ? formatBudget(a.estimated_price) : "-"}
-                </td>
+                {/* 투찰마감일시 */}
                 <td style={{ fontSize: 11, color: "#555" }}>{a.deadline ?? "-"}</td>
+                {/* 개찰일시 */}
                 <td style={{ fontSize: 11, color: "#555" }}>{a.opening_at ?? "-"}</td>
+                {/* 현설일 */}
                 <td style={{ fontSize: 11, color: "#555" }}>{a.site_visit_at ?? "-"}</td>
+                {/* 분석 */}
                 <td>
                   <Link
                     href={`/analysis/${a.id}`}

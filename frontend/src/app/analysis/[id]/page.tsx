@@ -25,7 +25,6 @@ import AnalysisSummaryBar from "@/components/analysis/AnalysisSummaryBar";
 import AnalysisDataTable from "@/components/analysis/AnalysisDataTable";
 import AnalysisTabs from "@/components/analysis/AnalysisTabs";
 import AnalysisCalculator from "@/components/analysis/AnalysisCalculator";
-import CorrelationPanel from "@/components/analysis/CorrelationPanel";
 import Tab1RateChart from "@/components/analysis/tabs/Tab1RateChart";
 import Tab2PreliminaryFreq from "@/components/analysis/tabs/Tab2PreliminaryFreq";
 import Tab3FrequencyMatrix from "@/components/analysis/tabs/Tab3FrequencyMatrix";
@@ -190,6 +189,7 @@ export default function AnalysisPage() {
     }
   };
 
+  // KBID 동등 4-탭 (v4) — 우측 보조 모드 (업체사정률 / 사정률 표) 별도
   const tabs = [
     {
       key: "tab1",
@@ -218,22 +218,6 @@ export default function AnalysisPage() {
     },
     {
       key: "tab4",
-      label: "사정률 표",
-      content: <Tab4RateTable records={firstPlacePreds} selectedRate={selectedRate} />,
-    },
-    {
-      key: "tab5",
-      label: "업체사정률 분석",
-      content: (
-        <Tab5CompanyRates
-          data={companyData}
-          selectedRate={selectedRate}
-          onRateSelect={setSelectedRate}
-        />
-      ),
-    },
-    {
-      key: "tab6",
       label: "종합분석",
       content: (
         <Tab6Comprehensive
@@ -247,6 +231,28 @@ export default function AnalysisPage() {
       ),
     },
   ];
+
+  // 보조 모드 (KBID 4탭과 별도 — 우측 액션 버튼으로 진입)
+  const secondaryViews: Record<string, { label: string; content: React.ReactNode }> = {
+    "company-rates": {
+      label: "업체사정률 분석",
+      content: (
+        <Tab5CompanyRates
+          data={companyData}
+          selectedRate={selectedRate}
+          onRateSelect={setSelectedRate}
+        />
+      ),
+    },
+    "rate-table": {
+      label: "사정률 표",
+      content: <Tab4RateTable records={firstPlacePreds} selectedRate={selectedRate} />,
+    },
+  };
+  const secondaryMode = activeTab.startsWith("sec-")
+    ? activeTab.slice(4)
+    : null;
+  const isSecondary = secondaryMode != null && secondaryViews[secondaryMode] != null;
 
   if (loading) {
     return (
@@ -294,15 +300,64 @@ export default function AnalysisPage() {
         onExport={handleExport}
       />
 
-      <CorrelationPanel data={correlation} onRateSelect={setSelectedRate} />
-
       <AnalysisDataTable comparisons={comparisons} />
 
-      <AnalysisTabs
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+      {/* 우측 보조 모드 액션 (KBID 4탭과 별도) */}
+      <div
+        className="mx-4 mt-2 flex items-center justify-between gap-2"
+        style={{
+          background: "var(--kbid-panel-bg)",
+          border: "1px solid var(--kbid-border)",
+          padding: "8px 14px",
+        }}
+      >
+        <div className="text-[12px]" style={{ color: "var(--kbid-text-meta)" }}>
+          {isSecondary
+            ? `보조 모드: ${secondaryViews[secondaryMode!].label}`
+            : "KBID 4-탭 분석 + 우측 보조 화면"}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {!isSecondary ? (
+            <>
+              <button
+                className="kbid-btn-secondary"
+                onClick={() => setActiveTab("sec-company-rates")}
+              >
+                업체사정률 분석
+              </button>
+              <button
+                className="kbid-btn-secondary"
+                onClick={() => setActiveTab("sec-rate-table")}
+              >
+                사정률 표
+              </button>
+            </>
+          ) : (
+            <button
+              className="kbid-btn-primary"
+              onClick={() => setActiveTab("tab3")}
+              style={{ padding: "5px 14px", fontSize: 12 }}
+            >
+              ← KBID 4-탭으로 돌아가기
+            </button>
+          )}
+        </div>
+      </div>
+
+      {isSecondary ? (
+        <div
+          className="mx-4 mt-2 bg-white border border-gray-300 p-4"
+          style={{ borderColor: "var(--kbid-border)" }}
+        >
+          {secondaryViews[secondaryMode!].content}
+        </div>
+      ) : (
+        <AnalysisTabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+      )}
 
       <AnalysisCalculator
         baseAmount={announcement?.budget ?? null}
