@@ -36,11 +36,11 @@
 
   /* === 폰트 === */
   --kbid-font-family: "Nanum Gothic", NanumGothic, "맑은 고딕", "Malgun Gothic", dotum, sans-serif;
-  --kbid-font-size-base: 13px;
+  --kbid-font-size-base: 14px;
   --kbid-font-size-sm: 12px;
   --kbid-font-size-xs: 11px;
-  --kbid-font-size-lg: 14px;
-  --kbid-font-size-xl: 16px;
+  --kbid-font-size-lg: 15px;
+  --kbid-font-size-xl: 17px;
 
   /* === 여백 === */
   --kbid-cell-padding-y: 6px;
@@ -71,22 +71,28 @@
 
 /* === 컴포넌트 클래스 === */
 
-/* 메인 액션 버튼 */
+/* 메인 액션 버튼 — 시인성 강화 (그라디언트 + 진한 텍스트 그림자) */
 .kbid-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 14px;
+  padding: 7px 16px;
   font-family: var(--kbid-font-family);
   font-size: var(--kbid-font-size-base);
-  font-weight: var(--kbid-weight-bold);
-  color: #ffffff;
-  background: var(--kbid-primary);
+  font-weight: 700;
+  color: #ffffff !important;
+  background: linear-gradient(to bottom, #5481B8, #437194);
   border: 1px solid var(--kbid-primary-border);
   cursor: pointer;
-  transition: background 0.1s;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  transition: filter 0.1s;
+  text-decoration: none !important;
 }
-.kbid-btn-primary:hover { background: var(--kbid-primary-hover); }
+.kbid-btn-primary:hover {
+  filter: brightness(1.08);
+  text-decoration: none !important;
+}
+.kbid-btn-primary:active { filter: brightness(0.95); }
 
 .kbid-btn-secondary {
   display: inline-flex;
@@ -150,32 +156,35 @@
   color: var(--kbid-text-strong);
 }
 
-/* List-table — 결과 목록 */
+/* List-table — 결과 목록 (시인성 개선: 행 높이 + 폰트 키움) */
 .kbid-list-table {
   width: 100%;
   border-collapse: collapse;
   background: #ffffff;
 }
 .kbid-list-table thead th {
-  background: var(--kbid-label-bg);
+  background: var(--kbid-label-bg-dark);
   border: 1px solid var(--kbid-border);
-  padding: 7px 4px;
-  font-size: var(--kbid-font-size-sm);
+  padding: 9px 6px;
+  font-size: var(--kbid-font-size-base);
   font-weight: var(--kbid-weight-bold);
   color: var(--kbid-text-strong);
   text-align: center;
+  white-space: nowrap;
 }
 .kbid-list-table tbody td {
   border: 1px solid var(--kbid-border);
-  padding: 6px 6px;
-  font-size: var(--kbid-font-size-sm);
+  padding: 8px 6px;
+  font-size: var(--kbid-font-size-base);
   text-align: center;
+  color: var(--kbid-text-base);
+  vertical-align: middle;
 }
 .kbid-list-table tbody tr:nth-child(even) td {
   background: var(--kbid-table-row-alt);
 }
 .kbid-list-table tbody tr:hover td {
-  background: #EFF5FB;
+  background: #E6F0FB;
 }
 
 /* Tab bar — 큰 파란 탭 */

@@ -81,7 +81,8 @@ function quickRangeDates(months: number): { from: string; to: string } {
 export default function AnnouncementsPage() {
   const [tab, setTab] = useState<NoticeTab>("all");
   const [filter, setFilter] = useState({
-    type: "all",
+    // 기본값: 공사+용역 (입찰 분석 핵심 카테고리)
+    type: "공사,용역",
     region_sido: "all",
     region_sigungu: "all",
     license_category: "all",
@@ -200,11 +201,10 @@ export default function AnnouncementsPage() {
                       setFilter((f) => ({ ...f, type: e.target.value }))
                     }
                   >
-                    <option value="all">전체</option>
-                    <option value="공사">공사입찰</option>
-                    <option value="용역">용역입찰</option>
-                    <option value="물품">물품입찰</option>
-                    <option value="구매">구매</option>
+                    <option value="공사,용역">공사 + 용역 (기본)</option>
+                    <option value="공사">공사입찰만</option>
+                    <option value="용역">용역입찰만</option>
+                    <option value="all">전체 카테고리</option>
                   </select>
                 ),
               },
@@ -495,54 +495,61 @@ export default function AnnouncementsPage() {
               </tr>
             )}
             {items.map((a, idx) => (
-              <tr key={a.id}>
-                <td>{(page - 1) * pageSize + idx + 1}</td>
-                <td style={{ textAlign: "left", maxWidth: 320 }}>
+              <tr key={a.id} style={{ height: 40 }}>
+                <td style={{ fontSize: 12 }}>{(page - 1) * pageSize + idx + 1}</td>
+                <td style={{ textAlign: "left", maxWidth: 340, padding: "8px 8px" }}>
                   <Link
                     href={`/analysis/${a.id}`}
-                    style={{ color: "var(--kbid-primary)", fontWeight: 600 }}
+                    style={{
+                      color: "var(--kbid-primary)",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      textDecoration: "none",
+                    }}
+                    className="hover:underline"
                   >
                     {a.title}
                   </Link>
                 </td>
-                <td style={{ fontFamily: "monospace", fontSize: 11 }}>
+                <td style={{ fontFamily: "monospace", fontSize: 11, color: "#777" }}>
                   {a.bid_number}
                 </td>
                 <td>
                   <span
-                    className="inline-block px-1.5 py-0.5 text-[10px] font-semibold"
+                    className="inline-block px-2 py-1 text-[11px] font-bold"
                     style={{
                       background:
                         a.type === "공사"
-                          ? "#E8F0FA"
+                          ? "#DCE8F6"
                           : a.type === "용역"
-                          ? "#F3E8FA"
-                          : "#F0F0F0",
+                          ? "#EEDCF6"
+                          : "#E8E8E8",
                       color:
                         a.type === "공사"
-                          ? "#1B5092"
+                          ? "#0E47C8"
                           : a.type === "용역"
                           ? "#6F2B96"
                           : "#555",
+                      borderRadius: 2,
                     }}
                   >
                     {a.type}
                   </span>
                 </td>
-                <td style={{ fontSize: 11, color: "#666" }}>
+                <td style={{ fontSize: 11, color: "#555" }}>
                   {a.license_category ?? "-"}
                 </td>
-                <td>{a.area ?? "-"}</td>
-                <td style={{ textAlign: "left", maxWidth: 140 }} className="truncate">
+                <td style={{ fontSize: 12, fontWeight: 600 }}>{a.area ?? "-"}</td>
+                <td style={{ textAlign: "left", maxWidth: 140, fontSize: 12 }} className="truncate">
                   {a.org}
                 </td>
                 <td style={{ textAlign: "left", fontSize: 11, color: "#666" }} className="truncate">
                   {a.parent_org && a.parent_org !== a.org ? a.parent_org : "-"}
                 </td>
-                <td style={{ textAlign: "right", fontWeight: 600 }}>
+                <td style={{ textAlign: "right", fontWeight: 700, fontSize: 13, color: "var(--kbid-text-strong)" }}>
                   {formatBudget(a.budget)}
                 </td>
-                <td style={{ textAlign: "right", color: "#666" }}>
+                <td style={{ textAlign: "right", color: "#666", fontSize: 12 }}>
                   {a.estimated_price ? formatBudget(a.estimated_price) : "-"}
                 </td>
                 <td style={{ fontSize: 11, color: "#555" }}>{a.deadline ?? "-"}</td>
@@ -552,9 +559,20 @@ export default function AnnouncementsPage() {
                   <Link
                     href={`/analysis/${a.id}`}
                     className="kbid-btn-primary"
-                    style={{ padding: "2px 8px", fontSize: 11 }}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "5px 14px",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      borderRadius: 3,
+                      minWidth: 56,
+                      lineHeight: 1.2,
+                      textDecoration: "none",
+                    }}
                   >
-                    분석
+                    분 석
                   </Link>
                 </td>
               </tr>
