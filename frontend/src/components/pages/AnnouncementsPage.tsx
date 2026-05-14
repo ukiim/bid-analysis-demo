@@ -13,6 +13,7 @@
  * KBID 캡쳐(1차 데모 검토 PDF 1페이지) 동등.
  */
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import KbidTabBar from "@/components/kbid/KbidTabBar";
 import KbidFormTable from "@/components/kbid/KbidFormTable";
@@ -79,6 +80,8 @@ function quickRangeDates(months: number): { from: string; to: string } {
 }
 
 export default function AnnouncementsPage() {
+  const sp = useSearchParams();
+  const initialKeyword = sp.get("q") ?? "";
   const [tab, setTab] = useState<NoticeTab>("all");
   const [filter, setFilter] = useState({
     // 기본값: 공사+용역 (입찰 분석 핵심 카테고리)
@@ -86,7 +89,7 @@ export default function AnnouncementsPage() {
     region_sido: "all",
     region_sigungu: "all",
     license_category: "all",
-    keyword: "",
+    keyword: initialKeyword,
     org_search: "",
     date_from: "",
     date_to: "",
@@ -94,6 +97,15 @@ export default function AnnouncementsPage() {
     area_max: "",
     source: "all",
   });
+
+  // URL ?q= 변경 시 keyword 동기화 (TopNav 검색)
+  useEffect(() => {
+    const q = sp.get("q");
+    if (q != null && q !== filter.keyword) {
+      setFilter((f) => ({ ...f, keyword: q }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sp]);
   const [items, setItems] = useState<AnnouncementRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);

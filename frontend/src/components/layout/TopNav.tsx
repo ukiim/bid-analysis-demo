@@ -10,6 +10,7 @@
  * 총 약 169px — kbid.co.kr 헤더와 동일.
  */
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface Props {
   activePage: string;
@@ -33,8 +34,10 @@ const QUICK_LINKS = [
 ];
 
 export default function TopNav({ activePage, onPageChange }: Props) {
+  const router = useRouter();
   const [user, setUser] = useState<{ name: string; plan?: string } | null>(null);
   const [now, setNow] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     setNow(
@@ -49,14 +52,47 @@ export default function TopNav({ activePage, onPageChange }: Props) {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          JSON.parse(atob(token.split(".")[1]));
-          setUser({ name: "관리자", plan: "프리미엄" });
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          // exp 만료 검사 (epoch 초)
+          if (payload.exp && payload.exp * 1000 < Date.now()) {
+            localStorage.removeItem("token");
+            router.push("/login");
+            return;
+          }
+          const stored = localStorage.getItem("user");
+          if (stored) {
+            try {
+              const u = JSON.parse(stored);
+              setUser({ name: u.name ?? "사용자", plan: u.plan });
+            } catch {
+              setUser({ name: "사용자" });
+            }
+          } else {
+            setUser({ name: "관리자", plan: "프리미엄" });
+          }
         } catch {
-          /* ignore */
+          /* invalid token — redirect */
+          router.push("/login");
         }
+      } else {
+        // 토큰 없음 → 로그인 페이지
+        router.push("/login");
       }
     }
-  }, []);
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    // 공고 페이지로 이동 + keyword 쿼리
+    router.push(`/?page=announcements&q=${encodeURIComponent(searchQuery)}`);
+  };
 
   return (
     <header style={{ borderBottom: "1px solid #08367A" }}>
@@ -84,16 +120,20 @@ export default function TopNav({ activePage, onPageChange }: Props) {
           </span>
         </div>
         <div className="flex items-center gap-4 text-[12px]" style={{ color: "rgba(255,255,255,0.92)" }}>
-          <input
-            placeholder="🔍 공고명, 발주기관 검색"
-            className="text-[12px] px-3 py-1"
-            style={{
-              width: 280,
-              background: "rgba(255,255,255,0.95)",
-              color: "#333",
-              border: "1px solid rgba(255,255,255,0.3)",
-            }}
-          />
+          <form onSubmit={handleSearch}>
+            <input
+              placeholder="🔍 공고명, 발주기관 검색 (Enter)"
+              className="text-[12px] px-3 py-1"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: 280,
+                background: "rgba(255,255,255,0.95)",
+                color: "#333",
+                border: "1px solid rgba(255,255,255,0.3)",
+              }}
+            />
+          </form>
           <span className="inline-flex items-center gap-1">
             <span
               className="inline-block w-1.5 h-1.5 rounded-full"
@@ -103,14 +143,32 @@ export default function TopNav({ activePage, onPageChange }: Props) {
           </span>
           <span style={{ color: "rgba(255,255,255,0.7)" }}>마지막 수집 {now || "—"}</span>
           {user && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded" style={{ background: "rgba(255,255,255,0.1)" }}>
-              <span className="font-bold">{user.name}</span>
-              {user.plan && (
-                <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.8)" }}>
-                  ({user.plan})
-                </span>
-              )}
-            </span>
+            <>
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded"
+                style={{ background: "rgba(255,255,255,0.1)" }}
+              >
+                <span className="font-bold">{user.name}</span>
+                {user.plan && (
+                  <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.8)" }}>
+                    ({user.plan})
+                  </span>
+                )}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="text-[11px] px-2.5 py-1"
+                style={{
+                  background: "rgba(255,255,255,0.12)",
+                  color: "#ffffff",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: 2,
+                }}
+                title="로그아웃"
+              >
+                ⏏ 로그아웃
+              </button>
+            </>
           )}
         </div>
       </div>

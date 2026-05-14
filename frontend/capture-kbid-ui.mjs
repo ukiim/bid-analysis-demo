@@ -32,6 +32,7 @@ async function captureSidebar(page, pageKey, fileName) {
 
   // v4: KBID 4-탭 + 2개 보조 모드 (sec-company-rates / sec-rate-table)
   const urlShots = [
+    { url: `${BASE}/login`, name: "00_login_page.png" },
     { url: `${BASE}/`, name: "01_announcements_list.png" },
     { url: `${BASE}/analysis/${ID}`, name: "02_analysis_tab3_default.png" },
     { url: `${BASE}/analysis/${ID}?tab=tab1`, name: "03_analysis_tab1_rate_chart.png" },
