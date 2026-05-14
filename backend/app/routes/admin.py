@@ -501,3 +501,113 @@ def get_errors(current_user: User = Depends(require_admin)):
     finally:
         db.close()
     return {"fail_count": fail_count, "errors": result}
+
+
+# ─── PDF 04 §1: NAS 다운로드 다중 작업 현황 ──────────────────────────────────────
+
+@router.get("/sync/status")
+def admin_sync_status(current_user: User = Depends(require_admin)):
+    """NAS 다운로드/수집 다중 작업 현황 (PDF 04 §1)
+
+    최근 in_progress + 최근 완료/실패 작업들을 진행률과 함께 반환.
+    프론트 NasStatusCard 가 이 응답을 사용해 진행률·이어받기 버튼을 표시.
+    """
+    db = SessionLocal()
+    try:
+        in_progress = (
+            db.query(DataSyncLog)
+            .filter(DataSyncLog.status == "in_progress")
+            .order_by(DataSyncLog.started_at.desc())
+            .limit(5)
+            .all()
+        )
+        recent_finished = (
+            db.query(DataSyncLog)
+            .filter(DataSyncLog.status.in_(["completed", "failed"]))
+            .order_by(DataSyncLog.started_at.desc())
+            .limit(3)
+            .all()
+        )
+        jobs = []
+        for log in list(in_progress) + list(recent_finished):
+            jobs.append({
+                "id": log.id,
+                "job_name": f"{log.source} {log.sync_type}",
+                "status": log.status,
+                "progress_pct": round(log.progress_pct or 0.0, 2),
+                "records_fetched": log.records_fetched or 0,
+                "inserted_count": getattr(log, "inserted_count", 0) or 0,
+                "started_at": log.started_at.strftime("%Y-%m-%d %H:%M:%S") if log.started_at else None,
+                "finished_at": log.finished_at.strftime("%Y-%m-%d %H:%M:%S") if log.finished_at else None,
+                "error_message": log.error_message,
+                "last_checkpoint": getattr(log, "last_checkpoint", None),
+                "can_resume": (
+                    log.status == "failed" and
+                    (getattr(log, "last_checkpoint", None) or (log.last_page or 0) > 0)
+                ),
+            })
+        return {
+            "jobs": jobs,
+            "running_count": len(in_progress),
+            "total_returned": len(jobs),
+        }
+    finally:
+        db.close()
+
+
+# ─── PDF 03 §10: 10년 이전 데이터 자동/수동 삭제 ──────────────────────────────
+
+@router.post("/purge")
+def admin_purge_old_data(
+    years: int = Query(10, ge=1, le=100),
+    dry_run: bool = Query(False),
+    current_user: User = Depends(require_admin),
+):
+    """오래된 데이터 삭제 — BidAnnouncement + BidResult 기준 announced_at < N년 전 (PDF 03 §10)
+
+    파라미터:
+    - years: 보관 기간 (기본 10). 이보다 오래된 announced_at 의 공고 + 결과 삭제.
+    - dry_run: True 이면 삭제 대신 카운트만 반환.
+
+    응답: { years, cutoff, dry_run, announcements_deleted, results_deleted, message }
+    """
+    cutoff = datetime.now() - timedelta(days=365 * years)
+    db = SessionLocal()
+    try:
+        ann_q = db.query(BidAnnouncement).filter(BidAnnouncement.announced_at < cutoff)
+        ann_count = ann_q.count()
+        # BidResult 는 announcement_id 로 cascade 가 아니므로 별도 조인 카운트
+        old_ids = [a.id for a in ann_q.limit(50000).all()]
+        res_count = db.query(BidResult).filter(BidResult.announcement_id.in_(old_ids)).count() if old_ids else 0
+
+        if dry_run:
+            return {
+                "years": years,
+                "cutoff": cutoff.strftime("%Y-%m-%d"),
+                "dry_run": True,
+                "announcements_to_delete": ann_count,
+                "results_to_delete": res_count,
+                "message": f"{ann_count}건 공고 + {res_count}건 낙찰결과가 삭제 대상 (dry-run)",
+            }
+
+        deleted_results = 0
+        if old_ids:
+            deleted_results = db.query(BidResult).filter(BidResult.announcement_id.in_(old_ids)).delete(synchronize_session=False)
+        deleted_anns = ann_q.delete(synchronize_session=False)
+        db.commit()
+        logger.info("Purge 완료: %d 공고 + %d 결과 (cutoff=%s)", deleted_anns, deleted_results, cutoff)
+        return {
+            "years": years,
+            "cutoff": cutoff.strftime("%Y-%m-%d"),
+            "dry_run": False,
+            "announcements_deleted": deleted_anns,
+            "results_deleted": deleted_results,
+            "deleted_count": deleted_anns + deleted_results,
+            "message": f"{deleted_anns}건 공고 + {deleted_results}건 낙찰결과 삭제 완료",
+        }
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Purge 실패")
+        raise HTTPException(status_code=500, detail=f"삭제 실패: {exc}")
+    finally:
+        db.close()
