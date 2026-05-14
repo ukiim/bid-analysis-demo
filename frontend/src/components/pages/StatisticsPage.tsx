@@ -1,18 +1,18 @@
 "use client";
 
+/**
+ * 통계 리포트 페이지 — v4 KBID 톤
+ */
 import { useState } from "react";
-import {
-  ComposedChart, Bar, Line, BarChart, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-} from "recharts";
+import AmLineChart from "@/components/charts/AmLineChart";
 
 const TREND_DATA = [
-  { month: "10월", construction: 82.4, service: 88.1, total: 85.1 },
-  { month: "11월", construction: 80.9, service: 87.3, total: 84.0 },
-  { month: "12월", construction: 79.5, service: 89.2, total: 84.2 },
-  { month: "1월", construction: 83.1, service: 90.4, total: 86.5 },
-  { month: "2월", construction: 81.7, service: 88.8, total: 85.1 },
-  { month: "3월", construction: 84.3, service: 91.2, total: 87.6 },
+  { period: "10월", avg_rate: 85.1, min_rate: 82.4, max_rate: 88.1 },
+  { period: "11월", avg_rate: 84.0, min_rate: 80.9, max_rate: 87.3 },
+  { period: "12월", avg_rate: 84.2, min_rate: 79.5, max_rate: 89.2 },
+  { period: "1월", avg_rate: 86.5, min_rate: 83.1, max_rate: 90.4 },
+  { period: "2월", avg_rate: 85.1, min_rate: 81.7, max_rate: 88.8 },
+  { period: "3월", avg_rate: 87.6, min_rate: 84.3, max_rate: 91.2 },
 ];
 
 const REGION_DATA = [
@@ -32,113 +32,138 @@ export default function StatisticsPage() {
 
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-xl font-extrabold">통계 리포트</h1>
-        <p className="text-[13px] text-slate-500 mt-1">
+      {/* KBID 페이지 헤더 */}
+      <div
+        className="bg-white border-b"
+        style={{ borderColor: "var(--kbid-border)", padding: "12px 16px", marginBottom: 14 }}
+      >
+        <h1 style={{ fontSize: 18, fontWeight: 800, color: "var(--kbid-text-strong)" }}>
+          📊 통계 리포트
+        </h1>
+        <p className="text-[12px] mt-1" style={{ color: "var(--kbid-text-meta)" }}>
           업종별·지역별 사정률 분포 · 시계열 트렌드 · 리포트 다운로드
         </p>
       </div>
 
-      {/* 필터 바 */}
-      <div className="flex items-center gap-2.5 p-3.5 bg-white rounded-[10px] mb-4 shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)] flex-wrap">
-        <span className="text-[13px] font-semibold text-slate-500">분석 기간:</span>
-        {PERIODS.map((p) => (
-          <button
-            key={p}
-            onClick={() => setActivePeriod(p)}
-            className={`px-3 py-[5px] rounded-[7px] text-[12.5px] font-semibold border-[1.5px] transition ${
-              activePeriod === p
-                ? "bg-primary text-white border-primary"
-                : "bg-transparent text-slate-500 border-border hover:bg-[#F0F4F8]"
-            }`}
-          >
-            {p}
-          </button>
-        ))}
-        <div className="ml-auto flex gap-2">
-          <button className="inline-flex items-center gap-1.5 px-3.5 py-[7px] rounded-[7px] text-[12.5px] font-semibold border-[1.5px] border-border hover:bg-[#F0F4F8] transition">
-            📊 PDF 리포트
-          </button>
-          <button className="inline-flex items-center gap-1.5 px-3.5 py-[7px] rounded-[7px] text-[12.5px] font-semibold border-[1.5px] border-border hover:bg-[#F0F4F8] transition">
-            📥 CSV 다운로드
-          </button>
-        </div>
-      </div>
+      {/* 필터 행 — KBID form-table 톤 */}
+      <table className="kbid-form-table mb-3">
+        <tbody>
+          <tr>
+            <th style={{ width: 110 }}>분석 기간</th>
+            <td>
+              <div className="flex items-center gap-1.5">
+                {PERIODS.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setActivePeriod(p)}
+                    className={`kbid-btn-quick ${activePeriod === p ? "active" : ""}`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <div className="flex-1" />
+                <button className="kbid-btn-secondary">📊 PDF 리포트</button>
+                <button className="kbid-btn-secondary">📥 CSV 다운로드</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* 차트 그리드 */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-2 gap-3 mb-3">
         {/* 월별 추이 */}
-        <div className="bg-white rounded-[10px] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <div className="text-sm font-bold">사정률 월별 추이</div>
-              <div className="text-xs text-slate-500 mt-0.5">공사 vs 용역 비교</div>
-            </div>
+        <div>
+          <div
+            className="text-white px-3 py-2 text-[12px] font-bold"
+            style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+          >
+            사정률 월별 추이 (평균/최저/최고)
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <ComposedChart data={TREND_DATA} margin={{ top: 0, right: 8, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-              <YAxis domain={[75, 95]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
-              <Tooltip formatter={(v: number, n: string) => [`${v}%`, n]} />
-              <Bar dataKey="construction" fill="#0066CC" opacity={0.7} name="공사" radius={[3, 3, 0, 0] as any} />
-              <Line type="monotone" dataKey="service" stroke="#7C3AED" strokeWidth={2.5} dot={{ r: 4, fill: "#7C3AED" }} name="용역" />
-              <Legend iconType="circle" iconSize={8} />
-            </ComposedChart>
-          </ResponsiveContainer>
+          <div className="bg-white border-x border-b p-3" style={{ borderColor: "var(--kbid-border)" }}>
+            <AmLineChart data={TREND_DATA} height={240} />
+          </div>
         </div>
 
-        {/* 지역별 */}
-        <div className="bg-white rounded-[10px] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <div className="text-sm font-bold">지역별 평균 사정률</div>
-              <div className="text-xs text-slate-500 mt-0.5">낙찰 건수 포함</div>
+        {/* 지역별 평균 사정률 (가로 바 차트 — KBID 톤 단순 CSS) */}
+        <div>
+          <div
+            className="text-white px-3 py-2 text-[12px] font-bold"
+            style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+          >
+            지역별 평균 사정률
+          </div>
+          <div className="bg-white border-x border-b p-4" style={{ borderColor: "var(--kbid-border)" }}>
+            <div className="space-y-2">
+              {REGION_DATA.map((r) => {
+                const max = Math.max(...REGION_DATA.map((d) => d.rate));
+                const pct = (r.rate / max) * 100;
+                return (
+                  <div key={r.region} className="flex items-center gap-2 text-[12px]">
+                    <div className="w-12 font-bold text-right" style={{ color: "var(--kbid-text-strong)" }}>
+                      {r.region}
+                    </div>
+                    <div className="flex-1 h-6 relative" style={{ background: "#F4F7FA", border: "1px solid var(--kbid-border)" }}>
+                      <div
+                        style={{
+                          width: `${pct}%`,
+                          height: "100%",
+                          background: "linear-gradient(to right, #5481B8, #437194)",
+                        }}
+                      />
+                      <div
+                        className="absolute inset-0 flex items-center px-2 font-bold text-white"
+                        style={{ fontSize: 11 }}
+                      >
+                        {r.rate}% <span className="ml-auto text-[10px] opacity-90">{r.count}건</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={REGION_DATA} layout="vertical" margin={{ top: 0, right: 16, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F1F5F9" />
-              <XAxis type="number" domain={[75, 95]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
-              <YAxis dataKey="region" type="category" tick={{ fontSize: 12, fill: "#475569" }} axisLine={false} tickLine={false} width={36} />
-              <Tooltip formatter={(v: number, n: string) => n === "rate" ? [`${v}%`, "사정률"] : [`${v}건`, "건수"]} />
-              <Bar dataKey="rate" fill="#0066CC" radius={[0, 4, 4, 0] as any} name="rate" />
-            </BarChart>
-          </ResponsiveContainer>
         </div>
       </div>
 
       {/* 상세 테이블 */}
-      <div className="bg-white rounded-[10px] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)]">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="text-sm font-bold">지역별 상세 통계</div>
-            <div className="text-xs text-slate-500 mt-0.5">최근 6개월 집계 기준</div>
-          </div>
+      <div>
+        <div
+          className="text-white px-3 py-2 text-[12px] font-bold"
+          style={{ background: "linear-gradient(to bottom, #346081, #1E3A6B)" }}
+        >
+          지역별 상세 통계 — 최근 {activePeriod} 집계
         </div>
-        <table className="w-full border-collapse text-[13px]">
+        <table className="kbid-list-table" style={{ borderTop: "none" }}>
           <thead>
             <tr>
-              <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">지역</th>
-              <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">평균 사정률</th>
-              <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">낙찰 건수</th>
-              <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">최소 사정률</th>
-              <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">최대 사정률</th>
-              <th className="text-left p-[10px_12px] text-[11.5px] font-semibold text-slate-500 border-b-[1.5px] border-border bg-[#F8FAFC]">전월 대비</th>
+              <th style={{ width: 70 }}>지역</th>
+              <th>평균 사정률</th>
+              <th>낙찰 건수</th>
+              <th>최소 사정률</th>
+              <th>최대 사정률</th>
+              <th>전월 대비</th>
             </tr>
           </thead>
           <tbody>
             {REGION_DATA.map((r, i) => (
-              <tr key={r.region} className="hover:bg-[#F8FAFC]">
-                <td className="p-[11px_12px] border-b border-border font-semibold">{r.region}</td>
-                <td className="p-[11px_12px] border-b border-border">
-                  <span className="font-bold text-primary">{r.rate}%</span>
+              <tr key={r.region}>
+                <td style={{ fontWeight: 700 }}>{r.region}</td>
+                <td>
+                  <span style={{ fontWeight: 700, color: "var(--kbid-primary)" }}>
+                    {r.rate}%
+                  </span>
                 </td>
-                <td className="p-[11px_12px] border-b border-border">{r.count}건</td>
-                <td className="p-[11px_12px] border-b border-border text-slate-500">{(r.rate - 4.1).toFixed(1)}%</td>
-                <td className="p-[11px_12px] border-b border-border text-slate-500">{(r.rate + 3.8).toFixed(1)}%</td>
-                <td className="p-[11px_12px] border-b border-border">
-                  <span className={i % 2 === 0 ? "text-green-600" : "text-red-600"}>
+                <td>{r.count}건</td>
+                <td style={{ color: "#666" }}>{(r.rate - 4.1).toFixed(1)}%</td>
+                <td style={{ color: "#666" }}>{(r.rate + 3.8).toFixed(1)}%</td>
+                <td>
+                  <span
+                    style={{
+                      color: i % 2 === 0 ? "#2B8B3C" : "#D9342B",
+                      fontWeight: 600,
+                    }}
+                  >
                     {i % 2 === 0 ? "↑ +1.2%" : "↓ -0.8%"}
                   </span>
                 </td>

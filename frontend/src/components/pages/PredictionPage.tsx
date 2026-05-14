@@ -1,10 +1,10 @@
 "use client";
 
+/**
+ * 사정률 예측 페이지 — v4 KBID 톤 (form-table 기반)
+ */
 import { useState } from "react";
-import {
-  ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Legend,
-} from "recharts";
+import AmLineChart from "@/components/charts/AmLineChart";
 
 const PREDICTION_TARGETS = [
   {
@@ -31,19 +31,12 @@ const PREDICTION_TARGETS = [
 ];
 
 const TREND_DATA = [
-  { month: "10월", construction: 82.4, service: 88.1 },
-  { month: "11월", construction: 80.9, service: 87.3 },
-  { month: "12월", construction: 79.5, service: 89.2 },
-  { month: "1월", construction: 83.1, service: 90.4 },
-  { month: "2월", construction: 81.7, service: 88.8 },
-  { month: "3월", construction: 84.3, service: 91.2 },
-];
-
-const FEATURES = [
-  ["업종코드", "공사/토목"],
-  ["예산 규모", ""],
-  ["지역", ""],
-  ["발주기관 유형", "공기업"],
+  { period: "10월", avg_rate: 85.3, min_rate: 82.4, max_rate: 88.1 },
+  { period: "11월", avg_rate: 84.1, min_rate: 80.9, max_rate: 87.3 },
+  { period: "12월", avg_rate: 84.4, min_rate: 79.5, max_rate: 89.2 },
+  { period: "1월", avg_rate: 86.8, min_rate: 83.1, max_rate: 90.4 },
+  { period: "2월", avg_rate: 85.3, min_rate: 81.7, max_rate: 88.8 },
+  { period: "3월", avg_rate: 87.8, min_rate: 84.3, max_rate: 91.2 },
 ];
 
 export default function PredictionPage() {
@@ -51,103 +44,159 @@ export default function PredictionPage() {
 
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-xl font-extrabold">사정률 예측</h1>
-        <p className="text-[13px] text-slate-500 mt-1">
+      {/* KBID 페이지 헤더 */}
+      <div className="bg-white border-b" style={{ borderColor: "var(--kbid-border)", padding: "12px 16px", marginBottom: 14 }}>
+        <h1 style={{ fontSize: 18, fontWeight: 800, color: "var(--kbid-text-strong)" }}>
+          📈 사정률 예측
+        </h1>
+        <p className="text-[12px] mt-1" style={{ color: "var(--kbid-text-meta)" }}>
           과거 낙찰 데이터 기반 선형회귀 모델 · 95% 신뢰 구간 입찰가 범위 제공
         </p>
       </div>
 
-      <div className="grid grid-cols-[340px_1fr] gap-4 mb-4">
+      <div className="grid grid-cols-[340px_1fr] gap-3">
         {/* 좌측: 공고 선택 */}
-        <div className="bg-white rounded-[10px] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)] h-fit">
-          <div className="text-sm font-bold mb-3">예측 대상 공고 선택</div>
-          {PREDICTION_TARGETS.map((p) => (
-            <div
-              key={p.id}
-              onClick={() => setSelected(p)}
-              className={`p-3 border-2 rounded-lg cursor-pointer mb-2 transition ${
-                selected.id === p.id
-                  ? "border-primary bg-blue-50"
-                  : "border-border hover:border-slate-300"
-              }`}
-            >
-              <div className="text-[13px] font-bold">{p.title}</div>
-              <div className="text-[11.5px] text-slate-500 mt-0.5">
-                {p.area} · {p.type} · {p.budget.toLocaleString()}만원
+        <div>
+          <div
+            className="text-white px-3 py-2 text-[12px] font-bold"
+            style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+          >
+            예측 대상 공고 선택
+          </div>
+          <div className="bg-white border-x border-b" style={{ borderColor: "var(--kbid-border)" }}>
+            {PREDICTION_TARGETS.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => setSelected(p)}
+                className="cursor-pointer border-b px-3 py-2.5 hover:bg-blue-50"
+                style={{
+                  borderColor: "var(--kbid-border)",
+                  background: selected.id === p.id ? "#FFF7ED" : undefined,
+                  borderLeft: selected.id === p.id ? "3px solid #E8913A" : "3px solid transparent",
+                }}
+              >
+                <div className="text-[13px] font-bold" style={{ color: "var(--kbid-text-strong)" }}>
+                  {p.title}
+                </div>
+                <div className="text-[11px] mt-0.5" style={{ color: "var(--kbid-text-meta)" }}>
+                  <span
+                    className="inline-block px-1.5 py-0.5 text-[10px] font-bold mr-1"
+                    style={{
+                      background: p.type === "공사" ? "#DCE8F6" : "#EEDCF6",
+                      color: p.type === "공사" ? "#0E47C8" : "#6F2B96",
+                      borderRadius: 2,
+                    }}
+                  >
+                    {p.type}
+                  </span>
+                  {p.area} · {p.budget.toLocaleString()}만원
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
-          <div className="h-px bg-border my-4" />
-
-          <div className="text-[13px] font-bold mb-2.5">예측 입력 피처</div>
-          {FEATURES.map(([k, v]) => (
-            <div key={k} className="flex justify-between items-center text-[12.5px] py-[5px] border-b border-border">
-              <span className="text-slate-500">{k}</span>
-              <span className="font-semibold">
-                {k === "예산 규모" ? `${selected.budget.toLocaleString()}만원` : k === "지역" ? selected.area : v}
-              </span>
+          {/* 예측 입력 피처 */}
+          <div className="mt-3">
+            <div
+              className="text-white px-3 py-2 text-[12px] font-bold"
+              style={{ background: "linear-gradient(to bottom, #346081, #1E3A6B)" }}
+            >
+              예측 입력 피처
             </div>
-          ))}
+            <table className="kbid-form-table" style={{ borderTop: "none" }}>
+              <tbody>
+                <tr>
+                  <th style={{ width: 100 }}>업종코드</th>
+                  <td>공사/토목</td>
+                </tr>
+                <tr>
+                  <th>예산 규모</th>
+                  <td>{selected.budget.toLocaleString()}만원</td>
+                </tr>
+                <tr>
+                  <th>지역</th>
+                  <td>{selected.area}</td>
+                </tr>
+                <tr>
+                  <th>발주기관 유형</th>
+                  <td>공기업</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* 우측: 예측 결과 */}
         <div>
-          <div className="bg-white rounded-[10px] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)] mb-4">
-            <div className="text-sm font-bold mb-4">예측 결과</div>
-
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="p-3.5 bg-[#F8FAFC] rounded-lg text-center">
-                <div className="text-[11px] text-slate-500 font-medium">예상 사정률</div>
-                <div className="text-[22px] font-extrabold text-primary my-1">{selected.predRate}%</div>
-                <div className="text-[11px] text-slate-500">95% CI: {selected.predMin}% ~ {selected.predMax}%</div>
+          {/* 예측 결과 KBID form-table */}
+          <div
+            className="text-white px-3 py-2 text-[12px] font-bold"
+            style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+          >
+            예측 결과
+          </div>
+          <div className="grid grid-cols-3 border-x border-b" style={{ borderColor: "var(--kbid-border)" }}>
+            <div className="border-r p-4" style={{ borderColor: "var(--kbid-border)" }}>
+              <div className="text-[11px]" style={{ color: "var(--kbid-text-meta)" }}>예상 사정률</div>
+              <div className="text-[26px] font-extrabold my-1" style={{ color: "var(--kbid-primary)" }}>
+                {selected.predRate}%
               </div>
-              <div className="p-3.5 bg-[#F8FAFC] rounded-lg text-center">
-                <div className="text-[11px] text-slate-500 font-medium">권장 입찰가</div>
-                <div className="text-[22px] font-extrabold text-green-600 my-1">{selected.bidAmountPred.toLocaleString()}</div>
-                <div className="text-[11px] text-slate-500">만원</div>
-              </div>
-              <div className="p-3.5 bg-[#F8FAFC] rounded-lg text-center">
-                <div className="text-[11px] text-slate-500 font-medium">예측 신뢰도</div>
-                <div className="text-[22px] font-extrabold text-amber-600 my-1">{selected.confidence}%</div>
-                <div className="text-[11px] text-slate-500">학습 데이터 기반</div>
+              <div className="text-[10px]" style={{ color: "var(--kbid-text-meta)" }}>
+                95% CI: {selected.predMin}% ~ {selected.predMax}%
               </div>
             </div>
-
-            {/* 알림 */}
-            <div className="p-3 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-[13px] flex items-start gap-2 mb-3">
-              <span>ℹ️</span>
-              <span>
-                권장 입찰가 범위: <strong>{selected.bidMin.toLocaleString()}만원 ~ {selected.bidMax.toLocaleString()}만원</strong>
-                {" "}(예산 대비 {selected.predMin}% ~ {selected.predMax}%)
-              </span>
+            <div className="border-r p-4" style={{ borderColor: "var(--kbid-border)" }}>
+              <div className="text-[11px]" style={{ color: "var(--kbid-text-meta)" }}>권장 입찰가</div>
+              <div className="text-[26px] font-extrabold my-1" style={{ color: "#2B8B3C" }}>
+                {selected.bidAmountPred.toLocaleString()}
+              </div>
+              <div className="text-[10px]" style={{ color: "var(--kbid-text-meta)" }}>
+                만원 (범위 {selected.bidMin.toLocaleString()}~{selected.bidMax.toLocaleString()})
+              </div>
             </div>
-
-            {/* 신뢰도 바 */}
-            <div className="text-[12.5px] text-slate-500 mb-1.5">예측 신뢰도</div>
-            <div className="h-1.5 rounded-full bg-slate-200 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
-                style={{ width: `${selected.confidence}%` }}
-              />
+            <div className="p-4">
+              <div className="text-[11px]" style={{ color: "var(--kbid-text-meta)" }}>예측 신뢰도</div>
+              <div className="text-[26px] font-extrabold my-1" style={{ color: "#E8913A" }}>
+                {selected.confidence}%
+              </div>
+              <div className="text-[10px]" style={{ color: "var(--kbid-text-meta)" }}>
+                학습 데이터 기반
+              </div>
+              <div className="h-1.5 mt-2 overflow-hidden" style={{ background: "#E5E5E5" }}>
+                <div
+                  style={{
+                    width: `${selected.confidence}%`,
+                    height: "100%",
+                    background: "linear-gradient(to right, #437194, #E8913A)",
+                  }}
+                />
+              </div>
             </div>
           </div>
 
+          {/* 권장 범위 알림 */}
+          <div
+            className="mt-3 border px-3 py-2 text-[12px]"
+            style={{ background: "#FFF7ED", borderColor: "#E8913A", color: "#C56F1A" }}
+          >
+            ℹ️ 권장 입찰가 범위:{" "}
+            <strong>
+              {selected.bidMin.toLocaleString()}만원 ~ {selected.bidMax.toLocaleString()}만원
+            </strong>{" "}
+            (예산 대비 {selected.predMin}% ~ {selected.predMax}%)
+          </div>
+
           {/* 유사 업종 차트 */}
-          <div className="bg-white rounded-[10px] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)]">
-            <div className="text-sm font-bold mb-3.5">유사 업종 낙찰 이력 (최근 6개월)</div>
-            <ResponsiveContainer width="100%" height={200}>
-              <ComposedChart data={TREND_DATA} margin={{ top: 0, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[75, 95]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
-                <Tooltip formatter={(v: number, n: string) => [`${v}%`, n === "construction" ? "공사" : "용역"]} />
-                <Area type="monotone" dataKey="construction" fill="#EFF6FF" stroke="#0066CC" strokeWidth={2} fillOpacity={0.4} name="construction" />
-                <Line type="monotone" dataKey="service" stroke="#7C3AED" strokeWidth={2} dot={{ r: 3 }} name="service" />
-                <Legend formatter={(v: string) => (v === "construction" ? "공사 사정률" : "용역 사정률")} iconType="circle" iconSize={8} />
-              </ComposedChart>
-            </ResponsiveContainer>
+          <div className="mt-3">
+            <div
+              className="text-white px-3 py-2 text-[12px] font-bold"
+              style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+            >
+              유사 업종 낙찰 이력 (최근 6개월)
+            </div>
+            <div className="bg-white border-x border-b p-3" style={{ borderColor: "var(--kbid-border)" }}>
+              <AmLineChart data={TREND_DATA} height={240} />
+            </div>
           </div>
         </div>
       </div>
