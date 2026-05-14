@@ -30,7 +30,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--kbid-page-bg)" }}>
       <TopNav activePage={page} onPageChange={setPage} />
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-5 py-5">
+      <main className="flex-1 max-w-[1440px] w-full mx-auto" style={{ padding: "24px 24px" }}>
         {renderPage()}
       </main>
       <Footer />

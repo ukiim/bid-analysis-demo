@@ -54,26 +54,21 @@ const PLAN_COLORS: Record<string, { bg: string; fg: string }> = {
 export default function AdminPage() {
   return (
     <div>
-      <div
-        className="bg-white border-b"
-        style={{ borderColor: "var(--kbid-border)", padding: "12px 16px", marginBottom: 14 }}
-      >
-        <h1 style={{ fontSize: 18, fontWeight: 800, color: "var(--kbid-text-strong)" }}>
-          관리자 모니터링
-        </h1>
-        <p className="text-[12px] mt-1" style={{ color: "var(--kbid-text-meta)" }}>
+      <div style={{ marginBottom: 24 }}>
+        <h1>관리자 모니터링</h1>
+        <p style={{ fontSize: "var(--text-sm)", color: "var(--text-meta)", marginTop: 4 }}>
           데이터 파이프라인 상태 · 예측 모델 성능 · 사용자 관리
         </p>
       </div>
 
       {/* v5: NAS 다운로드 현황 + 10년 삭제 (PDF 04 §1, PDF 03 §10) */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <NasStatusCard />
         <PurgeOldDataCard />
       </div>
 
-      {/* KPI 4종 — KBID form-table 스타일 */}
-      <div className="grid grid-cols-4 gap-0 mb-3" style={{ border: "1px solid var(--kbid-border)" }}>
+      {/* KPI 4종 */}
+      <div className="grid grid-cols-4 gap-0 mb-6" style={{ border: "1px solid var(--border)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--bg-elevated)" }}>
         {KPI_DATA.map((k, i) => (
           <div
             key={i}

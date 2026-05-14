@@ -374,18 +374,60 @@
 
 .kbid-form-table {
   border-top: 1px solid var(--border) !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+.kbid-form-table th,
+.kbid-form-table td {
+  vertical-align: middle !important;
+  border-color: var(--border) !important;
+  padding: 8px 12px !important;
 }
 .kbid-form-table th {
   background: var(--bg-subtle) !important;
   color: var(--text) !important;
   font-weight: var(--weight-medium) !important;
+  font-size: var(--text-sm) !important;
 }
+.kbid-form-table input[type="text"],
+.kbid-form-table input[type="number"],
+.kbid-form-table input[type="date"],
+.kbid-form-table select {
+  height: 28px !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid var(--border-input) !important;
+  padding: 0 8px !important;
+  font-size: var(--text-sm) !important;
+}
+.kbid-form-table input:focus,
+.kbid-form-table select:focus { border-color: var(--text) !important; outline: none !important; }
 
+.kbid-list-table {
+  border-top: 1px solid var(--border) !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
 .kbid-list-table thead th {
   background: var(--bg-subtle) !important;
   font-size: var(--text-sm) !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
+  padding: 10px 12px !important;
+  vertical-align: middle !important;
+  border-top: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-right: none !important;
+  border-left: none !important;
+  font-weight: 600 !important;
+  color: var(--text) !important;
+}
+.kbid-list-table tbody td {
+  padding: 12px 12px !important;
+  vertical-align: middle !important;
+  border-top: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-right: none !important;
+  border-left: none !important;
 }
 .kbid-list-table tbody tr:nth-child(even) td { background: transparent !important; }
 .kbid-list-table tbody tr:hover td { background: var(--bg-subtle) !important; }
@@ -436,4 +478,47 @@
   background: var(--bg-elevated) !important;
   border-color: var(--border) !important;
   border-radius: var(--radius-card) !important;
+  padding: 12px 16px !important;
+}
+
+/* === 카드/박스 16px radius compat (border + bg-white 조합 자동 적용) === */
+.bg-white.border,
+div.bg-white[class*="border"]:not(.kbid-list-table):not(.kbid-form-table) {
+  border-radius: var(--radius-card);
+  border-color: var(--border) !important;
+}
+
+/* 그리드 sibling gap 일관 */
+.eleven-app main { padding: var(--space-6) var(--space-6); }
+
+/* table-container — overflow-x-auto 컨테이너 정렬 */
+.eleven-app .overflow-x-auto {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-card);
+}
+
+/* 폼-table 컨테이너 (검색 패널 + 검색 행) */
+.eleven-app .kbid-form-table,
+.eleven-app .kbid-form-table + div {
+  /* 안전한 padding */
+}
+
+/* badge 미세 정렬 */
+.eleven-app [class*="rounded text-[10px]"],
+.eleven-app [class*="rounded text-[11px]"] {
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+}
+
+/* 검정 헤더 카드 (NAS·purge 등) — ElevenLabs 톤으로 변환 */
+.eleven-app [style*="background: var(--text)"] {
+  /* 검정 헤더 유지 (이미 ElevenLabs primary) */
+}
+
+/* 페이지 헤더 (h1 + p) 정렬 */
+.eleven-app h1 {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
 }

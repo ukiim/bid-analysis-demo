@@ -472,7 +472,7 @@ export default function AnnouncementsPage() {
 
       {/* KBID 9-컬럼 리스트 (v4) */}
       <div className="overflow-x-auto" style={{ borderTop: "2px solid var(--kbid-primary)" }}>
-        <table className="kbid-list-table" style={{ minWidth: 1280 }}>
+        <table className="kbid-list-table" style={{ minWidth: 1280, width: "100%" }}>
           <thead>
             <tr>
               <th style={{ width: 44 }}>번호</th>
