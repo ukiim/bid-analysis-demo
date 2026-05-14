@@ -225,7 +225,7 @@ export default function Tab3FrequencyMatrix({
                 }`}
               >
                 {c.rank}위: {c.rate.toFixed(4)}%
-                {c.is_recommended && " ★"}
+                {c.is_recommended && " *"}
               </button>
             ))}
           </div>

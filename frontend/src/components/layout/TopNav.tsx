@@ -1,32 +1,25 @@
 "use client";
 
 /**
- * KBID 상단 nav — v4 (3단 169px — KBID 실 사이트 동일 높이)
+ * 글로벌 상단 nav — v6 (ElevenLabs 톤 미니멀)
  *
- *  1차 56px: 로고 + 우측 상태 (사용자/로그인폼)
- *  2차 70px: 카테고리 빠른 진입 (공사입찰/용역입찰/물품입찰 등)
- *  3차 43px: 메인 메뉴 (홈/공고/사정률/통계/관리자)
+ * 1단: 로고(Inter bold) + 검색(우측) + 사용자 + 로그아웃
+ * 2단: 메뉴 (밑줄 active)
  *
- * 총 약 169px — kbid.co.kr 헤더와 동일.
+ * KBID 169px 3단 → 88px 2단으로 단순화
  */
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { FileText, Settings, Search, LogOut, Circle } from "lucide-react";
 
 interface Props {
   activePage: string;
   onPageChange: (page: string) => void;
 }
 
-// v5 — PDF 정합화: 메뉴 2개로 축소 (공고 + 관리자)
 const MENU = [
-  { id: "announcements", label: "공고 통합 조회", icon: "📋" },
-  { id: "admin", label: "관리자 모니터링", icon: "⚙️" },
-];
-
-// v5 — 빠른 카테고리 간소화 (공사·용역 강조)
-const QUICK_LINKS = [
-  { label: "공사입찰", color: "#0E47C8" },
-  { label: "용역입찰", color: "#6F2B96" },
+  { id: "announcements", label: "공고 통합 조회", Icon: FileText },
+  { id: "admin", label: "관리자 모니터링", Icon: Settings },
 ];
 
 export default function TopNav({ activePage, onPageChange }: Props) {
@@ -49,7 +42,6 @@ export default function TopNav({ activePage, onPageChange }: Props) {
       if (token) {
         try {
           const payload = JSON.parse(atob(token.split(".")[1]));
-          // exp 만료 검사 (epoch 초)
           if (payload.exp && payload.exp * 1000 < Date.now()) {
             localStorage.removeItem("token");
             router.push("/login");
@@ -67,11 +59,9 @@ export default function TopNav({ activePage, onPageChange }: Props) {
             setUser({ name: "관리자", plan: "프리미엄" });
           }
         } catch {
-          /* invalid token — redirect */
           router.push("/login");
         }
       } else {
-        // 토큰 없음 → 로그인 페이지
         router.push("/login");
       }
     }
@@ -86,143 +76,156 @@ export default function TopNav({ activePage, onPageChange }: Props) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    // 공고 페이지로 이동 + keyword 쿼리
     router.push(`/?page=announcements&q=${encodeURIComponent(searchQuery)}`);
   };
 
   return (
-    <header style={{ borderBottom: "1px solid #08367A" }}>
-      {/* 1차 영역 — 로고 + 검색·상태 */}
+    <header className="eleven-header">
+      {/* 1단: 로고 + 검색 + 사용자 */}
       <div
-        className="flex items-center justify-between px-6"
-        style={{ height: 56, background: "var(--kbid-header-bg)" }}
+        className="flex items-center justify-between"
+        style={{
+          height: 56,
+          paddingLeft: "var(--space-6)",
+          paddingRight: "var(--space-6)",
+        }}
       >
-        <div className="flex items-center gap-3">
-          <div
-            className="font-extrabold tracking-tight"
+        <div className="flex items-center" style={{ gap: "var(--space-3)" }}>
+          <span
             style={{
-              color: "#ffffff",
-              fontSize: 22,
-              letterSpacing: "-0.03em",
+              fontSize: 18,
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
+              color: "var(--text)",
             }}
           >
             입찰 인사이트
-          </div>
+          </span>
           <span
-            className="text-[11px] font-semibold px-2 py-0.5 rounded"
-            style={{ background: "rgba(255,255,255,0.15)", color: "#cfdbeb" }}
+            className="badge"
+            style={{ fontSize: 10, padding: "2px 8px" }}
           >
-            KBID 동등 UI
+            BETA
           </span>
         </div>
-        <div className="flex items-center gap-4 text-[12px]" style={{ color: "rgba(255,255,255,0.92)" }}>
+
+        <div
+          className="flex items-center"
+          style={{ gap: "var(--space-4)" }}
+        >
           <form onSubmit={handleSearch}>
-            <input
-              placeholder="🔍 공고명, 발주기관 검색 (Enter)"
-              className="text-[12px] px-3 py-1"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+            <div
+              className="flex items-center"
               style={{
-                width: 280,
-                background: "rgba(255,255,255,0.95)",
-                color: "#333",
-                border: "1px solid rgba(255,255,255,0.3)",
+                width: 320,
+                height: 32,
+                background: "var(--bg-subtle)",
+                borderRadius: "var(--radius-pill)",
+                padding: "0 var(--space-3)",
+                gap: "var(--space-2)",
               }}
-            />
+            >
+              <Search size={14} color="var(--text-meta)" />
+              <input
+                placeholder="공고명, 발주기관 검색"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  flex: 1,
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  fontSize: "var(--text-sm)",
+                  color: "var(--text)",
+                }}
+              />
+            </div>
           </form>
-          <span className="inline-flex items-center gap-1">
-            <span
-              className="inline-block w-1.5 h-1.5 rounded-full"
-              style={{ background: "#5BE38F" }}
-            />
-            API 정상
-          </span>
-          <span style={{ color: "rgba(255,255,255,0.7)" }}>마지막 수집 {now || "—"}</span>
+
+          <div
+            className="flex items-center"
+            style={{
+              gap: "var(--space-2)",
+              fontSize: "var(--text-xs)",
+              color: "var(--text-meta)",
+            }}
+          >
+            <Circle size={6} fill="var(--success)" color="var(--success)" />
+            <span>API 정상</span>
+            <span style={{ color: "var(--text-disabled)" }}>·</span>
+            <span>마지막 수집 {now || "—"}</span>
+          </div>
+
           {user && (
             <>
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded"
-                style={{ background: "rgba(255,255,255,0.1)" }}
+              <div
+                className="flex items-center"
+                style={{
+                  gap: "var(--space-2)",
+                  paddingLeft: "var(--space-3)",
+                  borderLeft: "1px solid var(--border)",
+                }}
               >
-                <span className="font-bold">{user.name}</span>
+                <span style={{ fontSize: "var(--text-sm)", fontWeight: 500 }}>
+                  {user.name}
+                </span>
                 {user.plan && (
-                  <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.8)" }}>
-                    ({user.plan})
-                  </span>
+                  <span className="badge">{user.plan}</span>
                 )}
-              </span>
+              </div>
               <button
                 onClick={handleLogout}
-                className="text-[11px] px-2.5 py-1"
-                style={{
-                  background: "rgba(255,255,255,0.12)",
-                  color: "#ffffff",
-                  border: "1px solid rgba(255,255,255,0.25)",
-                  borderRadius: 2,
-                }}
+                className="btn-chip"
                 title="로그아웃"
               >
-                ⏏ 로그아웃
+                <LogOut size={12} />
+                로그아웃
               </button>
             </>
           )}
         </div>
       </div>
 
-      {/* 2차 영역 — 빠른 진입 카테고리 (KBID 동일 디자인) */}
-      <div
-        className="flex items-center px-6 gap-1"
+      {/* 2단: 메뉴 (밑줄 active) */}
+      <nav
+        className="flex items-center"
         style={{
-          height: 70,
-          background: "linear-gradient(to bottom, #F4F7FA, #E8EDF3)",
-          borderTop: "1px solid #B0B8C2",
-          borderBottom: "1px solid #B0B8C2",
+          height: 44,
+          paddingLeft: "var(--space-6)",
+          paddingRight: "var(--space-6)",
+          gap: "var(--space-2)",
+          borderTop: "1px solid var(--border)",
         }}
       >
-        {QUICK_LINKS.map((q) => (
-          <button
-            key={q.label}
-            className="px-4 py-2 text-[13px] font-bold transition-colors"
-            style={{
-              background: "#ffffff",
-              border: "1px solid #C8CED6",
-              borderTop: `3px solid ${q.color}`,
-              color: q.color,
-              minWidth: 96,
-              height: 52,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {q.label}
-          </button>
-        ))}
-        <div className="flex-1" />
-        <div className="text-[11px]" style={{ color: "var(--kbid-text-meta)" }}>
-          공공데이터 G2B · 국방부 OpenAPI 통합 분석 · 사정률 예측
-        </div>
-      </div>
-
-      {/* 3차 영역 — 메인 메뉴 */}
-      <nav
-        className="kbid-topnav flex items-center px-3"
-        style={{ background: "var(--kbid-subheader-bg)", height: 43 }}
-      >
-        {MENU.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => onPageChange(m.id)}
-            className={`menu-item ${activePage === m.id ? "active" : ""}`}
-            style={{
-              background: activePage === m.id ? "rgba(0,0,0,0.18)" : "transparent",
-              height: 43,
-            }}
-          >
-            <span className="mr-1.5">{m.icon}</span>
-            {m.label}
-          </button>
-        ))}
+        {MENU.map((m) => {
+          const active = activePage === m.id;
+          return (
+            <button
+              key={m.id}
+              onClick={() => onPageChange(m.id)}
+              className="flex items-center"
+              style={{
+                height: 44,
+                padding: "0 var(--space-4)",
+                gap: "var(--space-2)",
+                background: "transparent",
+                border: "none",
+                borderBottom: active
+                  ? "2px solid var(--text)"
+                  : "2px solid transparent",
+                color: active ? "var(--text)" : "var(--text-meta)",
+                fontSize: "var(--text-sm)",
+                fontWeight: active ? 600 : 500,
+                cursor: "pointer",
+                marginBottom: -1,
+                transition: "color 80ms ease, border-color 80ms ease",
+              }}
+            >
+              <m.Icon size={14} />
+              {m.label}
+            </button>
+          );
+        })}
       </nav>
     </header>
   );

@@ -1,0 +1,439 @@
+/* ElevenLabs Refero 디자인 토큰 — v6
+ * 레퍼런스: https://styles.refero.design/style/031056ff-7af1-46db-8daa-115f731c5d26
+ *
+ * 무드: 박물관 라벨 + 작동 기계 — 엄격하면서 따뜻함
+ * 원칙: 무채색 중심 + 단일 강조색 + 미묘한 그림자 + pill 버튼
+ */
+
+:root {
+  /* === 색 팔레트 — 무채색 중심 === */
+  --bg: #fdfcfc;              /* Eggshell — 따뜻한 오프화이트 (페이지 배경) */
+  --bg-elevated: #ffffff;      /* 카드/패널 (페이지보다 살짝 밝음) */
+  --bg-subtle: #f5f4f2;        /* hover/줄무늬 */
+  --bg-muted: #ebe9e6;         /* disabled */
+
+  --text: #000000;             /* Obsidian — 절대 검정 (제목·핵심 텍스트) */
+  --text-secondary: #3d3936;   /* 본문 */
+  --text-meta: #777169;        /* Gravel — 따뜻한 회색 (보조 라벨) */
+  --text-disabled: #b0aca7;
+
+  --border: #e5e5e5;           /* Chalk — 단일 경계색 */
+  --border-strong: #c8c5c1;    /* divider 강조 */
+  --border-input: #d4d2cf;     /* 입력 언더라인 */
+
+  --accent: #0447ff;           /* Signal Blue — 단일 강조 (링크·primary 버튼) */
+  --accent-hover: #033ad9;
+  --accent-warm: #ff4704;      /* Ember — 8-16px 인디케이터 강조용 */
+
+  --success: #16a34a;          /* 상태(완료) */
+  --warning: #d97706;
+  --danger: #dc2626;
+
+  /* === 그림자 === */
+  --shadow-sm: 0 0 1px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  --shadow-inset: inset 0 0 0 0.5px rgba(0, 0, 0, 0.075);
+
+  /* === 반경 === */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-card: 16px;
+  --radius-pill: 9999px;
+
+  /* === 간격 (4px 그리드) === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* === 폰트 === */
+  --font-body: "Inter", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-display: "Waldenburg", "Inter", "Pretendard", serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", "Menlo", monospace;
+
+  --text-xs: 10px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+  --text-display: 48px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* === 트랜지션 === */
+  --transition-fast: 80ms ease;
+  --transition-base: 150ms ease;
+}
+
+/* === 글로벌 톤 (eleven-app 클래스로 활성화) === */
+.eleven-app {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text);
+  background: var(--bg);
+  font-feature-settings: "cv11", "ss03"; /* Inter 가독성 향상 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.eleven-app a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+.eleven-app a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+/* === 컴포넌트 === */
+
+/* Primary 버튼 — 검정 pill */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  height: 32px;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--bg);
+  background: var(--text);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+  white-space: nowrap;
+}
+.btn-primary:hover { background: #1a1a1a; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled {
+  background: var(--bg-muted);
+  border-color: var(--border);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+/* Ghost 버튼 — 흰 pill */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  height: 32px;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.btn-ghost:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+/* Accent 버튼 — 강조 (제한적) */
+.btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  height: 32px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: #ffffff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.btn-accent:hover { background: var(--accent-hover); }
+
+/* 작은 ghost (액션 칩) */
+.btn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 4px 10px;
+  height: 24px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.btn-chip:hover { background: var(--bg-subtle); }
+.btn-chip.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+/* 카드 */
+.card {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-5);
+}
+.card-flat {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+
+/* 입력 — 언더라인 스타일 */
+.input-underline {
+  width: 100%;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border: none;
+  border-bottom: 1px solid var(--border-input);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.input-underline:focus { border-bottom-color: var(--text); }
+.input-underline::placeholder { color: var(--text-disabled); }
+
+/* 입력 — bordered (form-table 호환) */
+.input-bordered {
+  width: 100%;
+  height: 30px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.input-bordered:focus { border-color: var(--text); }
+
+/* 미니멀 표 */
+.table-minimal {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.table-minimal thead th {
+  padding: var(--space-3) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-meta);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.table-minimal tbody td {
+  padding: var(--space-3) var(--space-3);
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+.table-minimal tbody tr:hover td { background: var(--bg-subtle); }
+
+/* Tab bar — 밑줄 active */
+.tabs-underline {
+  display: flex;
+  gap: var(--space-6);
+  border-bottom: 1px solid var(--border);
+}
+.tabs-underline .tab {
+  padding: var(--space-3) 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-meta);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color var(--transition-fast), border-bottom-color var(--transition-fast);
+  background: transparent;
+  margin-bottom: -1px;
+}
+.tabs-underline .tab:hover { color: var(--text-secondary); }
+.tabs-underline .tab.active {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+
+/* 헤더 (TopNav) */
+.eleven-header {
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+}
+
+/* badge / chip */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-pill);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+.badge-accent { background: var(--accent); color: #fff; }
+.badge-warm { background: var(--accent-warm); color: #fff; }
+.badge-success { background: var(--success); color: #fff; }
+.badge-danger { background: var(--danger); color: #fff; }
+
+/* === KBID 토큰 compat 레이어 — v5 컴포넌트 색을 ElevenLabs로 자동 매핑 === */
+:root {
+  --kbid-text-base: var(--text-secondary);
+  --kbid-text-strong: var(--text);
+  --kbid-text-meta: var(--text-meta);
+  --kbid-primary: var(--accent);
+  --kbid-primary-light: var(--accent);
+  --kbid-primary-border: var(--accent);
+  --kbid-primary-hover: var(--accent-hover);
+  --kbid-header-bg: var(--bg-elevated);
+  --kbid-header-text: var(--text);
+  --kbid-subheader-bg: var(--bg-subtle);
+  --kbid-accent-orange: var(--accent-warm);
+  --kbid-accent-red: var(--danger);
+  --kbid-accent-green: var(--success);
+  --kbid-page-bg: var(--bg);
+  --kbid-panel-bg: var(--bg-subtle);
+  --kbid-table-row-alt: var(--bg);
+  --kbid-label-bg: var(--bg-subtle);
+  --kbid-label-bg-dark: var(--bg-muted);
+  --kbid-disabled-bg: var(--bg-muted);
+  --kbid-border: var(--border);
+  --kbid-border-strong: var(--border-strong);
+  --kbid-border-light: var(--border);
+  --kbid-font-family: var(--font-body);
+  --kbid-font-size-base: var(--text-base);
+  --kbid-font-size-sm: var(--text-sm);
+  --kbid-font-size-xs: var(--text-xs);
+  --kbid-font-size-lg: var(--text-md);
+  --kbid-font-size-xl: var(--text-lg);
+}
+
+/* KBID 컴포넌트 클래스 톤다운 (그라디언트 제거) */
+.kbid-btn-primary {
+  background: var(--text) !important;
+  border-color: var(--text) !important;
+  color: var(--bg) !important;
+  border-radius: var(--radius-pill) !important;
+  font-weight: var(--weight-medium) !important;
+  text-shadow: none !important;
+  background-image: none !important;
+}
+.kbid-btn-primary:hover { background: #1a1a1a !important; }
+
+.kbid-btn-secondary {
+  background: var(--bg-elevated) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-pill) !important;
+}
+.kbid-btn-secondary:hover { background: var(--bg-subtle) !important; }
+
+.kbid-btn-quick {
+  border-radius: var(--radius-pill) !important;
+  font-size: var(--text-xs) !important;
+}
+.kbid-btn-quick.active {
+  background: var(--text) !important;
+  color: var(--bg) !important;
+  border-color: var(--text) !important;
+}
+
+.kbid-form-table {
+  border-top: 1px solid var(--border) !important;
+}
+.kbid-form-table th {
+  background: var(--bg-subtle) !important;
+  color: var(--text) !important;
+  font-weight: var(--weight-medium) !important;
+}
+
+.kbid-list-table thead th {
+  background: var(--bg-subtle) !important;
+  font-size: var(--text-sm) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+.kbid-list-table tbody tr:nth-child(even) td { background: transparent !important; }
+.kbid-list-table tbody tr:hover td { background: var(--bg-subtle) !important; }
+
+.kbid-tab-bar {
+  border-bottom: 1px solid var(--border) !important;
+}
+.kbid-tab {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  color: var(--text-meta) !important;
+  font-weight: var(--weight-medium) !important;
+  padding: var(--space-3) var(--space-4) !important;
+}
+.kbid-tab.active {
+  background: transparent !important;
+  color: var(--text) !important;
+  border-bottom-color: var(--text) !important;
+}
+
+.kbid-topnav {
+  background: var(--bg-elevated) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.kbid-topnav .menu-item {
+  color: var(--text-meta) !important;
+  font-weight: var(--weight-medium) !important;
+}
+.kbid-topnav .menu-item.active,
+.kbid-topnav .menu-item:hover {
+  background: var(--bg-subtle) !important;
+  color: var(--text) !important;
+}
+
+.kbid-pager .page-btn {
+  border-radius: var(--radius-pill) !important;
+  border-color: var(--border) !important;
+}
+.kbid-pager .page-btn.active {
+  background: var(--text) !important;
+  color: var(--bg) !important;
+  border-color: var(--text) !important;
+}
+
+.kbid-summary-bar {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border) !important;
+  border-radius: var(--radius-card) !important;
+}

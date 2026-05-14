@@ -80,9 +80,9 @@ export default function AnalysisDataTable({ comparisons }: Props) {
                 </td>
                 <td className="border border-gray-300 px-3 py-1.5 text-center">
                   {row.is_match ? (
-                    <span className="text-[#4CAF50] font-bold">●</span>
+                    <span className="text-[#4CAF50] font-bold">•</span>
                   ) : (
-                    <span className="text-gray-300">○</span>
+                    <span className="text-gray-300">-</span>
                   )}
                 </td>
               </tr>
@@ -98,7 +98,7 @@ export default function AnalysisDataTable({ comparisons }: Props) {
             disabled={page <= 1}
             className="px-2 py-1 text-[11px] border border-gray-300 disabled:opacity-40 hover:bg-gray-100"
           >
-            ◀
+            ‹
           </button>
           {Array.from({ length: Math.min(10, totalPages) }, (_, i) => {
             const start = Math.max(1, Math.min(page - 5, totalPages - 9));
@@ -123,7 +123,7 @@ export default function AnalysisDataTable({ comparisons }: Props) {
             disabled={page >= totalPages}
             className="px-2 py-1 text-[11px] border border-gray-300 disabled:opacity-40 hover:bg-gray-100"
           >
-            ▶
+            ›
           </button>
         </div>
       )}

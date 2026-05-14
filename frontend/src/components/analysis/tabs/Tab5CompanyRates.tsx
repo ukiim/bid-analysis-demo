@@ -114,7 +114,7 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
             onClick={() => setCompanyPage((p) => Math.max(0, p - 1))}
             className="px-3 py-1.5 border border-gray-300 disabled:opacity-40 hover:bg-gray-100"
           >
-            ◀ 이전 8곳
+            이전 8곳
           </button>
           <span className="px-2 text-gray-600">
             {companyPage + 1} / {totalPages}
@@ -124,7 +124,7 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
             onClick={() => setCompanyPage((p) => Math.min(totalPages - 1, p + 1))}
             className="px-3 py-1.5 border border-gray-300 disabled:opacity-40 hover:bg-gray-100"
           >
-            다음 8곳 ▶
+            다음 8곳
           </button>
         </div>
       </div>
@@ -132,7 +132,7 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
       <div className="grid grid-cols-12 gap-3">
         {/* 좌측 사이드: 회사 목록 + 체크박스 (v4 KBID 동등) */}
         <div className="col-span-3 border max-h-[600px] overflow-y-auto" style={{ borderColor: "var(--kbid-border)" }}>
-          <div className="text-white px-3 py-2 text-[11px] font-bold sticky top-0" style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}>
+          <div className="text-white px-3 py-2 text-[11px] font-bold sticky top-0" style={{ background: "var(--text)" }}>
             <div className="flex items-center justify-between">
               <span>업체 목록 ({companies.length}곳)</span>
               <span style={{ color: "rgba(255,255,255,0.9)" }}>
@@ -195,7 +195,7 @@ export default function Tab5CompanyRates({ data, selectedRate, onRateSelect }: P
                     />
                   </td>
                   <td className="border border-gray-300 px-1.5 py-1 max-w-[140px] truncate">
-                    {c.has1st && <span className="text-[#E8913A] mr-0.5">★</span>}
+                    {c.has1st && <span className="text-[#E8913A] mr-0.5">*</span>}
                     {c.name}
                   </td>
                   <td className="border border-gray-300 px-1.5 py-1 text-center font-semibold">

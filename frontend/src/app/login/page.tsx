@@ -5,6 +5,7 @@
  */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Lock, User, Eye, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -57,7 +58,7 @@ export default function LoginPage() {
     <div
       className="min-h-screen flex items-center justify-center"
       style={{
-        background: "linear-gradient(to bottom, #F4F7FA, #E8EDF3)",
+        background: "var(--bg-subtle)",
         fontFamily: "var(--kbid-font-family)",
       }}
     >
@@ -80,7 +81,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="p-6">
           <div className="text-[13px] font-bold mb-4" style={{ color: "var(--kbid-text-strong)" }}>
-            🔐 로그인
+            <Lock size={14} style={{display:"inline",verticalAlign:"-2px",marginRight:6}} />로그인
           </div>
 
           {error && (
@@ -92,7 +93,7 @@ export default function LoginPage() {
                 color: "#A8231D",
               }}
             >
-              ⚠ {error}
+              <AlertCircle size={14} style={{display:"inline",verticalAlign:"-2px",marginRight:6}} />{error}
             </div>
           )}
 
@@ -147,7 +148,7 @@ export default function LoginPage() {
               className="kbid-btn-secondary"
               style={{ padding: "8px 12px" }}
             >
-              👤 관리자 (admin)
+              <User size={14} style={{display:"inline",verticalAlign:"-2px",marginRight:6}} />관리자 (admin)
             </button>
             <button
               type="button"
@@ -155,7 +156,7 @@ export default function LoginPage() {
               className="kbid-btn-secondary"
               style={{ padding: "8px 12px" }}
             >
-              👁️ 조회자 (viewer)
+              <Eye size={14} style={{display:"inline",verticalAlign:"-2px",marginRight:6}} />조회자 (viewer)
             </button>
           </div>
 

@@ -440,7 +440,7 @@ export default function AnnouncementsPage() {
               onClick={() => setPage(1)}
               style={{ minWidth: 90 }}
             >
-              🔍 검 색
+              검색
             </button>
           </div>
         </div>
@@ -459,8 +459,8 @@ export default function AnnouncementsPage() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <button className="kbid-btn-secondary">📥 엑셀 출력</button>
-          <button className="kbid-btn-secondary">🖨 인쇄</button>
+          <button className="kbid-btn-secondary">엑셀 출력</button>
+          <button className="kbid-btn-secondary">인쇄</button>
         </div>
       </div>
 

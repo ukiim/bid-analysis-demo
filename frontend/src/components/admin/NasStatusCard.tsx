@@ -102,7 +102,7 @@ export default function NasStatusCard() {
     <div className="border bg-white" style={{ borderColor: "var(--kbid-border)" }}>
       <div
         className="text-white px-3 py-2 text-[12px] font-bold flex items-center justify-between"
-        style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+        style={{ background: "var(--text)" }}
       >
         <span>NAS 다운로드 현황 (PDF 04 §1)</span>
         <span className="text-[10px] opacity-90">
@@ -113,7 +113,7 @@ export default function NasStatusCard() {
         {loading && <div className="text-[11px] text-gray-500">조회 중...</div>}
         {error && (
           <div className="text-[11px] px-2 py-1" style={{ background: "#FFE5E0", color: "#A8231D" }}>
-            ⚠ {error}
+            ! {error}
           </div>
         )}
         {!loading && jobs.length === 0 && (
@@ -126,7 +126,7 @@ export default function NasStatusCard() {
                 className="kbid-btn-primary"
                 style={{ padding: "5px 14px", fontSize: 12 }}
               >
-                {busy === "trigger" ? "트리거 중..." : "▶ 지금 수집 시작"}
+                {busy === "trigger" ? "트리거 중..." : "지금 수집 시작"}
               </button>
             </div>
           </div>
@@ -154,7 +154,7 @@ export default function NasStatusCard() {
                     className="kbid-btn-secondary"
                     style={{ padding: "2px 8px", fontSize: 11 }}
                   >
-                    {busy === j.id ? "재개 중..." : "▶ 이어받기"}
+                    {busy === j.id ? "재개 중..." : "이어받기"}
                   </button>
                 )}
               </div>
@@ -169,7 +169,7 @@ export default function NasStatusCard() {
                   width: `${j.progress_pct.toFixed(2)}%`,
                   background:
                     j.status === "in_progress"
-                      ? "linear-gradient(to right, #5481B8, #437194)"
+                      ? "var(--accent)"
                       : j.status === "failed"
                       ? "#D9342B"
                       : "#A0A8B3",
@@ -189,7 +189,7 @@ export default function NasStatusCard() {
               {j.last_checkpoint && <span>체크포인트 {j.last_checkpoint}</span>}
               {j.error_message && (
                 <span style={{ color: "#D9342B" }} className="truncate">
-                  ⚠ {j.error_message}
+                  ! {j.error_message}
                 </span>
               )}
             </div>
@@ -203,7 +203,7 @@ export default function NasStatusCard() {
               className="kbid-btn-secondary"
               style={{ padding: "4px 12px", fontSize: 11 }}
             >
-              {busy === "trigger" ? "트리거 중..." : "+ 신규 수집 트리거"}
+              {busy === "trigger" ? "트리거 중..." : "신규 수집 트리거"}
             </button>
           </div>
         )}

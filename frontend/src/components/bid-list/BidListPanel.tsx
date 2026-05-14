@@ -70,7 +70,7 @@ export default function BidListPanel({ onClose }: Props) {
           className="text-white px-4 py-3 text-[13px] font-bold flex items-center justify-between"
           style={{ background: "var(--kbid-header-bg)" }}
         >
-          <span>📋 투찰리스트 (PDF 03 §9 — {items.length}건)</span>
+          <span>투찰리스트 (PDF 03 §9 — {items.length}건)</span>
           <button
             onClick={onClose}
             className="text-white text-[14px] px-2 hover:bg-white/20"
@@ -143,11 +143,11 @@ export default function BidListPanel({ onClose }: Props) {
                   className="kbid-btn-secondary"
                   style={{ color: "#D9342B" }}
                 >
-                  🗑 전체 비우기
+                  전체 비우기
                 </button>
                 <div className="flex-1" />
                 <button onClick={handleExportCSV} className="kbid-btn-primary">
-                  📥 CSV 다운로드 ({items.length}건)
+                  CSV 다운로드 ({items.length}건)
                 </button>
               </div>
             </>

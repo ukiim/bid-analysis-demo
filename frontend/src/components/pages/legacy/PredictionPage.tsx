@@ -59,7 +59,7 @@ export default function PredictionPage() {
         <div>
           <div
             className="text-white px-3 py-2 text-[12px] font-bold"
-            style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+            style={{ background: "var(--text)" }}
           >
             예측 대상 공고 선택
           </div>
@@ -99,7 +99,7 @@ export default function PredictionPage() {
           <div className="mt-3">
             <div
               className="text-white px-3 py-2 text-[12px] font-bold"
-              style={{ background: "linear-gradient(to bottom, #346081, #1E3A6B)" }}
+              style={{ background: "var(--text)" }}
             >
               예측 입력 피처
             </div>
@@ -131,7 +131,7 @@ export default function PredictionPage() {
           {/* 예측 결과 KBID form-table */}
           <div
             className="text-white px-3 py-2 text-[12px] font-bold"
-            style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+            style={{ background: "var(--text)" }}
           >
             예측 결과
           </div>
@@ -167,7 +167,7 @@ export default function PredictionPage() {
                   style={{
                     width: `${selected.confidence}%`,
                     height: "100%",
-                    background: "linear-gradient(to right, #437194, #E8913A)",
+                    background: "var(--accent)",
                   }}
                 />
               </div>
@@ -190,7 +190,7 @@ export default function PredictionPage() {
           <div className="mt-3">
             <div
               className="text-white px-3 py-2 text-[12px] font-bold"
-              style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+              style={{ background: "var(--text)" }}
             >
               유사 업종 낙찰 이력 (최근 6개월)
             </div>

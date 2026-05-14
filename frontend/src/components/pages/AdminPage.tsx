@@ -59,7 +59,7 @@ export default function AdminPage() {
         style={{ borderColor: "var(--kbid-border)", padding: "12px 16px", marginBottom: 14 }}
       >
         <h1 style={{ fontSize: 18, fontWeight: 800, color: "var(--kbid-text-strong)" }}>
-          ⚙️ 관리자 모니터링
+          관리자 모니터링
         </h1>
         <p className="text-[12px] mt-1" style={{ color: "var(--kbid-text-meta)" }}>
           데이터 파이프라인 상태 · 예측 모델 성능 · 사용자 관리
@@ -105,7 +105,7 @@ export default function AdminPage() {
         <div>
           <div
             className="text-white px-3 py-2 text-[12px] font-bold"
-            style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+            style={{ background: "var(--text)" }}
           >
             데이터 파이프라인 현황
           </div>
@@ -144,7 +144,7 @@ export default function AdminPage() {
         <div>
           <div
             className="text-white px-3 py-2 text-[12px] font-bold"
-            style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+            style={{ background: "var(--text)" }}
           >
             예측 모델 성능 추이 (MAE / RMSE)
           </div>
@@ -172,7 +172,7 @@ export default function AdminPage() {
       <div>
         <div
           className="text-white px-3 py-2 text-[12px] font-bold flex items-center justify-between"
-          style={{ background: "linear-gradient(to bottom, #346081, #1E3A6B)" }}
+          style={{ background: "var(--text)" }}
         >
           <span>최근 가입 사용자</span>
           <button

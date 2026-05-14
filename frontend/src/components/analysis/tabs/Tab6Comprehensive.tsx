@@ -146,7 +146,7 @@ export default function Tab6Comprehensive({
       <div className="grid grid-cols-4 gap-3 mb-3">
         {/* 구간정보 카드 */}
         <div className="border bg-white" style={{ borderColor: "var(--kbid-border)" }}>
-          <div className="text-white px-3 py-2 text-[12px] font-bold" style={{ background: "linear-gradient(to bottom, #346081, #1E3A6B)" }}>
+          <div className="text-white px-3 py-2 text-[12px] font-bold" style={{ background: "var(--text)" }}>
             구간정보
           </div>
           <div className="p-3 space-y-2 text-[11px]">
@@ -219,7 +219,7 @@ export default function Tab6Comprehensive({
         <div className="border bg-white mb-3" style={{ borderColor: "var(--kbid-border)" }}>
           <div
             className="text-white px-4 py-2 text-[13px] font-bold"
-            style={{ background: "linear-gradient(to bottom, #E8913A, #C56F1A)" }}
+            style={{ background: "var(--accent-warm)" }}
           >
             종합정보 — 3가지 방법 종합
           </div>
@@ -308,7 +308,7 @@ export default function Tab6Comprehensive({
                     className={aligned ? "bg-[#FFF7ED]" : "hover:bg-blue-50"}
                   >
                     <td className="border border-gray-300 px-2 py-1">
-                      {aligned && <span className="text-[#E8913A] mr-1">★</span>}
+                      {aligned && <span className="text-[#E8913A] mr-1">*</span>}
                       {m.name}
                     </td>
                     <td className="border border-gray-300 px-2 py-1 text-center font-bold text-[#437194]">

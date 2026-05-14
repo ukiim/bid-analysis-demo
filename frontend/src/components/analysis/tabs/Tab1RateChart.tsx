@@ -26,7 +26,7 @@ export default function Tab1RateChart({ series, selectedRate }: Props) {
         </div>
         {selectedRate != null && (
           <div className="text-[11px] bg-[#FFF7ED] border border-[#E8913A] text-[#E8913A] px-2.5 py-1 font-bold">
-            ★ Tab3에서 선택된 사정률: {selectedRate.toFixed(4)}%
+            * Tab3에서 선택된 사정률: {selectedRate.toFixed(4)}%
           </div>
         )}
       </div>

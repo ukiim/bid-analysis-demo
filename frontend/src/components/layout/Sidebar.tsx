@@ -10,10 +10,10 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "announcements", label: "공고 통합 조회", icon: "📋", section: "데이터 조회" },
-  { id: "prediction", label: "사정률 예측", icon: "📈", section: "예측 분석" },
-  { id: "statistics", label: "통계 리포트", icon: "📊", section: "예측 분석" },
-  { id: "admin", label: "관리자 모니터링", icon: "⚙️", section: "시스템 관리" },
+  { id: "announcements", label: "공고 통합 조회", icon: "[F]", section: "데이터 조회" },
+  { id: "prediction", label: "사정률 예측", icon: "[L]", section: "예측 분석" },
+  { id: "statistics", label: "통계 리포트", icon: "[B]", section: "예측 분석" },
+  { id: "admin", label: "관리자 모니터링", icon: "[S]", section: "시스템 관리" },
 ];
 
 interface SidebarProps {

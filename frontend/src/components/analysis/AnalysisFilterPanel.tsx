@@ -196,7 +196,7 @@ export default function AnalysisFilterPanel({
                   onClick={onSearch}
                   className="ml-2 px-4 py-1 bg-[#437194] text-white text-[11px] font-bold hover:bg-[#346081]"
                 >
-                  🔍 검색
+                  검색
                 </button>
               </div>
             </td>

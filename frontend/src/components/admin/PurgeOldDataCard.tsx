@@ -35,7 +35,7 @@ export default function PurgeOldDataCard() {
         cutoff: d.cutoff,
       });
     } catch (e) {
-      setLastResult(`⚠ 미리보기 실패: ${e instanceof Error ? e.message : "오류"}`);
+      setLastResult(`! 미리보기 실패: ${e instanceof Error ? e.message : "오류"}`);
     } finally {
       setBusy(false);
     }
@@ -73,7 +73,7 @@ export default function PurgeOldDataCard() {
       );
       setPreview(null);
     } catch (e) {
-      setLastResult(`⚠ 삭제 실패: ${e instanceof Error ? e.message : "오류"}`);
+      setLastResult(`! 삭제 실패: ${e instanceof Error ? e.message : "오류"}`);
     } finally {
       setBusy(false);
     }
@@ -83,7 +83,7 @@ export default function PurgeOldDataCard() {
     <div className="border bg-white" style={{ borderColor: "var(--kbid-border)" }}>
       <div
         className="text-white px-3 py-2 text-[12px] font-bold"
-        style={{ background: "linear-gradient(to bottom, #346081, #1E3A6B)" }}
+        style={{ background: "var(--text)" }}
       >
         오래된 데이터 정리 (PDF 03 §10 — 10년 자동/수동 삭제)
       </div>
@@ -106,7 +106,7 @@ export default function PurgeOldDataCard() {
               color: autoEnabled ? "#2B8B3C" : "#A8231D",
             }}
           >
-            {autoEnabled ? "● 활성" : "○ 비활성"}
+            {autoEnabled ? "활성" : "비활성"}
           </button>
         </div>
 
@@ -138,7 +138,7 @@ export default function PurgeOldDataCard() {
             className="kbid-btn-secondary"
             style={{ padding: "4px 12px", fontSize: 12 }}
           >
-            {busy && !preview ? "조회 중..." : "🔍 미리보기"}
+            {busy && !preview ? "조회 중..." : "미리보기"}
           </button>
           <button
             onClick={handleManualPurge}
@@ -147,7 +147,7 @@ export default function PurgeOldDataCard() {
             style={{ padding: "4px 14px", fontSize: 12 }}
             title={!preview ? "먼저 미리보기로 확인" : "영구 삭제"}
           >
-            {busy && preview ? "삭제 중..." : "🗑 수동 삭제 실행"}
+            {busy && preview ? "삭제 중..." : "수동 삭제 실행"}
           </button>
         </div>
 
@@ -160,7 +160,7 @@ export default function PurgeOldDataCard() {
               color: "#C56F1A",
             }}
           >
-            🔍 삭제 대상 (cutoff {preview.cutoff}):{" "}
+            삭제 대상 (cutoff {preview.cutoff}):{" "}
             <strong>공고 {preview.ann.toLocaleString()}건 + 낙찰결과 {preview.res.toLocaleString()}건</strong>
           </div>
         )}
@@ -171,17 +171,17 @@ export default function PurgeOldDataCard() {
             style={{
               background: lastResult.startsWith("✓")
                 ? "#DDF1DF"
-                : lastResult.startsWith("ℹ")
+                : lastResult.startsWith("안내")
                 ? "#E8EDF3"
                 : "#FFE5E0",
               borderColor: lastResult.startsWith("✓")
                 ? "#2B8B3C"
-                : lastResult.startsWith("ℹ")
+                : lastResult.startsWith("안내")
                 ? "var(--kbid-border)"
                 : "#D9342B",
               color: lastResult.startsWith("✓")
                 ? "#2B8B3C"
-                : lastResult.startsWith("ℹ")
+                : lastResult.startsWith("안내")
                 ? "var(--kbid-text-meta)"
                 : "#A8231D",
             }}

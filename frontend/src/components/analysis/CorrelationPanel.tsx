@@ -61,7 +61,7 @@ export default function CorrelationPanel({ data, onRateSelect }: Props) {
                     <div className="text-[10px] text-gray-400 mt-0.5">모드 {m.mode}</div>
                   )}
                   {aligned && (
-                    <div className="text-[10px] text-[#E8913A] font-bold mt-1">★ 종합 일치</div>
+                    <div className="text-[10px] text-[#E8913A] font-bold mt-1">* 종합 일치</div>
                   )}
                 </div>
               </div>

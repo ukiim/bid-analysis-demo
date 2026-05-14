@@ -76,7 +76,7 @@ export default function StatisticsPage() {
         <div>
           <div
             className="text-white px-3 py-2 text-[12px] font-bold"
-            style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+            style={{ background: "var(--text)" }}
           >
             사정률 월별 추이 (평균/최저/최고)
           </div>
@@ -89,7 +89,7 @@ export default function StatisticsPage() {
         <div>
           <div
             className="text-white px-3 py-2 text-[12px] font-bold"
-            style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+            style={{ background: "var(--text)" }}
           >
             지역별 평균 사정률
           </div>
@@ -108,7 +108,7 @@ export default function StatisticsPage() {
                         style={{
                           width: `${pct}%`,
                           height: "100%",
-                          background: "linear-gradient(to right, #5481B8, #437194)",
+                          background: "var(--accent)",
                         }}
                       />
                       <div
@@ -130,7 +130,7 @@ export default function StatisticsPage() {
       <div>
         <div
           className="text-white px-3 py-2 text-[12px] font-bold"
-          style={{ background: "linear-gradient(to bottom, #346081, #1E3A6B)" }}
+          style={{ background: "var(--text)" }}
         >
           지역별 상세 통계 — 최근 {activePeriod} 집계
         </div>

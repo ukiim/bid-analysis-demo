@@ -76,7 +76,7 @@ export default function PreviousAnnouncementCard({
       >
         <div
           className="text-white px-3 py-1.5 text-[11px] font-bold"
-          style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+          style={{ background: "var(--text)" }}
         >
           바로 이전 결과공고 갭 비교 (PDF 04 §2)
         </div>
@@ -101,7 +101,7 @@ export default function PreviousAnnouncementCard({
     >
       <div
         className="text-white px-3 py-1.5 text-[11px] font-bold flex items-center justify-between"
-        style={{ background: "linear-gradient(to bottom, #5481B8, #437194)" }}
+        style={{ background: "var(--text)" }}
       >
         <span>바로 이전 결과공고 갭 비교 (PDF 04 §2)</span>
         <span className="text-[10px] opacity-90">

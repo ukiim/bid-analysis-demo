@@ -36,14 +36,14 @@ export default function KbidPager({
           onClick={() => onPageChange(1)}
           disabled={page <= 1}
         >
-          ≪
+          «
         </button>
         <button
           className="page-btn"
           onClick={() => onPageChange(Math.max(1, page - 1))}
           disabled={page <= 1}
         >
-          ＜
+          ‹
         </button>
         {numbers.map((n) => (
           <button
@@ -59,14 +59,14 @@ export default function KbidPager({
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           disabled={page >= totalPages}
         >
-          ＞
+          ›
         </button>
         <button
           className="page-btn"
           onClick={() => onPageChange(totalPages)}
           disabled={page >= totalPages}
         >
-          ≫
+          »
         </button>
       </div>
       {onPageSizeChange && (

@@ -286,7 +286,7 @@ export default function AnalysisPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="text-red-500 text-lg mb-2">⚠</div>
+          <div className="text-red-500 text-lg mb-2">!</div>
           <div className="text-[13px] text-red-600">{error}</div>
           <button
             onClick={fetchAll}
@@ -309,14 +309,14 @@ export default function AnalysisPage() {
           style={{ padding: "5px 12px", fontSize: 12 }}
           title="현재 선택 사정률을 투찰리스트에 추가"
         >
-          ➕ 투찰리스트 담기
+          투찰리스트 담기
         </button>
         <button
           onClick={() => setBidListOpen(true)}
           className="kbid-btn-primary"
           style={{ padding: "5px 14px", fontSize: 12 }}
         >
-          📋 투찰리스트 보기 ({bidListCount})
+          투찰리스트 보기 ({bidListCount})
         </button>
       </div>
 
